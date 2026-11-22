@@ -17,7 +17,8 @@ const ON_LIGHT = { lit: C.primary, shade: C.deep };
 
 // 64×64 grid. Shield with three merlons over a tapered point; prompt chevron cut out with even-odd fill.
 const SHIELD = 'M5 5H18V14H26V5H38V14H46V5H59L55 41L32 59L9 41Z';
-const CHEVRON = 'M19 24H29L41 35L29 46H19L31 35Z';
+// Chevron: 7-unit stroke, bounding box (22.5–41.5) centred on the shield's axis (x = 32).
+const CHEVRON = 'M22.5 24H29.5L41.5 35L29.5 46H22.5L34.5 35Z';
 const mark = ({ lit, shade }) => `
   <defs><clipPath id="ngb-lit"><rect width="32" height="64"/></clipPath></defs>
   <path fill="${shade}" fill-rule="evenodd" d="${SHIELD}${CHEVRON}"/>
