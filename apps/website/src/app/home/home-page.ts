@@ -22,7 +22,7 @@ const DESCRIPTION = 'NgBastion is an Angular-aware, local-first security scanner
             <div class="hero-actions">
               <a class="btn btn-primary" routerLink="/docs/getting-started/installation">Get started<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
               <a class="btn" routerLink="/rules">Browse {{ showcase.ruleCount }} rules</a>
-              <a class="btn btn-ghost" routerLink="/playground">Playground</a>
+              <a class="btn btn-ghost" routerLink="/playground">Playground<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
             </div>
             <dl class="hero-stats">
               <div><dt>{{ showcase.ruleCount }}</dt><dd>security rules</dd></div>
