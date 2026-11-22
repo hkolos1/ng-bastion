@@ -1,0 +1,36 @@
+{
+  "name": "@ngbastion/core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "NgBastion type-aware data-flow security engine.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": "^22.22.3 || >=24.15.0 <25"
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@ngbastion/plugin-api": "workspace:*",
+    "@ngbastion/config": "workspace:*",
+    "@angular/compiler": "~22.3.0",
+    "picomatch": "^4.0.7",
+    "typescript": "~6.0.3"
+  },
+  "devDependencies": {
+    "@types/picomatch": "^4.0.3"
+  }
+}
