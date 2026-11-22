@@ -1,0 +1,30 @@
+// Declarative pipeline stage. Requires Node.js 22.22.3+/24.15+ on the agent.
+pipeline {
+  agent any
+  environment {
+    NGBASTION_CMD = 'npx --yes ngbastion@0.1.0' // replace with a local build until published
+  }
+  stages {
+    stage('Install') {
+      steps { sh 'npm ci' }
+    }
+    stage('NgBastion') {
+      steps {
+        sh '$NGBASTION_CMD scan --format sarif --output ngbastion.sarif --fail-on none'
+        script {
+          def code = sh(script: '$NGBASTION_CMD scan --format json --output ngbastion.json --fail-on high', returnStatus: true)
+          if (code == 1) {
+            error('NgBastion security gate failed')
+          } else if (code != 0) {
+            error("NgBastion could not complete the scan (exit ${code})")
+          }
+        }
+      }
+    }
+  }
+  post {
+    always {
+      archiveArtifacts artifacts: 'ngbastion.json, ngbastion.sarif', allowEmptyArchive: true
+    }
+  }
+}

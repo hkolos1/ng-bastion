@@ -1,0 +1,29 @@
+# Azure DevOps. The SARIF SAST Scans Tab extension reads the CodeAnalysisLogs artifact.
+trigger:
+  - main
+pr:
+  - main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  NGBASTION_CMD: 'npx --yes ngbastion@0.1.0' # replace with a local build until published
+
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '24.x'
+  - script: npm ci
+    displayName: Install dependencies
+  - script: |
+      mkdir -p $(Build.ArtifactStagingDirectory)/CodeAnalysisLogs
+      $(NGBASTION_CMD) scan --format sarif --output $(Build.ArtifactStagingDirectory)/CodeAnalysisLogs/ngbastion.sarif --fail-on none
+    displayName: NgBastion SARIF report
+  - script: $(NGBASTION_CMD) scan --format json --output $(Build.ArtifactStagingDirectory)/ngbastion.json --fail-on high
+    displayName: NgBastion security gate
+  - task: PublishBuildArtifacts@1
+    condition: always()
+    inputs:
+      PathtoPublish: $(Build.ArtifactStagingDirectory)/CodeAnalysisLogs
+      ArtifactName: CodeAnalysisLogs
