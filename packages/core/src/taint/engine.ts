@@ -458,8 +458,17 @@ export class TaintEngine implements TaintAnalyzer {
     const name = memberName(e);
     if (name === 'length') return this.constant();
     if (name) this.addName(name);
-    const sym = this.symbols.symbolAt(e);
-    const decl = sym?.valueDeclaration ?? sym?.declarations?.[0];
+    let sym = this.symbols.symbolAt(e);
+    let decl = sym?.valueDeclaration ?? sym?.declarations?.[0];
+    if (!sym && name) {
+      // `inject(Service).field` while framework types are unavailable: use the declared class.
+      const member = this.symbols.declaredClass(e.expression)?.members.find((m) => nameOf(m) === name);
+      const msym = member?.name && this.symbols.checker.getSymbolAtLocation(member.name);
+      if (member && msym) {
+        sym = msym;
+        decl = member;
+      }
+    }
     // Fields of interface / type-literal DTOs carry the taint of their container unless written explicitly.
     if (sym && decl && this.symbols.isProjectNode(decl) && ts.isPropertySignature(decl) && mode === 'value' && !this.index.writesTo(sym).length) {
       return this.visit(e.expression, env, this.extend(path, 'property', e, `property '${name ?? '?'}'`, name));
