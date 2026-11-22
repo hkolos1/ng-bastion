@@ -1,0 +1,473 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ngbastion.dev/schemas/report-v1.json",
+  "title": "NgBastion JSON report (schemaVersion 1)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "tool",
+    "scan",
+    "rules",
+    "findings",
+    "suppressed",
+    "diagnostics",
+    "summary"
+  ],
+  "definitions": {
+    "severity": {
+      "enum": [
+        "critical",
+        "high",
+        "medium",
+        "low",
+        "info"
+      ]
+    },
+    "confidence": {
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "file",
+        "line",
+        "column",
+        "endLine",
+        "endColumn"
+      ],
+      "properties": {
+        "file": {
+          "type": "string",
+          "description": "Workspace-relative POSIX path",
+          "pattern": "^(?!/)"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "column": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "endLine": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "endColumn": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "traceStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "description",
+        "file",
+        "line",
+        "column",
+        "endLine",
+        "endColumn"
+      ],
+      "properties": {
+        "file": {
+          "type": "string",
+          "description": "Workspace-relative POSIX path",
+          "pattern": "^(?!/)"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "column": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "endLine": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "endColumn": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "kind": {
+          "enum": [
+            "source",
+            "assignment",
+            "argument",
+            "parameter",
+            "return",
+            "property",
+            "transform",
+            "reactive",
+            "signal",
+            "template",
+            "trust-bypass",
+            "sink"
+          ]
+        },
+        "symbol": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fingerprint",
+        "ruleId",
+        "ruleName",
+        "category",
+        "severity",
+        "confidence",
+        "evidenceKind",
+        "level",
+        "message",
+        "location",
+        "evidence",
+        "project"
+      ],
+      "properties": {
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{20}$"
+        },
+        "ruleId": {
+          "type": "string"
+        },
+        "ruleName": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/definitions/severity"
+        },
+        "confidence": {
+          "$ref": "#/definitions/confidence"
+        },
+        "evidenceKind": {
+          "enum": [
+            "dataflow",
+            "pattern",
+            "heuristic"
+          ]
+        },
+        "level": {
+          "enum": [
+            "error",
+            "warn"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "location": {
+          "$ref": "#/definitions/location"
+        },
+        "snippet": {
+          "type": "string"
+        },
+        "trace": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/traceStep"
+          }
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "project": {
+          "type": "string"
+        },
+        "suppression": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "justification",
+            "source"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "inline",
+                "exception"
+              ]
+            },
+            "justification": {
+              "type": "string"
+            },
+            "source": {
+              "type": "string"
+            },
+            "expires": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "tool": {
+      "type": "object",
+      "required": [
+        "name",
+        "version",
+        "pluginApiVersion"
+      ],
+      "properties": {
+        "name": {
+          "const": "NgBastion"
+        },
+        "version": {
+          "type": "string"
+        },
+        "pluginApiVersion": {
+          "type": "integer"
+        }
+      }
+    },
+    "scan": {
+      "type": "object",
+      "required": [
+        "startedAt",
+        "durationMs",
+        "projects",
+        "config",
+        "stats"
+      ],
+      "properties": {
+        "startedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "durationMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "angularVersion": {
+          "type": "string"
+        },
+        "projects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "root",
+              "kind",
+              "files",
+              "templates"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "root": {
+                "type": "string"
+              },
+              "kind": {
+                "enum": [
+                  "angular-json",
+                  "tsconfig",
+                  "directory"
+                ]
+              },
+              "files": {
+                "type": "integer"
+              },
+              "templates": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        "config": {
+          "type": "object",
+          "required": [
+            "failOn",
+            "minConfidence",
+            "sources"
+          ],
+          "properties": {
+            "failOn": {
+              "enum": [
+                "critical",
+                "high",
+                "medium",
+                "low",
+                "info",
+                "none"
+              ]
+            },
+            "minConfidence": {
+              "$ref": "#/definitions/confidence"
+            },
+            "sources": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "stats": {
+          "type": "object"
+        }
+      }
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "category",
+          "severity",
+          "level",
+          "helpUri"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "severity": {
+            "$ref": "#/definitions/severity"
+          },
+          "level": {
+            "enum": [
+              "error",
+              "warn"
+            ]
+          },
+          "cwe": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "helpUri": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/finding"
+      }
+    },
+    "suppressed": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/finding"
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "code",
+          "level",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "level": {
+            "enum": [
+              "error",
+              "warning",
+              "info"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "file": {
+            "type": "string",
+            "pattern": "^(?!/)"
+          },
+          "project": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "total",
+        "bySeverity",
+        "suppressed",
+        "hiddenBelowConfidence",
+        "gate"
+      ],
+      "properties": {
+        "total": {
+          "type": "integer"
+        },
+        "bySeverity": {
+          "type": "object",
+          "required": [
+            "critical",
+            "high",
+            "medium",
+            "low",
+            "info"
+          ]
+        },
+        "suppressed": {
+          "type": "integer"
+        },
+        "hiddenBelowConfidence": {
+          "type": "integer"
+        },
+        "gate": {
+          "type": "object",
+          "required": [
+            "failOn",
+            "failed",
+            "failingFindings"
+          ]
+        }
+      }
+    }
+  }
+}

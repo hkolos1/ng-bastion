@@ -15,10 +15,12 @@
     "./config": {
       "types": "./dist/config.d.ts",
       "import": "./dist/config.js"
-    }
+    },
+    "./schema/report-v1.json": "./schema/report-v1.json"
   },
   "files": [
-    "dist"
+    "dist",
+    "schema"
   ],
   "engines": {
     "node": "^22.22.3 || >=24.15.0 <25"
