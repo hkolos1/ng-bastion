@@ -3,25 +3,50 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "ngbastion.dev: landing page, documentation, rule reference, playground and changelog.",
+  "description": "ngbastion.dev: Angular 22 + AnalogJS site with landing page, documentation, rule reference, playground and changelog.",
   "engines": {
-    "node": ">=24"
+    "node": ">=22.22.3"
   },
   "scripts": {
     "generate": "node scripts/generate.mjs",
-    "dev": "node scripts/generate.mjs && ASTRO_TELEMETRY_DISABLED=1 astro dev",
-    "build": "node scripts/generate.mjs && ASTRO_TELEMETRY_DISABLED=1 astro build",
-    "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview"
+    "dev": "node scripts/generate.mjs && vite",
+    "build": "node scripts/generate.mjs && vite build && node scripts/verify-build.mjs",
+    "test": "node scripts/generate.mjs && vitest run",
+    "preview": "vite preview --outDir dist/analog/public",
+    "typecheck": "node scripts/generate.mjs && tsc -p tsconfig.app.json --noEmit && tsc -p tsconfig.spec.json --noEmit"
   },
   "dependencies": {
-    "@astrojs/sitemap": "^3.7.6",
-    "@astrojs/starlight": "^0.43.1",
+    "@analogjs/router": "^2.9.7",
+    "@angular/common": "~22.3.0",
+    "@angular/compiler": "~22.3.0",
+    "@angular/core": "~22.3.0",
+    "@angular/platform-browser": "~22.3.0",
+    "@angular/platform-server": "~22.3.0",
+    "@angular/router": "~22.3.0",
     "@fontsource-variable/jetbrains-mono": "^5.3.0",
     "@fontsource-variable/schibsted-grotesk": "^5.3.0",
+    "rxjs": "~7.8.2",
+    "tslib": "^2.8.1"
+  },
+  "devDependencies": {
+    "@analogjs/content": "^2.9.7",
+    "@analogjs/platform": "^2.9.7",
+    "@analogjs/vite-plugin-angular": "^2.9.7",
+    "@analogjs/vitest-angular": "^2.9.7",
+    "@angular/build": "~22.3.0",
+    "@angular/compiler-cli": "~22.3.0",
     "@ngbastion/config": "workspace:*",
     "@ngbastion/core": "workspace:*",
     "@ngbastion/rules": "workspace:*",
-    "astro": "^7.4.13",
-    "sharp": "^0.35.5"
+    "@shikijs/transformers": "^4.0.0",
+    "@tailwindcss/vite": "^4.3.5",
+    "jsdom": "^26.1.0",
+    "marked": "^18.2.1",
+    "sharp": "^0.35.5",
+    "shiki": "^4.6.0",
+    "tailwindcss": "^4.3.5",
+    "typescript": "~6.0.3",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.1"
   }
 }

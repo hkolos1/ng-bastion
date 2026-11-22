@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://ngbastion.dev/sitemap-index.xml
+Sitemap: https://ngbastion.dev/sitemap.xml
