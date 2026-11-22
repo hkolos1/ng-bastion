@@ -23,21 +23,26 @@ writes through `ElementRef`, `postMessage` handlers without origin checks, inter
 bearer tokens, card data in `localStorage`. Generic JavaScript linters see function names;
 NgBastion follows the data.
 
-```text
+```console
+$ ngbastion scan
 HIGH     NGB001  Unsafe HTML trust bypass  confidence: high · dataflow
   src/app/xss/profile-card.component.ts:14:28
-  Untrusted data (URL query parameter 'bio' (ActivatedRoute)) is marked as trusted HTML with bypassSecurityTrustHtml(); Angular will not sanitize it.
+  Untrusted data (URL query parameter 'bio' (ActivatedRoute)) is marked as trusted HTML
+  with bypassSecurityTrustHtml(); Angular will not sanitize it.
   │ readonly bio: SafeHtml = this.sanitizer.bypassSecurityTrustHtml(this.bios.previewBio());
   Trace:
-    1. source       src/app/xss/bio.service.ts:10:17  URL query parameter 'bio' (ActivatedRoute)
+    1. source       src/app/xss/bio.service.ts:10:17  URL query parameter 'bio'
+                    (ActivatedRoute)
     2. assignment   src/app/xss/bio.service.ts:10:11  assigned to 'bio'
     3. transform    src/app/xss/bio.service.ts:11:12  interpolated into a template literal
     4. return       src/app/xss/profile-card.component.ts:14:67  returned from previewBio()
-    5. sink         src/app/xss/profile-card.component.ts:14:28  bypassSecurityTrustHtml() disables Angular HTML sanitization
-  Fix: Bind untrusted HTML with `[innerHTML]` directly and let Angular sanitize it, or sanitize explicitly … → ngbastion explain NGB001
+    5. sink         src/app/xss/profile-card.component.ts:14:28  bypassSecurityTrustHtml()
+                    disables Angular HTML sanitization
+  Fix: Bind untrusted HTML with `[innerHTML]` directly and let Angular sanitize it,
+       or sanitize explicitly … → ngbastion explain NGB001
 ```
 
-*Real output of `ngbastion scan` on [`examples/vulnerable-showcase`](examples/vulnerable-showcase), an intentionally vulnerable app.*
+*Real output of `ngbastion scan` on [`examples/vulnerable-showcase`](examples/vulnerable-showcase), an intentionally vulnerable app (long lines wrapped to fit).*
 
 ## Key capabilities
 
