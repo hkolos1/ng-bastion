@@ -349,6 +349,8 @@ export class TaintEngine implements TaintAnalyzer {
       if (mode === 'emitted') return this.unresolved(`external observable '${name}'`, ref);
       return this.unresolved(`external value '${name}'`, ref);
     }
+    // `import data from './x.json'`: build-time project data, a constant.
+    if (ts.isSourceFile(decl) && decl.fileName.endsWith('.json')) return this.constant();
     if (ts.isParameter(decl)) return this.visitParameter(decl, env, path, mode);
     if (ts.isBindingElement(decl)) return this.visitBindingElement(decl, env, path, mode);
     if (ts.isVariableDeclaration(decl)) {

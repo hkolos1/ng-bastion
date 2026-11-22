@@ -2,7 +2,7 @@ node_modules/
 dist/
 coverage/
 .turbo/
-.astro/
+.angular/
 *.log
 .DS_Store
 results.sarif

@@ -1,0 +1,26 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "newProjectRoot": "projects",
+  "projects": {
+    "website": {
+      "projectType": "application",
+      "root": ".",
+      "sourceRoot": "src",
+      "prefix": "ngb",
+      "architect": {
+        "build": {
+          "builder": "@analogjs/platform:vite",
+          "options": {
+            "configFile": "vite.config.ts",
+            "main": "src/main.ts",
+            "index": "index.html",
+            "outputPath": "dist/client",
+            "tsConfig": "tsconfig.app.json"
+          }
+        },
+        "test": { "builder": "@analogjs/vitest-angular:test" }
+      }
+    }
+  }
+}

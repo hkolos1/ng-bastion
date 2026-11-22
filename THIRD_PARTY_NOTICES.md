@@ -8,7 +8,7 @@ NgBastion's published packages depend at runtime on:
 | [@angular/compiler](https://github.com/angular/angular) | MIT | Angular template parsing |
 | [picomatch](https://github.com/micromatch/picomatch) | MIT | File glob matching |
 
-Development and test tooling (pnpm, Turborepo, tsup, Vitest, ESLint, Ajv, Astro, Starlight) is not
+Development and test tooling (pnpm, Turborepo, tsup, Vitest, ESLint, Ajv, Angular, AnalogJS, Vite, Tailwind CSS, marked, Shiki) is not
 distributed with the scanner.
 
 `tests/fixtures/schemas/sarif-2.1.0.json` is the SARIF 2.1.0 JSON schema published by the OASIS

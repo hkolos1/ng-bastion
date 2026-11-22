@@ -56,3 +56,10 @@ user-visible changes are tracked with [Changesets](.changeset).
 
 - Documentation site, landing page, rule reference, minimal fixture-based playground and original
   branding (`apps/website`, not deployed).
+- The website is an Angular 22 + AnalogJS application (Vite, Tailwind CSS v4), statically
+  pre-rendered for every route, with signal-based search, theme and playground; it replaced the
+  initial Astro + Starlight implementation. Content is still generated from real scanner output,
+  rendered through Angular's sanitizer without trust bypasses, and verified after each build.
+- Scanning the website with NgBastion uncovered and fixed two scanner issues: NGB005 now ignores
+  non-executable script data blocks (`type="application/ld+json"` etc.), and JSON module imports
+  are treated as build-time constants.

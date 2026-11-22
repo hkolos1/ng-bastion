@@ -2,6 +2,9 @@ import type * as ts from 'typescript';
 import { defineRule, type RuleFinding } from '@ngbastion/plugin-api';
 import { constantPrefix, hasFixedOrigin, is, memberName, methodCall, receiverOf, reportSink, strip } from '../shared/common.js';
 
+/** `type` values browsers execute as script (HTML spec "JavaScript MIME type essence matches" + module). */
+const EXECUTABLE_TYPES = new Set(['', 'module', 'text/javascript', 'application/javascript', 'application/ecmascript', 'application/x-ecmascript', 'application/x-javascript', 'text/ecmascript', 'text/javascript1.0', 'text/javascript1.1', 'text/javascript1.2', 'text/javascript1.3', 'text/javascript1.4', 'text/javascript1.5', 'text/jscript', 'text/livescript', 'text/x-ecmascript', 'text/x-javascript']);
+
 export const ngb005 = defineRule({
   meta: {
     id: 'NGB005',
@@ -19,6 +22,7 @@ export const ngb005 = defineRule({
         '`const s = renderer.createElement("script"); renderer.setAttribute(s, "src", url)` / `renderer.setProperty(s, "src", url)`',
         '`import(specifier)` and `importScripts(url)` with a non-literal argument',
         'Constant `https://` URLs and URLs with a fixed `https://host/` prefix are treated as explicitly trusted locations',
+        'Script elements given a constant non-JavaScript `type` (e.g. `application/ld+json` structured data) are data blocks and are not reported',
       ],
       limitations: [
         'Only script elements stored in a local variable or class field are tracked; elements passed through helper functions are not.',
@@ -76,10 +80,28 @@ document.body.appendChild(s);`,
       const sym = holder && ctx.checker.getSymbolAtLocation(t.isPropertyAccessExpression(holder) ? holder.name : holder);
       if (sym) scriptSymbols.add(sym);
     }
+    const symbolOf = (e: ts.Expression) => {
+      const x = strip(ctx, e);
+      return ctx.checker.getSymbolAtLocation(t.isPropertyAccessExpression(x) ? x.name : x);
+    };
+    // Data blocks (`type="application/ld+json"`, `application/json`, `text/template` …) never execute.
+    for (const a of ctx.index.assignments) {
+      const recv = receiverOf(ctx, a.left);
+      const sym = recv && memberName(ctx, a.left) === 'type' ? symbolOf(recv) : undefined;
+      const type = sym && scriptSymbols.has(sym) ? ctx.symbols.constantString(a.right)?.trim().toLowerCase() : undefined;
+      if (sym && type !== undefined && !EXECUTABLE_TYPES.has(type)) scriptSymbols.delete(sym);
+    }
+    for (const call of ctx.index.calls) {
+      const callee = strip(ctx, call.expression);
+      const recv = receiverOf(ctx, callee);
+      if (memberName(ctx, callee) !== 'setAttribute' || !recv || !call.arguments[1] || ctx.symbols.constantString(call.arguments[0]!)?.toLowerCase() !== 'type') continue;
+      const sym = symbolOf(recv);
+      const type = ctx.symbols.constantString(call.arguments[1])?.trim().toLowerCase();
+      if (sym && scriptSymbols.has(sym) && type !== undefined && !EXECUTABLE_TYPES.has(type)) scriptSymbols.delete(sym);
+    }
     const isScript = (e: ts.Expression | undefined) => {
       if (!e) return false;
-      const x = strip(ctx, e);
-      const sym = ctx.checker.getSymbolAtLocation(t.isPropertyAccessExpression(x) ? x.name : x);
+      const sym = symbolOf(e);
       return !!sym && scriptSymbols.has(sym);
     };
 
