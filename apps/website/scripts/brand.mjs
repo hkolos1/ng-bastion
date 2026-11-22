@@ -8,8 +8,8 @@ import sharp from 'sharp';
 const out = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../assets/brand');
 mkdirSync(out, { recursive: true });
 
-// Palette matches the site's design tokens (src/styles.css): neutral base, violet primary, amber prompt.
-const C = { slate: '#141417', steel: '#8b7cf8', amber: '#f0b45b', ink: '#5b47e0', stone: '#fafaf9', text: '#ececee', muted: '#a0a0ab' };
+// Palette matches the site's design tokens (src/styles.css): near-black base, Electric Royal Blue primary, amber prompt.
+const C = { slate: '#0d101a', bg: '#090b12', steel: '#315bff', amber: '#f0b45b', ink: '#315bff', stone: '#f8f9fc', text: '#f1f4ff', muted: '#a4abc0' };
 
 /** Star-fort outline centred at (cx, cy) with outer radius R. */
 function fort(cx, cy, R) {
@@ -25,9 +25,9 @@ function fort(cx, cy, R) {
 }
 
 const mark = ({ outline, fill, prompt, size = 64 }) => `
-  <polygon points="${fort(size / 2, size / 2 + 1.5, size * 0.44)}" fill="${fill}" stroke="${outline}" stroke-width="${size / 20}" stroke-linejoin="miter"/>
-  <path d="M${size * 0.36} ${size * 0.4} L${size * 0.5} ${size * 0.52} L${size * 0.36} ${size * 0.64}" fill="none" stroke="${prompt}" stroke-width="${size / 14}" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M${size * 0.55} ${size * 0.66} H${size * 0.68}" stroke="${prompt}" stroke-width="${size / 14}" stroke-linecap="round"/>`;
+  <polygon points="${fort(size / 2, size / 2 + 1.5, size * 0.44)}" fill="${fill}" stroke="${outline}" stroke-width="${size / 16}" stroke-linejoin="miter"/>
+  <path d="M${size * 0.36} ${size * 0.4} L${size * 0.5} ${size * 0.52} L${size * 0.36} ${size * 0.64}" fill="none" stroke="${prompt}" stroke-width="${size / 12}" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M${size * 0.55} ${size * 0.66} H${size * 0.68}" stroke="${prompt}" stroke-width="${size / 12}" stroke-linecap="round"/>`;
 
 const svg = (w, h, body, title) =>
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="${title}"><title>${title}</title>${body}</svg>\n`;
@@ -42,12 +42,14 @@ writeFileSync(path.join(out, 'favicon.svg'), svg(64, 64, mark({ outline: C.steel
 const wordmark = (color) => `<text x="76" y="44" font-family="'Geist', 'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="33" font-weight="600" letter-spacing="-1" fill="${color}">NgBastion</text>`;
 writeFileSync(path.join(out, 'logo-full-dark.svg'), svg(260, 64, mark({ outline: C.steel, fill: C.slate, prompt: C.amber }) + wordmark(C.text), 'NgBastion'));
 // Neutral variant readable on light and dark backgrounds (e.g. GitHub README).
-writeFileSync(path.join(out, 'logo-full.svg'), svg(260, 64, mark({ outline: '#7c6cf2', fill: C.slate, prompt: C.amber }) + wordmark('#7c6cf2'), 'NgBastion'));
-writeFileSync(path.join(out, 'logo-full-light.svg'), svg(260, 64, mark({ outline: C.ink, fill: C.stone, prompt: '#b7791f' }) + wordmark('#18181b'), 'NgBastion'));
+writeFileSync(path.join(out, 'logo-full.svg'), svg(260, 64, mark({ outline: C.steel, fill: C.slate, prompt: C.amber }) + wordmark(C.steel), 'NgBastion'));
+writeFileSync(path.join(out, 'logo-full-light.svg'), svg(260, 64, mark({ outline: C.ink, fill: C.stone, prompt: '#b7791f' }) + wordmark('#0f1424'), 'NgBastion'));
 
 // Social preview 1280×640.
 const social = svg(1280, 640, `
-  <rect width="1280" height="640" fill="${C.slate}"/>
+  <defs><radialGradient id="glow" cx="0.82" cy="0.5" r="0.6"><stop offset="0" stop-color="${C.steel}" stop-opacity="0.16"/><stop offset="1" stop-color="${C.steel}" stop-opacity="0"/></radialGradient></defs>
+  <rect width="1280" height="640" fill="${C.bg}"/>
+  <rect width="1280" height="640" fill="url(#glow)"/>
   <g opacity="0.12" stroke="${C.steel}" fill="none" stroke-width="2">
     <polygon points="${fort(1060, 330, 420)}"/><polygon points="${fort(1060, 330, 300)}"/>
   </g>
