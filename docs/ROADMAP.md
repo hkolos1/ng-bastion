@@ -9,7 +9,7 @@ Status legend: ✅ done · 🚧 in progress · ⏳ planned · ⏸ deferred (need
 | 3 | Rules NGB001–NGB020 with positive/negative/false-positive tests | ✅ |
 | 4 | CLI (init/scan/explain/rules/doctor), hybrid config, presets, policies, plugins, reporters | ✅ |
 | 5 | Compatibility (Angular 20/21/22), regression, SARIF validation, coverage, CI templates | ✅ |
-| 6 | README, docs site, landing page, playground, logo, SEO, changelog | 🚧 |
+| 6 | README, docs site, landing page, playground, logo, SEO, changelog | ✅ (not deployed) |
 
 ## Deferred (require explicit approval)
 - Public npm publishing, Trusted Publishing, release automation
