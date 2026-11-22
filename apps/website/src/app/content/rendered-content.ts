@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { Router } from '@angular/router';
 import type { ContentBlock } from '../core/content';
+import { CodeBlock } from '../ui/code-block';
 
 /**
  * Renders build-time content. HTML blocks go through Angular's sanitizer ([innerHTML], no trust
@@ -10,6 +11,7 @@ import type { ContentBlock } from '../core/content';
 @Component({
   selector: 'ngb-rendered-content',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [CodeBlock],
   host: { class: 'prose', '(click)': 'onClick($event)' },
   template: `
     @for (block of blocks(); track $index) {
@@ -19,6 +21,8 @@ import type { ContentBlock } from '../core/content';
           @case (3) { <h3 [id]="block.id"><a class="anchor" [href]="'/' + slug() + '/#' + block.id" aria-hidden="true" tabindex="-1">#</a><span [innerHTML]="block.html"></span></h3> }
           @default { <h4 [id]="block.id"><span [innerHTML]="block.html"></span></h4> }
         }
+      } @else if (block.kind === 'code') {
+        <ngb-code-block [snippet]="block" />
       } @else {
         <div class="prose-block" [innerHTML]="block.html"></div>
       }

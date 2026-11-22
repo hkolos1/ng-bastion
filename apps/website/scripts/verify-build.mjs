@@ -37,6 +37,14 @@ for (const route of routes) {
   if (h1 !== 1) problem(`${route}: expected exactly one <h1>, found ${h1}`);
   if (/data-astro|astro-island|\/_astro\/|class="sl-|starlight-theme|pagefind/.test(html)) problem(`${route}: contains Astro/Starlight output`);
   if (!html.includes('<ngb-root')) problem(`${route}: not rendered by the Angular application`);
+  // Every code snippet is a CodeBlock with a copy button (the walkthrough lines and terminal are not snippets).
+  const pres = (html.match(/<pre\b[^>]*>/g) ?? []);
+  const codePres = pres.filter((p) => /class="code-body"/.test(p)).length;
+  const otherPres = pres.filter((p) => !/class="(code-body|flow-code)"/.test(p));
+  if (otherPres.length) problem(`${route}: ${otherPres.length} <pre> outside the CodeBlock component`);
+  const copyButtons = (html.match(/class="copy-btn"/g) ?? []).length;
+  if (copyButtons < codePres) problem(`${route}: ${codePres} code blocks but only ${copyButtons} copy buttons`);
+  if (!html.includes('<link rel="preload" href="/fonts/jetbrains-mono-latin-wght-normal.woff2"')) problem(`${route}: JetBrains Mono preload missing`);
   for (const [, href] of html.matchAll(/href="(\/[^"]*)"/g)) {
     if (href.startsWith('//')) continue;
     const pathOnly = href.split(/[?#]/)[0].replace(/\/$/, '') || '/';
@@ -46,7 +54,8 @@ for (const route of routes) {
 
 const home = readFileSync(htmlFor('/'), 'utf8');
 if (!/<script type="application\/ld\+json"[^>]*>\{"@context":"https:\/\/schema.org","@type":"SoftwareApplication"/.test(home)) problem('/: SoftwareApplication JSON-LD missing');
-if (!home.includes('Your Angular security stronghold.')) problem('/: tagline missing');
+const h1Text = (/<h1[^>]*>([\s\S]*?)<\/h1>/.exec(home)?.[1] ?? '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+if (h1Text !== 'Your Angular security stronghold.') problem(`/: tagline missing (h1 is "${h1Text}")`);
 if (!home.includes('captured when this site was built')) problem('/: real-scan terminal demo missing');
 const playground = readFileSync(htmlFor('/playground'), 'utf8');
 if (!playground.includes('this page does not scan arbitrary input')) problem('/playground: demonstration label missing');
@@ -55,7 +64,7 @@ const sitemap = existsSync(path.join(out, 'sitemap.xml')) ? readFileSync(path.jo
 for (const route of routes) if (!sitemap.includes(`<loc>${canonical(route)}</loc>`)) problem(`sitemap.xml: ${canonical(route)} missing`);
 const robots = existsSync(path.join(out, 'robots.txt')) ? readFileSync(path.join(out, 'robots.txt'), 'utf8') : '';
 if (!robots.includes(`Sitemap: ${SITE}/sitemap.xml`)) problem('robots.txt: sitemap reference missing');
-for (const asset of ['favicon.svg', 'brand/social-preview.png', 'brand/logo-mark-dark.svg', 'brand/logo-mark-light.svg', 'brand/apple-touch-icon.png']) {
+for (const asset of ['fonts/geist-latin-wght-normal.woff2', 'fonts/jetbrains-mono-latin-wght-normal.woff2', 'favicon.svg', 'brand/social-preview.png', 'brand/logo-mark-dark.svg', 'brand/logo-mark-light.svg', 'brand/apple-touch-icon.png']) {
   if (!existsSync(path.join(out, asset))) problem(`asset missing: ${asset}`);
 }
 const walk = (d) => readdirSync(d).flatMap((f) => (statSync(path.join(d, f)).isDirectory() ? walk(path.join(d, f)) : [path.join(d, f)]));

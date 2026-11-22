@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Seo } from '../core/seo.service';
+import { CodeBlock } from '../ui/code-block';
 import { PLAYGROUND, type PgData, type PgFinding, type PgVariant } from './playground-data';
 
 export type Variant = 'unsafe' | 'safe';
@@ -20,7 +21,7 @@ export function hitLines(variant: PgVariant, file: string): Set<number> {
 @Component({
   selector: 'ngb-playground-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, CodeBlock],
   template: `
     <section class="shell pg">
       <div class="pg-head">
@@ -54,10 +55,7 @@ export function hitLines(variant: PgVariant, file: string): Set<number> {
         <div class="cols">
           <div>
             @for (file of current().files; track file.name) {
-              <figure class="code-figure">
-                <figcaption>{{ file.name }}</figcaption>
-                <pre><code>@for (line of lines(file.code); track $index) {<span class="ln" [class.hit]="hits(file.name).has($index + 1)"><span class="no" aria-hidden="true">{{ $index + 1 }}</span>{{ line }}</span>}</code></pre>
-              </figure>
+              <ngb-code-block [snippet]="file" [filename]="file.name" [lineNumbers]="true" [highlight]="hits(file.name)" />
             }
           </div>
           <div class="results">
@@ -108,9 +106,6 @@ export class PlaygroundPage {
     });
   }
 
-  protected lines(code: string): string[] {
-    return code.replace(/\n$/, '').split('\n');
-  }
   protected hits(file: string): Set<number> {
     return this.hitCache().get(file) ?? new Set();
   }
