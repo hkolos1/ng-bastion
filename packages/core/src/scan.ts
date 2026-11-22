@@ -392,6 +392,11 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
   findings.sort((a, b) => severityRank(b.severity) - severityRank(a.severity) || confidenceRank(b.confidence) - confidenceRank(a.confidence)
     || a.location.file.localeCompare(b.location.file) || a.location.line - b.location.line);
 
+  // Reports never contain absolute paths.
+  const relPath = (f: string) => (path.isAbsolute(f) ? rel(f) : f);
+  for (const d of diagnostics) if (d.file) d.file = relPath(d.file);
+  for (const f of suppressed) if (f.suppression) f.suppression.source = relPath(f.suppression.source);
+
   const failing = config.failOn === 'none'
     ? []
     : findings.filter((f) => f.level === 'error' && severityRank(f.severity) >= severityRank(config.failOn as Severity));

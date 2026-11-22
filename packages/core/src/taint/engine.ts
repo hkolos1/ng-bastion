@@ -179,7 +179,6 @@ export class TaintEngine implements TaintAnalyzer {
       if (p.step) steps.push(p.step);
       if (p.approx) approximations.push(p.approx);
     }
-    steps.reverse();
     const sourceStep: TraceStep = { kind: 'source', location, description: match.description };
     const dedup = steps.filter((st, i) => i === 0 || !sameLoc(st, steps[i - 1]!));
     const confidence = lowerConfidence(match.trust, Math.min(2, new Set(approximations).size));
@@ -313,8 +312,10 @@ export class TaintEngine implements TaintAnalyzer {
     if (id.text === 'undefined') return this.constant();
     let raw: ts.Symbol | undefined;
     try {
-      raw = this.symbols.checker.getSymbolAtLocation(id);
-      if (!raw && ts.isShorthandPropertyAssignment(id.parent)) raw = this.symbols.checker.getShorthandAssignmentValueSymbol(id.parent);
+      // `{ x }`: the name resolves to the property; the value is the variable `x`.
+      raw = ts.isShorthandPropertyAssignment(id.parent) && id.parent.name === id
+        ? this.symbols.checker.getShorthandAssignmentValueSymbol(id.parent)
+        : this.symbols.checker.getSymbolAtLocation(id);
     } catch {
       raw = undefined;
     }
@@ -439,7 +440,7 @@ export class TaintEngine implements TaintAnalyzer {
           if (member && ts.isPropertyAssignment(member)) return this.visitAny(member.initializer, env, p, mode);
         }
       }
-      return this.visitAny(container.initializer, env, this.approx(p, 'destructuring (field-insensitive)'), mode);
+      return this.visitAny(container.initializer, env, p, mode);
     }
     if (ts.isParameter(container)) {
       if (!isArray) {
@@ -448,7 +449,7 @@ export class TaintEngine implements TaintAnalyzer {
           return this.addSource({ kind: 'message', description: 'MessageEvent.data (destructured)', trust: 'high' }, be, p);
         }
       }
-      return this.visitParameter(container, env, this.approx(p, 'destructured parameter (field-insensitive)'), mode);
+      return this.visitParameter(container, env, p, mode);
     }
     this.unsupported('nested destructuring', be);
   }
@@ -459,6 +460,10 @@ export class TaintEngine implements TaintAnalyzer {
     if (name) this.addName(name);
     const sym = this.symbols.symbolAt(e);
     const decl = sym?.valueDeclaration ?? sym?.declarations?.[0];
+    // Fields of interface / type-literal DTOs carry the taint of their container unless written explicitly.
+    if (sym && decl && this.symbols.isProjectNode(decl) && ts.isPropertySignature(decl) && mode === 'value' && !this.index.writesTo(sym).length) {
+      return this.visit(e.expression, env, this.extend(path, 'property', e, `property '${name ?? '?'}'`, name));
+    }
     if (sym && decl && this.symbols.isProjectNode(decl)) return this.visitDeclaration(decl, sym, e, env, path, mode);
     if (mode === 'emitted') {
       if (name === 'asObservable') return this.visitEmitted(e.expression, env, path, undefined);
@@ -473,7 +478,7 @@ export class TaintEngine implements TaintAnalyzer {
       const member = (skipOuter(objDecl.initializer) as ts.ObjectLiteralExpression).properties.find((m) => nameOf(m) === name);
       if (member && ts.isPropertyAssignment(member)) return this.visit(member.initializer, env, p);
     }
-    this.visit(e.expression, env, this.approx(p, 'property of an untyped value (field-insensitive)'));
+    this.visit(e.expression, env, p); // container taint flows to its fields
   }
 
   // ---------------------------------------------------------------- parameters & callbacks

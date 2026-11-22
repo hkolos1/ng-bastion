@@ -52,15 +52,14 @@ function parseTsconfig(file: string, diagnostics: WorkspaceDiagnostic[], seen = 
 
 const isSourceTs = (f: string) => f.endsWith('.ts') && !f.endsWith('.d.ts');
 
+/** Root files and compiler options for a project (no program is built). */
+export function resolveProjectFiles(target: ProjectTarget, diagnostics: WorkspaceDiagnostic[]): { fileNames: string[]; options: ts.CompilerOptions } {
+  if (target.tsconfig) return parseTsconfig(target.tsconfig, diagnostics);
+  return { fileNames: listFiles(target.sourceRoot, isSourceTs), options: DEFAULT_COMPILER_OPTIONS };
+}
+
 export function createProjectProgram(target: ProjectTarget, diagnostics: WorkspaceDiagnostic[]): ts.Program {
-  let fileNames: string[];
-  let options: ts.CompilerOptions;
-  if (target.tsconfig) {
-    ({ fileNames, options } = parseTsconfig(target.tsconfig, diagnostics));
-  } else {
-    fileNames = listFiles(target.sourceRoot, isSourceTs);
-    options = DEFAULT_COMPILER_OPTIONS;
-  }
+  const { fileNames, options } = resolveProjectFiles(target, diagnostics);
   const finalOptions = { ...options, ...FORCED };
   return ts.createProgram({ rootNames: fileNames, options: finalOptions, host: ts.createCompilerHost(finalOptions, true) });
 }
