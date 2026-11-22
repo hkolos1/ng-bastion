@@ -28,7 +28,7 @@ Run the CLI from source after building: `node packages/cli/dist/bin.js scan exam
 | `packages/core` | Workspace discovery, TypeScript program, templates, taint engine, scan orchestration |
 | `packages/rules` | Built-in rules NGB001–NGB020 and shared rule helpers |
 | `packages/cli` | `ngbastion` command, reporters (terminal, JSON, SARIF) |
-| `apps/website` | Landing page, documentation, rule pages, playground (Astro + Starlight) |
+| `apps/website` | ngbastion.dev: Angular 22 + AnalogJS app (landing, docs, rule pages, playground), statically pre-rendered |
 | `examples/angular-{20,21,22}` | Compatibility fixtures with installed framework packages |
 | `examples/vulnerable-showcase` | Intentionally vulnerable demo app (never deploy) |
 | `tests/` | Integration, compatibility and reliability suites, fixtures, SARIF schema |

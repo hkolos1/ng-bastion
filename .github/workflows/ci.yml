@@ -28,7 +28,7 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # The website (Astro 7) needs Node >= 22.23.4; scanner packages support 22.22.3+.
+      # The website is built and tested in its own job (it needs installed example apps for its demo data).
       - run: pnpm turbo run build --filter="./packages/*"
       - run: pnpm turbo run typecheck --filter="./packages/*"
       - run: pnpm lint
@@ -90,4 +90,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm build
+      - name: Build (packages + Angular/Analog website, SSG with post-build verification)
+        run: pnpm build
+      - name: Website unit tests (Vitest + Angular TestBed)
+        run: pnpm --filter @ngbastion/website test
