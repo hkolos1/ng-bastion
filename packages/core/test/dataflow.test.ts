@@ -48,6 +48,14 @@ describe('taint engine: interprocedural', () => {
     expect(r!.constants).toContain('static');
   });
 
+  it('orders trace steps from source to sink', async () => {
+    const [r] = await traceSink({ 'a.ts': `${SINK}function wrap(x: string) {\n  const y = '<b>' + x;\n  return y;\n}\nconst h = location.hash;\nsink(wrap(h));` });
+    const lines = r!.flows[0]!.steps.map((s) => s.location.line);
+    expect(r!.flows[0]!.steps.map((s) => s.kind)).toEqual(['source', 'assignment', 'argument', 'transform', 'assignment', 'return']);
+    expect(lines[0]).toBe(6);
+    expect(lines.at(-1)).toBe(7);
+  });
+
   it('follows return values with context-sensitive parameter binding', async () => {
     const [tainted, clean] = await traceSink({
       'a.ts': `${SINK}function wrap(x: string) { return '<div>' + x + '</div>'; }\nsink(wrap(location.hash));\nsink(wrap('fixed'));`,
