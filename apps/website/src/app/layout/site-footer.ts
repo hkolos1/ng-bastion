@@ -29,7 +29,7 @@ import { RouterLink } from '@angular/router';
       </div>
       <div class="footer-meta">
         <div class="shell footer-meta-inner">
-          <span>MIT license · open source</span>
+          <span>MIT License · Open Source</span>
           <span>Built by <a href="https://github.com/hkolos1" target="_blank" rel="noopener noreferrer">hkolos1</a></span>
         </div>
       </div>
