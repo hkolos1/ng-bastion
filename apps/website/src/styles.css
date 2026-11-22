@@ -312,8 +312,6 @@
   .link-card strong::after { content: '→'; color: var(--text-subtle); transition: transform var(--dur) var(--ease), color var(--dur) var(--ease); }
   .link-card:hover strong::after { color: var(--accent); transform: translateX(2px); }
   .link-card span { color: var(--text-muted); font-size: var(--text-sm); }
-  .honest { max-width: 46rem; }
-  .honest p { color: var(--text-muted); }
 
   /* --- Terminal (real scan output) -------------------------------------- */
   .terminal { margin: 0; border: 1px solid var(--term-border); border-radius: var(--radius-lg); background: var(--term-bg); color: var(--term-text); overflow: hidden; box-shadow: 0 30px 80px -40px rgb(0 0 0 / 0.55); }
@@ -392,7 +390,8 @@
   /* --- Documentation ---------------------------------------------------- */
   .docs { display: grid; grid-template-columns: 15rem minmax(0, 1fr) 12.5rem; gap: clamp(1.5rem, 3.5vw, 3.5rem); padding-block: var(--space-6) var(--space-8); align-items: start; }
   .docs-nav, .toc { position: sticky; top: calc(var(--header-h) + 1.5rem); max-height: calc(100vh - var(--header-h) - 3rem); overflow-y: auto; font-size: var(--text-sm); scrollbar-width: thin; }
-  .docs-nav ul, .toc ul { list-style: none; margin: 0.5rem 0 1.5rem; padding: 0; }
+  .docs-nav ul, .toc ul { list-style: none; margin: 0.5rem 0 0; padding: 0; }
+  .docs-nav .nav-group { margin-bottom: 1.6rem; }
   .docs-nav a { display: block; padding: 0.32rem 0.7rem; border-radius: var(--radius-sm); color: var(--text-muted); line-height: 1.45; }
   .docs-nav a:hover { color: var(--text); background: var(--surface-2); }
   .docs-nav a.current { color: var(--accent); background: var(--accent-soft); font-weight: 500; }

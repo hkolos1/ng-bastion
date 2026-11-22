@@ -86,10 +86,12 @@ const DESCRIPTION = 'NgBastion is an Angular-aware, local-first security scanner
         </ul>
       </section>
 
-      <section class="section honest" aria-labelledby="limits-h">
-        <p class="label">Honest by design</p>
-        <h2 id="limits-h">What a clean report means.</h2>
-        <p>NgBastion reports the patterns and data flows it models, with the confidence its evidence supports. It does not replace penetration testing, server-side authorization or browser security controls, and no findings never proves an application is secure. The <a routerLink="/docs/limitations">limitations</a> are documented as carefully as the rules.</p>
+      <section class="section" aria-labelledby="limits-h">
+        <div class="section-head">
+          <p class="label">Honest by design</p>
+          <h2 id="limits-h">What a clean report means.</h2>
+          <p class="lead">NgBastion reports the patterns and data flows it models, with the confidence its evidence supports. It does not replace penetration testing, server-side authorization or browser security controls, and no findings never proves an application is secure. The <a routerLink="/docs/limitations">limitations</a> are documented as carefully as the rules.</p>
+        </div>
       </section>
     </div>
   `,
