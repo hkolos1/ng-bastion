@@ -689,6 +689,8 @@
   .footer-group a:hover { color: var(--text); }
   .footer-meta { border-top: 1px solid var(--border); }
   .footer-meta-inner { display: flex; flex-wrap: wrap; gap: 0.4rem 1.6rem; padding-block: 1rem 1.25rem; font: 400 var(--text-label) / 1.5 var(--font-mono); letter-spacing: 0.02em; color: var(--text-subtle); }
+  .footer-meta a { color: var(--text-muted); text-decoration: underline; text-decoration-color: var(--border-strong); text-underline-offset: 0.2em; }
+  .footer-meta a:hover { color: var(--text); text-decoration-color: currentColor; }
   @media (max-width: 760px) { .footer-main { grid-template-columns: 1fr 1fr; } .footer-brand { grid-column: 1 / -1; } }
 
   /* --- Navigation micro-interactions ------------------------------------ */

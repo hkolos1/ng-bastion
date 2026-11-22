@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { SHOWCASE } from '../home/showcase';
 
 @Component({
   selector: 'ngb-site-footer',
@@ -30,18 +29,14 @@ import { SHOWCASE } from '../home/showcase';
       </div>
       <div class="footer-meta">
         <div class="shell footer-meta-inner">
-          <span>MIT license</span>
-          <span>v{{ version }} · private development</span>
-          <span>Repository private until the first public release</span>
-          <span>Angular {{ angularMajor }} + AnalogJS · no analytics</span>
+          <span>MIT license · open source</span>
+          <span>Built by <a href="https://github.com/hkolos1" target="_blank" rel="noopener noreferrer">hkolos1</a></span>
         </div>
       </div>
     </footer>
   `,
 })
 export class SiteFooter {
-  protected readonly angularMajor = 22;
-  protected readonly version = SHOWCASE.version;
   protected readonly groups = [
     { label: 'Product', links: [['/docs', 'Documentation'], ['/rules', 'Security rules'], ['/playground', 'Playground'], ['/changelog', 'Changelog']] },
     { label: 'Reference', links: [['/docs/cli-reference', 'CLI reference'], ['/docs/configuration', 'Configuration'], ['/docs/limitations', 'Limitations'], ['/docs/security-policy', 'Security policy']] },
