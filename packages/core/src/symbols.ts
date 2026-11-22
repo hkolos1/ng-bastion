@@ -303,5 +303,13 @@ export class Symbols implements SymbolResolver {
 export function originIs(origin: TypeOrigin | undefined, modules: string | readonly string[], ...names: string[]): boolean {
   if (!origin) return false;
   const mods = typeof modules === 'string' ? [modules] : modules;
-  return mods.includes(origin.module) && names.includes(origin.name);
+  return mods.some((m) => moduleMatches(origin, m)) && names.includes(origin.name);
+}
+
+/**
+ * Import specifiers name entry points (`@angular/common/http`); the TypeChecker
+ * only knows the package a declaration file lives in (`@angular/common`).
+ */
+export function moduleMatches(origin: TypeOrigin, module: string): boolean {
+  return origin.module === module || (origin.resolvedBy === 'type-checker' && module.startsWith(`${origin.module}/`));
 }

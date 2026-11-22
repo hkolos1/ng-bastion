@@ -38,7 +38,9 @@ export function receiverOf(ctx: AnalysisContext, e: ts.Expression): ts.Expressio
 export function is(origin: TypeOrigin | undefined, modules: string | readonly string[], ...names: string[]): boolean {
   if (!origin) return false;
   const mods = typeof modules === 'string' ? [modules] : modules;
-  return mods.includes(origin.module) && (names.length === 0 || names.includes(origin.name));
+  // The TypeChecker reports the package (`@angular/common`), imports name entry points (`@angular/common/http`).
+  const matches = (m: string) => origin.module === m || (origin.resolvedBy === 'type-checker' && m.startsWith(`${origin.module}/`));
+  return mods.some(matches) && (names.length === 0 || names.includes(origin.name));
 }
 
 const ELEMENT_RE = /^(HTML\w*Element|Element|SVG\w*Element|ShadowRoot|DocumentFragment)$/;
