@@ -12,8 +12,8 @@ import { SHOWCASE } from '../home/showcase';
     <header class="site-header">
       <div class="shell site-header-inner">
         <a class="brand" routerLink="/" aria-label="NgBastion home">
-          <img class="only-dark" src="/brand/logo-mark-dark.svg" alt="" width="26" height="26" />
-          <img class="only-light" src="/brand/logo-mark-light.svg" alt="" width="26" height="26" />
+          <img class="only-dark" src="/brand/logo-mark-dark.svg" alt="" width="32" height="32" />
+          <img class="only-light" src="/brand/logo-mark-light.svg" alt="" width="32" height="32" />
           <span>NgBastion</span>
         </a>
         <nav class="main-nav" aria-label="Main">
