@@ -1,0 +1,152 @@
+---
+import Layout from '../components/Layout.astro';
+import showcase from '../generated/showcase.json';
+import { builtinRules } from '@ngbastion/rules';
+
+const description = 'NgBastion is an Angular-aware, local-first security scanner. It traces untrusted data from URLs, messages and API responses to dangerous sinks and explains every finding.';
+const sev = (s: string) => s.toUpperCase().padEnd(8, ' ');
+const counts = Object.entries(showcase.summary as Record<string, number>)
+  .map(([s, n]) => `${n} ${s}`).join(', ');
+
+const capabilities = [
+  ['Understands Angular', 'Knows that [innerHTML] bindings are sanitized, and recognizes DomSanitizer, ElementRef, Renderer2, ActivatedRoute, HttpClient, interceptors, TransferState, signals and inject().'],
+  ['Type-aware data flow', 'Built on the TypeScript Compiler API. Follows values across files, services, function calls, selected RxJS operators and signals, matching APIs by symbol rather than by name.'],
+  ['Explains every finding', 'Data-flow findings carry the observed path from source to sink. Confidence is reported separately from severity, and analysis gaps appear as diagnostics.'],
+  [`${builtinRules.length} security rules`, 'XSS and trust bypasses, cross-window messaging, redirects and credential forwarding, token and payment storage, secrets, CSP and Trusted Types, SSR state.'],
+  ['Local-first', 'Runs on your machine or CI runner. No uploads, no account, no telemetry.'],
+  ['Policy for teams', 'JSON or TypeScript config, presets, shared configurations, mandatory rules, expiring exceptions with justifications.'],
+  ['Made for CI', 'Exit codes for security gates and templates for GitHub Actions, GitLab CI, Jenkins and Azure DevOps.'],
+  ['SARIF and JSON reports', 'SARIF 2.1.0 with code flows for GitHub code scanning, and a versioned JSON schema for your own tooling.'],
+];
+
+const docs = [
+  ['/docs/getting-started/installation/', 'Getting started', 'Local setup and your first scan'],
+  ['/docs/cli-reference/', 'CLI reference', 'scan, init, explain, rules and doctor'],
+  ['/rules/', 'Security rules', 'What each of the rules detects, and what it does not'],
+  ['/docs/configuration/', 'Configuration', 'Presets, policies and exceptions'],
+  ['/docs/plugin-api/', 'Plugin API', 'Write trusted custom rules'],
+  ['/docs/ci-cd/', 'CI/CD', 'Gates, artifacts and SARIF upload'],
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'NgBastion',
+  applicationCategory: 'DeveloperApplication',
+  operatingSystem: 'Linux, macOS, Windows (Node.js 22 or 24)',
+  softwareVersion: showcase.version,
+  description,
+  url: 'https://ngbastion.dev/',
+  license: 'https://opensource.org/licenses/MIT',
+};
+---
+<Layout title="NgBastion: Angular-aware security scanner" description={description} path="/" jsonLd={jsonLd}>
+  <section class="hero">
+    <div class="hero-copy">
+      <h1>NgBastion</h1>
+      <p class="tagline">Your Angular security stronghold.</p>
+      <p class="lede">An Angular-aware, local-first security scanner. It follows untrusted data from URLs, window messages and API responses through your services, RxJS pipes and signals, and shows you the exact path it took to a dangerous sink.</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="/docs/getting-started/installation/">Get started</a>
+        <a class="btn" href="/rules/">Browse the rules</a>
+      </div>
+      <p class="hero-note">Version {showcase.version} is in private development. The npm package is not published yet.</p>
+    </div>
+
+    <figure class="hero-demo">
+      <div class="terminal" role="img" aria-labelledby="demo-caption">
+        <div class="terminal-bar"><span aria-hidden="true">●●●</span><span>examples/vulnerable-showcase</span></div>
+        <div class="terminal-body" aria-hidden="true">
+          <div><span class="prompt">$</span> ngbastion scan</div>
+          <div class="t-muted">NgBastion {showcase.version} · 1 project · {showcase.files} files · {showcase.templates} templates</div>
+          {showcase.featured.map((f, i) => (
+            <div class="reveal finding" style={`--i:${i}`}>
+              <div><span class={`sev sev-${f.severity}`}>{sev(f.severity)}</span> <strong>{f.ruleId}</strong> {f.ruleName} <span class="t-muted">confidence: {f.confidence}</span></div>
+              <div class="t-path">{f.location.file}:{f.location.line}:{f.location.column}</div>
+              <ol class="trace">
+                {f.trace?.map((s) => (
+                  <li class={`k-${s.kind}`}><span class="k">{s.kind}</span> <span class="t-path">{s.file.split('/').pop()}:{s.line}</span> {s.description}</li>
+                ))}
+              </ol>
+            </div>
+          ))}
+          <div class="reveal" style="--i:3"><strong>Summary:</strong> {showcase.total} findings ({counts}) from {showcase.rulesTriggered} rules</div>
+          <div class="reveal" style="--i:4">Security gate (fail on {showcase.gate.failOn}+): <span class="sev-high">FAILED</span></div>
+        </div>
+      </div>
+      <figcaption id="demo-caption">Real output of <code>ngbastion scan</code> on the repository's intentionally vulnerable showcase app, captured when this site was built. Three of {showcase.total} findings shown.</figcaption>
+    </figure>
+  </section>
+
+  <section aria-labelledby="cap-h">
+    <h2 id="cap-h">Security checks that understand Angular</h2>
+    <p class="lede">Generic linters see <code>innerHTML</code>. NgBastion asks where the value came from, whether Angular already sanitized it, and how sure it can be.</p>
+    <dl class="caps">
+      {capabilities.map(([t, d]) => (<div><dt>{t}</dt><dd>{d}</dd></div>))}
+    </dl>
+  </section>
+
+  <section aria-labelledby="start-h" class="start">
+    <h2 id="start-h">Getting started</h2>
+    <div class="start-grid">
+      <div>
+        <h3>Available now: from a checkout</h3>
+        <pre><code><span class="prompt">$</span> pnpm install && pnpm build
+<span class="prompt">$</span> node packages/cli/dist/bin.js scan ../my-angular-app
+<span class="prompt">$</span> node packages/cli/dist/bin.js scan ../my-angular-app \
+    --format sarif --output results.sarif</code></pre>
+      </div>
+      <div>
+        <h3>Planned: once published to npm</h3>
+        <pre class="planned"><code><span class="prompt">$</span> npx ngbastion scan
+<span class="prompt">$</span> npx ngbastion init --preset recommended
+<span class="prompt">$</span> npx ngbastion explain NGB001</code></pre>
+        <p class="t-small">These commands describe the intended interface. They will not work until the first public release.</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="docs-h">
+    <h2 id="docs-h">Documentation</h2>
+    <ul class="doc-links">
+      {docs.map(([href, t, d]) => (<li><a href={href}><span class="doc-t">{t}</span><span class="doc-d">{d}</span></a></li>))}
+    </ul>
+  </section>
+
+  <section aria-labelledby="limits-h" class="honest">
+    <h2 id="limits-h">What a clean report means</h2>
+    <p>NgBastion reports the patterns and data flows it models, with the confidence its evidence supports. It does not replace penetration testing, server-side authorization or browser security controls, and no findings never proves an application is secure. The <a href="/docs/limitations/">limitations</a> are documented as carefully as the rules.</p>
+  </section>
+</Layout>
+
+<style>
+  .hero { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.25fr); gap: clamp(2rem, 4vw, 3.5rem); align-items: start; padding-top: clamp(2rem, 6vw, 4.5rem); }
+  h1 { font-size: clamp(3rem, 8vw, 5.4rem); font-weight: 800; letter-spacing: -0.045em; margin: 0; line-height: 0.95; }
+  .tagline { font-size: clamp(1.3rem, 2.4vw, 1.7rem); color: var(--steel); font-weight: 500; margin: 0.75rem 0 1.25rem; letter-spacing: -0.01em; }
+  .hero-note { color: var(--muted); font-size: 0.9rem; margin-top: 1.25rem; }
+  .hero-demo { margin: 0; }
+  figcaption { color: var(--muted); font-size: 0.85rem; margin-top: 0.75rem; }
+  .finding { margin-top: 1rem; }
+
+  .caps { display: grid; grid-template-columns: repeat(auto-fit, minmax(14.5rem, 1fr)); gap: 2rem 2.25rem; margin: 2.5rem 0 0; }
+  .caps div { border-left: 2px solid var(--steel); padding-left: 1rem; }
+  .caps dt { font-weight: 650; font-size: 1.08rem; margin-bottom: 0.3rem; }
+  .caps dd { margin: 0; color: var(--muted); }
+
+  .start-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 2rem; margin-top: 1.5rem; }
+  .start pre { background: var(--term); color: var(--term-text); border: 1px solid #2c3450; border-radius: 8px; padding: 1rem 1.1rem; overflow-x: auto; font-size: 0.85rem; line-height: 1.6; margin: 0.75rem 0; }
+  .start pre.planned { border-style: dashed; opacity: 0.85; }
+  .t-small { color: var(--muted); font-size: 0.9rem; }
+
+  .doc-links { list-style: none; padding: 0; margin: 1.5rem 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 0 2.5rem; }
+  .doc-links a { display: flex; flex-direction: column; padding: 0.9rem 0; border-bottom: 1px solid var(--line); text-decoration: none; }
+  .doc-t { color: var(--text); font-weight: 650; }
+  .doc-d { color: var(--muted); font-size: 0.95rem; }
+  .doc-links a:hover .doc-t { color: var(--steel); }
+
+  .honest p { color: var(--muted); }
+
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>

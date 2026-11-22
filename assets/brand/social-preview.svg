@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640" role="img" aria-label="NgBastion — Your Angular security stronghold."><title>NgBastion — Your Angular security stronghold.</title>
+  <rect width="1280" height="640" fill="#171b2b"/>
+  <g opacity="0.08" stroke="#8fb0d6" fill="none" stroke-width="2">
+    <polygon points="953.50,101.61 950.61,12.31 1060.00,-90.00 1169.39,12.31 1166.50,101.61 1244.30,158.14 1328.34,127.79 1459.44,200.21 1395.95,335.86 1310.12,360.71 1280.40,452.17 1335.24,522.72 1306.87,669.79 1158.24,651.32 1108.08,577.37 1011.92,577.37 961.76,651.32 813.13,669.79 784.76,522.72 839.60,452.17 809.88,360.71 724.05,335.86 660.56,200.21 791.66,127.79 875.70,158.14"/><polygon points="983.93,166.86 981.86,103.08 1060.00,30.00 1138.14,103.08 1136.07,166.86 1191.64,207.24 1251.67,185.56 1345.32,237.29 1299.96,334.19 1238.66,351.94 1217.43,417.27 1256.60,467.66 1236.34,572.71 1130.17,559.51 1094.35,506.69 1025.65,506.69 989.83,559.51 883.66,572.71 863.40,467.66 902.57,417.27 881.34,351.94 820.04,334.19 774.68,237.29 868.33,185.56 928.36,207.24"/>
+  </g>
+  <g transform="translate(96 120) scale(2.4)">
+  <polygon points="24.86,18.19 24.67,12.20 32.00,5.34 39.33,12.20 39.14,18.19 44.36,21.98 49.99,19.94 58.78,24.80 54.52,33.89 48.77,35.56 46.78,41.69 50.45,46.42 48.55,56.28 38.59,55.04 35.22,50.09 28.78,50.09 25.41,55.04 15.45,56.28 13.55,46.42 17.22,41.69 15.23,35.56 9.48,33.89 5.22,24.80 14.01,19.94 19.64,21.98" fill="#171b2b" stroke="#8fb0d6" stroke-width="3.2" stroke-linejoin="miter"/>
+  <path d="M23.04 25.6 L32 33.28 L23.04 40.96" fill="none" stroke="#e9a23b" stroke-width="4.571428571428571" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M35.2 42.24 H43.52" stroke="#e9a23b" stroke-width="4.571428571428571" stroke-linecap="round"/></g>
+  <text x="96" y="370" font-family="'Helvetica Neue', Arial, sans-serif" font-size="92" font-weight="700" letter-spacing="-2" fill="#e2e6ef">NgBastion</text>
+  <text x="98" y="438" font-family="'Helvetica Neue', Arial, sans-serif" font-size="38" fill="#8fb0d6">Your Angular security stronghold.</text>
+  <text x="98" y="540" font-family="Menlo, 'DejaVu Sans Mono', monospace" font-size="26" fill="#e9a23b">$ ngbastion scan</text>
+  <text x="380" y="540" font-family="Menlo, 'DejaVu Sans Mono', monospace" font-size="26" fill="#9aa3b8">local-first · type-aware data-flow · SARIF</text></svg>

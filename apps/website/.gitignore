@@ -1,0 +1,8 @@
+dist/
+.astro/
+src/generated/
+src/content/docs/rules/
+src/content/docs/changelog.md
+src/content/docs/docs/cli-reference.md
+public/brand/
+public/favicon.svg
