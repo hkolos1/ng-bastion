@@ -1,0 +1,45 @@
+# .github/workflows/ngbastion.yml
+name: NgBastion security scan
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  ngbastion:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write # upload SARIF to code scanning
+    env:
+      # Replace with a local build until the npm package is published.
+      NGBASTION_CMD: npx --yes ngbastion@0.1.0
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      # Installing dependencies gives NgBastion full type information (optional but recommended).
+      - run: npm ci
+      - name: SARIF report (never fails the job)
+        run: $NGBASTION_CMD scan --format sarif --output ngbastion.sarif --fail-on none
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: ngbastion.sarif
+          category: ngbastion
+      - name: Security gate
+        run: $NGBASTION_CMD scan --format json --output ngbastion.json --fail-on high
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ngbastion-report
+          path: |
+            ngbastion.sarif
+            ngbastion.json
+          retention-days: 30
