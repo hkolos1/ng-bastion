@@ -169,9 +169,42 @@ export class Symbols implements SymbolResolver {
     return this.declaredOrigin(e);
   }
 
+  /**
+   * Project class an expression is an instance of, from its declaration when the
+   * checker cannot infer it (e.g. `inject(Service)` while `@angular/core` is unresolved).
+   */
+  declaredClass(expression: ts.Expression): ts.ClassDeclaration | undefined {
+    const classOf = (id: ts.Node | undefined) => {
+      const d = id && this.symbolAt(id)?.declarations?.[0];
+      return d && ts.isClassDeclaration(d) && this.isProjectNode(d) ? d : undefined;
+    };
+    const fromInit = (init: ts.Expression | undefined): ts.ClassDeclaration | undefined => {
+      const e = init && skipOuter(init);
+      if (!e) return undefined;
+      if (ts.isCallExpression(e) && ts.isIdentifier(e.expression) && e.expression.text === 'inject' && e.arguments[0]) return classOf(skipOuter(e.arguments[0]));
+      if (ts.isNewExpression(e)) return classOf(e.expression);
+      return undefined;
+    };
+    const decl = this.declarationOf(expression);
+    if (!decl) return undefined;
+    if (ts.isParameter(decl) || ts.isPropertyDeclaration(decl) || ts.isVariableDeclaration(decl)) {
+      if (decl.type && ts.isTypeReferenceNode(decl.type)) {
+        const c = classOf(ts.isIdentifier(decl.type.typeName) ? decl.type.typeName : decl.type.typeName.right);
+        if (c) return c;
+      }
+      if (!ts.isParameter(decl)) return fromInit(decl.initializer);
+    }
+    return undefined;
+  }
+
   /** User-code function-like declaration a call targets, if any. */
   functionDeclaration(callee: ts.Expression): ts.SignatureDeclaration | undefined {
-    const decl = this.declarationOf(callee);
+    let decl = this.declarationOf(callee);
+    const c = skipOuter(callee);
+    if (!decl && ts.isPropertyAccessExpression(c)) {
+      const cls = this.declaredClass(c.expression);
+      decl = cls?.members.find((m) => m.name && ts.isIdentifier(m.name) && m.name.text === c.name.text);
+    }
     if (!decl || !this.isProjectNode(decl)) return undefined;
     if (isFunctionLike(decl)) return decl;
     if ((ts.isVariableDeclaration(decl) || ts.isPropertyDeclaration(decl) || ts.isPropertyAssignment(decl)) && decl.initializer) {
