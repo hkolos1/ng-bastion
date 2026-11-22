@@ -15,8 +15,15 @@ export class ThemeService {
 
   toggle(): void {
     const next: Theme = this.theme() === 'dark' ? 'light' : 'dark';
-    this.chosen.set(next);
-    this.document.documentElement.dataset['theme'] = next;
+    const apply = () => {
+      this.chosen.set(next);
+      this.document.documentElement.dataset['theme'] = next;
+    };
+    // Cross-fade the switch where supported; instant for reduced motion and older browsers.
+    const doc = this.document as Document & { startViewTransition?: (update: () => void) => unknown };
+    const reduced = this.browser && typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (doc.startViewTransition && !reduced) doc.startViewTransition(apply);
+    else apply();
     try {
       localStorage.setItem(KEY, next);
     } catch {

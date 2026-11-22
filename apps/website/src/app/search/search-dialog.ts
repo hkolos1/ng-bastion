@@ -26,14 +26,14 @@ import { searchIndex, type SearchEntry } from './search';
           @for (hit of hits(); track hit.slug; let i = $index) {
             <li role="option" [attr.aria-selected]="i === active()">
               <a [href]="'/' + hit.slug + '/'" (click)="go($event, hit.slug)" [class.active]="i === active()">
-                <span class="hit-title">{{ hit.title }}</span>
+                <span class="hit-title">@for (p of hit.titleParts; track $index) {@if (p.match) {<mark>{{ p.text }}</mark>} @else {{{ p.text }}}}</span>
                 <span class="hit-section">{{ hit.section }}</span>
-                <span class="hit-snippet">{{ hit.snippet }}</span>
+                <span class="hit-snippet">@for (p of hit.snippetParts; track $index) {@if (p.match) {<mark>{{ p.text }}</mark>} @else {{{ p.text }}}}</span>
               </a>
             </li>
           }
         </ul>
-        <p class="search-foot">↑↓ to move · Enter to open · Esc to close</p>
+        <p class="search-foot"><kbd>↑</kbd><kbd>↓</kbd> to move <kbd>Enter</kbd> to open <kbd>Esc</kbd> to close</p>
       </div>
     </dialog>
   `,
