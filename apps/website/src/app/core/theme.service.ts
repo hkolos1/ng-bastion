@@ -4,14 +4,14 @@ import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core
 export type Theme = 'dark' | 'light';
 const KEY = 'ngbastion-theme';
 
-/** Dark by default; follows the OS until the visitor picks a theme. Storage access is best-effort. */
+/** Dark by default (regardless of OS setting); light only when the visitor picks it. Storage access is best-effort. */
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
   private readonly document = inject(DOCUMENT);
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
   private readonly chosen = signal<Theme | null>(this.read());
 
-  readonly theme = computed<Theme>(() => this.chosen() ?? this.systemTheme());
+  readonly theme = computed<Theme>(() => this.chosen() ?? 'dark');
 
   toggle(): void {
     const next: Theme = this.theme() === 'dark' ? 'light' : 'dark';
@@ -41,9 +41,5 @@ export class ThemeService {
     } catch {
       return null;
     }
-  }
-
-  private systemTheme(): Theme {
-    return this.browser && typeof matchMedia === 'function' && matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
   }
 }

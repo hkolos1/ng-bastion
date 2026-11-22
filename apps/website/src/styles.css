@@ -139,46 +139,6 @@
   --grid-line: rgb(15 20 36 / 0.045);
   color-scheme: light;
 }
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme='dark']) {
-    --bg: #f8f9fc;
-    --surface: #ffffff;
-    --surface-2: #f0f2f8;
-    --border: #e2e5ee;
-    --border-strong: #cbd0dd;
-    --text: #0f1424;
-    --text-muted: #4a5168;
-    --text-subtle: #687089;
-    --brand: #315bff;
-    --brand-hover: #2449ec;
-    --brand-ink: #ffffff;
-    --accent: #2448e6;
-    --accent-hover: #1a37c4;
-    --accent-ink: #ffffff;
-    --accent-soft: rgb(49 91 255 / 0.08);
-    --accent-line: rgb(36 72 230 / 0.35);
-    --focus: #2448e6;
-    --sev-critical: #c81e4f;
-    --sev-high: #c2410c;
-    --sev-medium: #a16207;
-    --sev-low: #2563eb;
-    --sev-info: #6b6b74;
-    --code-bg: #f5f6fa;
-    --code-head: #eef0f6;
-    --code-border: #e0e4ee;
-    --code-border-strong: #c9cfdc;
-    --code-text: #0f1424;
-    --code-muted: #5f6680;
-    --code-label: #2448e6;
-    --code-gutter: #a9afc0;
-    --code-hit: rgb(183 121 31 / 0.1);
-    --code-shadow: 0 1px 0 rgb(15 20 36 / 0.03);
-    --ok: #15803d;
-    --glow: rgb(49 91 255 / 0.07);
-    --grid-line: rgb(15 20 36 / 0.045);
-    color-scheme: light;
-  }
-}
 
 /* Tokens exposed to Tailwind utilities (bg-surface, text-muted, border-line, font-mono …). */
 @theme inline {
@@ -238,10 +198,6 @@
   .only-light { display: none; }
   :root[data-theme='light'] .only-light { display: inline-block; }
   :root[data-theme='light'] .only-dark { display: none; }
-  @media (prefers-color-scheme: light) {
-    :root:not([data-theme='dark']) .only-light { display: inline-block; }
-    :root:not([data-theme='dark']) .only-dark { display: none; }
-  }
   .shell { max-width: var(--shell); margin-inline: auto; padding-inline: var(--gutter); }
 
   /* Buttons & controls */
@@ -596,9 +552,6 @@
   .code-body .line.hit { background: var(--code-hit); box-shadow: inset 2px 0 0 var(--trace-source); }
   .code-body .line span { color: var(--shiki-dark); font-style: var(--shiki-dark-font-style, normal); }
   :root[data-theme='light'] .code-body .line span { color: var(--shiki-light); font-style: var(--shiki-light-font-style, normal); }
-  @media (prefers-color-scheme: light) {
-    :root:not([data-theme='dark']) .code-body .line span { color: var(--shiki-light); font-style: var(--shiki-light-font-style, normal); }
-  }
 
   /* --- Copy button ------------------------------------------------------ */
   .copy { display: inline-flex; }
@@ -628,13 +581,21 @@
   }
   .hero-wrap .hero { position: relative; }
   /* Two deliberate lines; "Angular" carries a permanent selection-style highlight. */
-  .hero-title .line { display: block; }
+  /* Inline lines + forced break: selection paints one uniform height across both lines and the highlight. */
+  .hero-title .line { display: inline; }
+  .hero-title .line:first-child::after { content: '\A'; white-space: pre; }
+  /* Tight display leading makes line 2's selection overlap line 1's descenders; a translucent
+     selection keeps glyph colours, so nothing is painted over (e.g. the tail of the g in Angular). */
+  .hero-title::selection, .hero-title *::selection { background: rgb(49 91 255 / 0.3); color: var(--text); }
+  .hero-title .hl::selection { color: var(--brand-ink); }
   @media (min-width: 640px) { .hero-title .line { white-space: nowrap; } }
   .hero-title .hl {
-    background: var(--brand); color: var(--brand-ink);
-    /* inline-block + own line-height keeps the fill inside its line instead of bleeding into the next. */
-    display: inline-block; line-height: 1.08;
+    /* Fill drawn as a band one line tall (an inline background would cover the whole font box and
+       bleed into the next line); stays inline so text selection flows normally. */
+    background: linear-gradient(var(--brand), var(--brand)) 0 50% / 100% 1.12em no-repeat;
+    color: var(--brand-ink);
     padding: 0 0.12em; margin: 0 -0.02em; border-radius: 0.06em;
+    box-decoration-break: clone; -webkit-box-decoration-break: clone;
   }
   .btn svg { width: 1rem; height: 1rem; transition: transform var(--dur) var(--ease); }
   .btn:hover svg { transform: translateX(2px); }
@@ -676,7 +637,6 @@
   .flow-code { margin: 0.55rem 0 0; padding: 0.55rem 0.7rem; border-radius: var(--radius-sm); background: var(--code-bg); border: 1px solid var(--code-border); color: var(--code-text); font: 400 0.8rem / 1.6 var(--font-mono); overflow-x: auto; white-space: pre; scrollbar-width: thin; }
   .flow-code span { color: var(--shiki-dark); }
   :root[data-theme='light'] .flow-code span { color: var(--shiki-light); }
-  @media (prefers-color-scheme: light) { :root:not([data-theme='dark']) .flow-code span { color: var(--shiki-light); } }
   .flow-desc { margin: 0.5rem 0 0; font-size: var(--text-sm); color: var(--text-muted); }
   .flow-verdict { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; margin: var(--space-5) 0 0 calc(16px + var(--space-4)); font-size: var(--text-sm); }
   .flow-verdict a { color: var(--text); }
@@ -712,8 +672,8 @@
   .footer-main { display: grid; grid-template-columns: minmax(0, 1.6fr) repeat(2, minmax(0, 1fr)); gap: var(--space-6); padding-block: var(--space-7) var(--space-6); }
   .footer-brand { display: grid; gap: var(--space-3); align-content: start; }
   .footer-brand p { margin: 0; max-width: 38ch; color: var(--text-muted); font-size: var(--text-sm); }
-  .footer-group ul { list-style: none; margin: var(--space-3) 0 0; padding: 0; display: grid; gap: 0.5rem; }
-  .footer-group a { color: var(--text-muted); font: 400 var(--ui-size) / 1.6 var(--font-ui); letter-spacing: 0.04em; }
+  .footer-group ul { list-style: none; margin: var(--space-3) 0 0; padding: 0; display: grid; gap: 0.2rem; }
+  .footer-group a { color: var(--text-muted); font: 400 var(--ui-size) / 1.5 var(--font-ui); letter-spacing: 0.04em; }
   .footer-group a:hover { color: var(--text); }
   .footer-meta { border-top: 1px solid var(--border); }
   .footer-meta-inner { display: flex; flex-wrap: wrap; justify-content: center; text-align: center; gap: 0.4rem 1.6rem; padding-block: 1rem 1.25rem; font: 400 var(--text-label) / 1.5 var(--font-mono); letter-spacing: 0.02em; color: var(--text-subtle); }

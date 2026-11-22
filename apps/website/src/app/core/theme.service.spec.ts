@@ -19,6 +19,12 @@ describe('ThemeService', () => {
     expect(localStorage.getItem('ngbastion-theme')).toBe('dark');
   });
 
+  it('defaults to dark even when the OS prefers light', () => {
+    vi.stubGlobal('matchMedia', (q: string) => ({ matches: q.includes('light'), media: q }));
+    expect(TestBed.inject(ThemeService).theme()).toBe('dark');
+    vi.unstubAllGlobals();
+  });
+
   it('keeps working when storage is unavailable', () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('blocked');
