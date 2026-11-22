@@ -8,9 +8,10 @@ import { Seo } from '../core/seo.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink],
   template: `
-    <section class="not-found">
+    <section class="shell not-found">
+      <p class="label">404</p>
       <h1>Page not found</h1>
-      <p class="lede">This page is outside the walls. Try the <a routerLink="/docs">documentation</a>, the <a routerLink="/rules">rule reference</a> or search with <kbd>/</kbd>.</p>
+      <p class="lead">This page is outside the walls. Try the <a routerLink="/docs">documentation</a>, the <a routerLink="/rules">rule reference</a> or search with <kbd>/</kbd>.</p>
     </section>
   `,
 })
