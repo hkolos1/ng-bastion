@@ -123,6 +123,9 @@ importers:
       marked:
         specifier: ^18.2.1
         version: 18.2.1
+      ngbastion:
+        specifier: workspace:*
+        version: link:../../packages/cli
       sharp:
         specifier: ^0.35.5
         version: 0.35.5(@types/node@24.19.2)
