@@ -1,0 +1,20 @@
+{
+  "name": "@ngbastion/config",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Configuration schema, presets, policies and loading for NgBastion.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" }
+  },
+  "files": ["dist"],
+  "engines": { "node": "^22.22.3 || >=24.15.0 <25" },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": { "@ngbastion/plugin-api": "workspace:*" }
+}

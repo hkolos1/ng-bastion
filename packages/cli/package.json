@@ -1,0 +1,39 @@
+{
+  "name": "ngbastion",
+  "version": "0.1.0",
+  "private": true,
+  "description": "NgBastion — Angular-aware, local-first security scanner CLI.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./config": {
+      "types": "./dist/config.d.ts",
+      "import": "./dist/config.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": "^22.22.3 || >=24.15.0 <25"
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@ngbastion/plugin-api": "workspace:*",
+    "@ngbastion/config": "workspace:*",
+    "@ngbastion/core": "workspace:*",
+    "@ngbastion/rules": "workspace:*"
+  },
+  "bin": {
+    "ngbastion": "./dist/bin.js"
+  }
+}

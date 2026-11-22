@@ -1,0 +1,10 @@
+node_modules/
+dist/
+coverage/
+.turbo/
+.astro/
+*.log
+.DS_Store
+results.sarif
+ngbastion-report.*
+.idea/
