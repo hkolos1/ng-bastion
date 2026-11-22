@@ -37,7 +37,7 @@ describe('PlaygroundPage', () => {
     safe.checked = true;
     safe.click();
     fixture.detectChanges();
-    expect(el.querySelector('.panel h2')!.textContent).toContain('safe variant');
+    expect(el.querySelector('.pg-panel h2')!.textContent).toContain('safe variant');
   });
 
   it('highlights source, sink and trace lines of the shown file', () => {

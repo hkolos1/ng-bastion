@@ -8,7 +8,8 @@ import sharp from 'sharp';
 const out = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../assets/brand');
 mkdirSync(out, { recursive: true });
 
-const C = { slate: '#171b2b', steel: '#8fb0d6', amber: '#e9a23b', ink: '#1b2133', stone: '#f1f3f6' };
+// Palette matches the site's design tokens (src/styles.css): neutral base, violet primary, amber prompt.
+const C = { slate: '#141417', steel: '#8b7cf8', amber: '#f0b45b', ink: '#5b47e0', stone: '#fafaf9', text: '#ececee', muted: '#a0a0ab' };
 
 /** Star-fort outline centred at (cx, cy) with outer radius R. */
 function fort(cx, cy, R) {
@@ -35,26 +36,26 @@ const svg = (w, h, body, title) =>
 writeFileSync(path.join(out, 'logo-mark.svg'), svg(64, 64, mark({ outline: 'currentColor', fill: 'none', prompt: C.amber }), 'NgBastion'));
 // Solid marks for fixed backgrounds.
 writeFileSync(path.join(out, 'logo-mark-dark.svg'), svg(64, 64, mark({ outline: C.steel, fill: C.slate, prompt: C.amber }), 'NgBastion'));
-writeFileSync(path.join(out, 'logo-mark-light.svg'), svg(64, 64, mark({ outline: C.ink, fill: C.stone, prompt: '#a8650a' }), 'NgBastion'));
+writeFileSync(path.join(out, 'logo-mark-light.svg'), svg(64, 64, mark({ outline: C.ink, fill: C.stone, prompt: '#b7791f' }), 'NgBastion'));
 writeFileSync(path.join(out, 'favicon.svg'), svg(64, 64, mark({ outline: C.steel, fill: C.slate, prompt: C.amber }), 'NgBastion'));
 
-const wordmark = (color) => `<text x="76" y="44" font-family="'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif" font-size="34" font-weight="700" letter-spacing="-0.5" fill="${color}">NgBastion</text>`;
-writeFileSync(path.join(out, 'logo-full-dark.svg'), svg(260, 64, mark({ outline: C.steel, fill: C.slate, prompt: C.amber }) + wordmark('#e2e6ef'), 'NgBastion'));
+const wordmark = (color) => `<text x="76" y="44" font-family="'Geist', 'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="33" font-weight="600" letter-spacing="-1" fill="${color}">NgBastion</text>`;
+writeFileSync(path.join(out, 'logo-full-dark.svg'), svg(260, 64, mark({ outline: C.steel, fill: C.slate, prompt: C.amber }) + wordmark(C.text), 'NgBastion'));
 // Neutral variant readable on light and dark backgrounds (e.g. GitHub README).
-writeFileSync(path.join(out, 'logo-full.svg'), svg(260, 64, mark({ outline: '#5b7fae', fill: C.slate, prompt: C.amber }) + wordmark('#5b7fae'), 'NgBastion'));
-writeFileSync(path.join(out, 'logo-full-light.svg'), svg(260, 64, mark({ outline: C.ink, fill: C.stone, prompt: '#a8650a' }) + wordmark(C.ink), 'NgBastion'));
+writeFileSync(path.join(out, 'logo-full.svg'), svg(260, 64, mark({ outline: '#7c6cf2', fill: C.slate, prompt: C.amber }) + wordmark('#7c6cf2'), 'NgBastion'));
+writeFileSync(path.join(out, 'logo-full-light.svg'), svg(260, 64, mark({ outline: C.ink, fill: C.stone, prompt: '#b7791f' }) + wordmark('#18181b'), 'NgBastion'));
 
 // Social preview 1280×640.
 const social = svg(1280, 640, `
   <rect width="1280" height="640" fill="${C.slate}"/>
-  <g opacity="0.08" stroke="${C.steel}" fill="none" stroke-width="2">
+  <g opacity="0.12" stroke="${C.steel}" fill="none" stroke-width="2">
     <polygon points="${fort(1060, 330, 420)}"/><polygon points="${fort(1060, 330, 300)}"/>
   </g>
   <g transform="translate(96 120) scale(2.4)">${mark({ outline: C.steel, fill: C.slate, prompt: C.amber })}</g>
-  <text x="96" y="370" font-family="'Helvetica Neue', Arial, sans-serif" font-size="92" font-weight="700" letter-spacing="-2" fill="#e2e6ef">NgBastion</text>
-  <text x="98" y="438" font-family="'Helvetica Neue', Arial, sans-serif" font-size="38" fill="${C.steel}">Your Angular security stronghold.</text>
+  <text x="96" y="370" font-family="'Geist', 'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="92" font-weight="600" letter-spacing="-3" fill="${C.text}">NgBastion</text>
+  <text x="98" y="438" font-family="'Helvetica Neue', Arial, sans-serif" font-size="38" fill="${C.muted}">Your Angular security stronghold.</text>
   <text x="98" y="540" font-family="Menlo, 'DejaVu Sans Mono', monospace" font-size="26" fill="${C.amber}">$ ngbastion scan</text>
-  <text x="380" y="540" font-family="Menlo, 'DejaVu Sans Mono', monospace" font-size="26" fill="#9aa3b8">local-first · type-aware data-flow · SARIF</text>`, 'NgBastion — Your Angular security stronghold.');
+  <text x="380" y="540" font-family="Menlo, 'DejaVu Sans Mono', monospace" font-size="26" fill="${C.muted}">local-first · type-aware data-flow · SARIF</text>`, 'NgBastion — Your Angular security stronghold.');
 writeFileSync(path.join(out, 'social-preview.svg'), social);
 await sharp(Buffer.from(social)).png().toFile(path.join(out, 'social-preview.png'));
 await sharp(Buffer.from(svg(64, 64, mark({ outline: C.steel, fill: C.slate, prompt: C.amber }), 'NgBastion'))).resize(180, 180).png().toFile(path.join(out, 'apple-touch-icon.png'));

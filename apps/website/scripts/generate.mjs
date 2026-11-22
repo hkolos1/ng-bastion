@@ -62,7 +62,7 @@ title: ${yaml(`${m.id}: ${m.name}`)}
 description: ${yaml(d.description.split('. ')[0].replace(/`/g, '') + '.')}
 ---
 
-| | |
+| Property | Value |
 |---|---|
 | **Rule ID** | \`${m.id}\` |
 | **Category** | ${CATEGORY[m.category] ?? m.category} |
@@ -277,7 +277,7 @@ const escapeHtml = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace
 const slugify = (s) => s.toLowerCase().replace(/<[^>]+>/g, '').replace(/&[a-z]+;/g, '').replace(/[`*_]/g, '').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-');
 
 const LANGS = ['ts', 'typescript', 'js', 'json', 'sh', 'bash', 'yaml', 'html', 'text'];
-const highlighter = await createHighlighter({ themes: ['github-dark-dimmed', 'github-light'], langs: LANGS.filter((l) => l !== 'text') });
+const highlighter = await createHighlighter({ themes: ['vitesse-dark', 'vitesse-light'], langs: LANGS.filter((l) => l !== 'text') });
 // Converts Shiki's inline styles to classes: Angular's sanitizer removes `style` attributes.
 const toClass = transformerStyleToClass({ classPrefix: 'sk-' });
 
@@ -301,7 +301,7 @@ function render(slug, text, file) {
       code({ text: code, lang }) {
         const language = LANGS.includes(lang) ? (lang === 'text' ? undefined : lang) : undefined;
         if (!language) return `<pre class="code code-plain"><code>${escapeHtml(code)}</code></pre>\n`;
-        const html = highlighter.codeToHtml(code, { lang: language, themes: { dark: 'github-dark-dimmed', light: 'github-light' }, defaultColor: false, transformers: [toClass] });
+        const html = highlighter.codeToHtml(code, { lang: language, themes: { dark: 'vitesse-dark', light: 'vitesse-light' }, defaultColor: false, transformers: [toClass] });
         return html.replace('<pre class="', '<pre class="code ').replace(/ tabindex="0"/, '');
       },
       table(token) {

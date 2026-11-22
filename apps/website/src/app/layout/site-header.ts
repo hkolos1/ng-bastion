@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { ThemeService } from '../core/theme.service';
 import { SearchDialog } from '../search/search-dialog';
+import { SHOWCASE } from '../home/showcase';
 
 @Component({
   selector: 'ngb-site-header',
@@ -9,28 +10,35 @@ import { SearchDialog } from '../search/search-dialog';
   imports: [RouterLink, RouterLinkActive, SearchDialog],
   template: `
     <header class="site-header">
-      <a class="brand" routerLink="/" aria-label="NgBastion home">
-        <img class="brand-mark only-dark" src="/brand/logo-mark-dark.svg" alt="" width="32" height="32" />
-        <img class="brand-mark only-light" src="/brand/logo-mark-light.svg" alt="" width="32" height="32" />
-        <span>NgBastion</span>
-      </a>
-      <nav aria-label="Main">
-        <ul>
-          @for (link of links; track link.href) {
-            <li><a [routerLink]="link.href" routerLinkActive="current" ariaCurrentWhenActive="page">{{ link.label }}</a></li>
-          }
-        </ul>
-      </nav>
-      <ngb-search-dialog />
-      <button class="theme" type="button" (click)="theme.toggle()"
-              [attr.aria-label]="theme.theme() === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'">
-        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z"/></svg>
-      </button>
+      <div class="shell site-header-inner">
+        <a class="brand" routerLink="/" aria-label="NgBastion home">
+          <img class="only-dark" src="/brand/logo-mark-dark.svg" alt="" width="26" height="26" />
+          <img class="only-light" src="/brand/logo-mark-light.svg" alt="" width="26" height="26" />
+          <span>NgBastion</span>
+        </a>
+        <nav class="main-nav" aria-label="Main">
+          <ul>
+            @for (link of links; track link.href) {
+              <li><a [routerLink]="link.href" routerLinkActive="current" ariaCurrentWhenActive="page">{{ link.label }}</a></li>
+            }
+          </ul>
+        </nav>
+        <div class="header-actions">
+          <span class="version-pill" title="Private development; not published to npm">v{{ version }}</span>
+          <ngb-search-dialog />
+          <button class="icon-btn" type="button" (click)="theme.toggle()"
+                  aria-label="Toggle color theme">
+            <svg class="only-dark" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>
+            <svg class="only-light" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>
+          </button>
+        </div>
+      </div>
     </header>
   `,
 })
 export class SiteHeader {
   protected readonly theme = inject(ThemeService);
+  protected readonly version = SHOWCASE.version;
   protected readonly links = [
     { href: '/docs', label: 'Docs' },
     { href: '/rules', label: 'Rules' },

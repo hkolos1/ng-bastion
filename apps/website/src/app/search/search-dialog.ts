@@ -11,7 +11,7 @@ import { searchIndex, type SearchEntry } from './search';
   template: `
     <button type="button" class="search-trigger" (click)="open()" aria-haspopup="dialog">
       <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M10 3a7 7 0 1 0 4.2 12.6l4.6 4.6 1.4-1.4-4.6-4.6A7 7 0 0 0 10 3Zm0 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10Z"/></svg>
-      <span>Search</span><kbd>/</kbd>
+      <span>Search docs</span><kbd>/</kbd>
     </button>
     <dialog #dialog class="search-dialog" aria-label="Search the documentation" (close)="query.set('')" (click)="backdrop($event)">
       <div class="search-panel">

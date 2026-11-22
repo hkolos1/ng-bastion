@@ -11,7 +11,7 @@ import { RenderedContent } from './rendered-content';
   imports: [DocsShell, RenderedContent],
   template: `
     <ngb-docs-shell [slug]="page().slug" [title]="page().title" [section]="page().section" [headings]="page().headings">
-      <p class="lede">{{ page().description }}</p>
+      <p class="lead">{{ page().description }}</p>
       <ngb-rendered-content [blocks]="page().blocks" [slug]="page().slug" />
     </ngb-docs-shell>
   `,
