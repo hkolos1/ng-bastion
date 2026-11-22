@@ -1,0 +1,30 @@
+/* NgBastion palette applied to Starlight. Dark: dusk slate + steel; light: stone + ink. Amber marks traces only. */
+:root {
+  --sl-font: 'Schibsted Grotesk Variable', system-ui, sans-serif;
+  --sl-font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+  --sl-color-accent-low: #23314a;
+  --sl-color-accent: #6f95c4;
+  --sl-color-accent-high: #c9daef;
+  --sl-color-white: #eef1f7;
+  --sl-color-gray-1: #dfe3ee;
+  --sl-color-gray-2: #b9c0d0;
+  --sl-color-gray-3: #8b93a8;
+  --sl-color-gray-4: #555d74;
+  --sl-color-gray-5: #333a52;
+  --sl-color-gray-6: #20263a;
+  --sl-color-black: #171b2b;
+}
+:root[data-theme='light'] {
+  --sl-color-accent-low: #d6e2f1;
+  --sl-color-accent: #2f5d93;
+  --sl-color-accent-high: #1b3558;
+  --sl-color-white: #141a2a;
+  --sl-color-gray-1: #1b2133;
+  --sl-color-gray-2: #343c52;
+  --sl-color-gray-3: #59627a;
+  --sl-color-gray-4: #8e97ab;
+  --sl-color-gray-5: #c5cbd7;
+  --sl-color-gray-6: #e4e8ef;
+  --sl-color-gray-7: #f1f3f6;
+  --sl-color-black: #f8f9fb;
+}

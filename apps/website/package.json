@@ -1,0 +1,27 @@
+{
+  "name": "@ngbastion/website",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "ngbastion.dev: landing page, documentation, rule reference, playground and changelog.",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "generate": "node scripts/generate.mjs",
+    "dev": "node scripts/generate.mjs && ASTRO_TELEMETRY_DISABLED=1 astro dev",
+    "build": "node scripts/generate.mjs && ASTRO_TELEMETRY_DISABLED=1 astro build",
+    "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.6",
+    "@astrojs/starlight": "^0.43.1",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@fontsource-variable/schibsted-grotesk": "^5.3.0",
+    "@ngbastion/config": "workspace:*",
+    "@ngbastion/core": "workspace:*",
+    "@ngbastion/rules": "workspace:*",
+    "astro": "^7.4.13",
+    "sharp": "^0.35.5"
+  }
+}
