@@ -32,9 +32,9 @@ pages (and \`ngbastion explain <ID>\`) repeat the rule-specific items below.
   state-management libraries (NgRx, NGXS, Akita, signal stores), \`Reflect\`/proxies, \`eval\`-built
   code, dynamic property names, decorators that transform values, Web Workers, iframes of other
   applications.
-- **RxJS**: only the operators listed in the docs; others (\`scan\`, \`reduce\`, \`combineLatest\`,
+- **RxJS**: only the operators listed in the docs; others (\`scan\`, \`reduce\`,
   \`withLatestFrom\`, \`mergeWith\`, custom operators, \`interval\`/\`timer\` factories …) stop the trace
-  with an \`unsupported-construct\` diagnostic.
+  with an \`unsupported-construct\` diagnostic. \`combineLatest\`, \`forkJoin\` and \`zip\` are modeled element-insensitively.
 - **Signals**: \`input()\`, \`input.required()\` and \`model()\` values come from parent bindings, which
   are not followed (reported as unresolved). \`effect()\` side effects are not modeled as writes.
 - **Templates**: inline templates must be static strings; templates built at runtime are skipped
