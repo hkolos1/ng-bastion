@@ -1,0 +1,8 @@
+@if (note) {
+  <p class="note" [innerHTML]="note"></p>
+}
+@for (item of items; track item) {
+  <span>{{ item }}</span>
+}
+<app-preview />
+<iframe src="/help.html" title="help"></iframe>
