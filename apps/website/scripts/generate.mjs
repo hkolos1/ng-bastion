@@ -14,7 +14,6 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Marked } from 'marked';
 import { createHighlighter } from 'shiki';
-import { transformerStyleToClass } from '@shikijs/transformers';
 import { loadConfig, resolveConfig, PRESETS } from '@ngbastion/config';
 import { scan } from '@ngbastion/core';
 import { builtinRules } from '@ngbastion/rules';
@@ -235,7 +234,7 @@ for (const [id, meta] of Object.entries(EXAMPLES)) {
   if (variants.safe.findings.length) fail(`playground example ${id}: safe variant produced findings: ${variants.safe.findings.map((f) => f.ruleId).join(', ')}`);
   playground.push({ id, ...meta, variants });
 }
-writeFileSync(path.join(generated, 'playground.json'), JSON.stringify({ examples: playground, rules: ruleDocs }, null, 2));
+// playground.json is written after highlighting (below).
 
 // ---------------------------------------------------------------- changelog (markdown)
 const changelog = path.join(repo, 'CHANGELOG.md');
@@ -276,15 +275,53 @@ function frontmatter(text, file) {
 const escapeHtml = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const slugify = (s) => s.toLowerCase().replace(/<[^>]+>/g, '').replace(/&[a-z]+;/g, '').replace(/[`*_]/g, '').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-');
 
-const LANGS = ['ts', 'typescript', 'js', 'json', 'sh', 'bash', 'yaml', 'html', 'text'];
-const highlighter = await createHighlighter({ themes: ['vitesse-dark', 'vitesse-light'], langs: LANGS.filter((l) => l !== 'text') });
-// Converts Shiki's inline styles to classes: Angular's sanitizer removes `style` attributes.
-const toClass = transformerStyleToClass({ classPrefix: 'sk-' });
+// ---------------------------------------------------------------- syntax highlighting
+/** Fence/alias → Shiki grammar and the label shown on the code block. */
+const LANG = {
+  ts: ['typescript', 'TypeScript'], typescript: ['typescript', 'TypeScript'], 'angular-ts': ['angular-ts', 'Angular'],
+  js: ['javascript', 'JavaScript'], mjs: ['javascript', 'JavaScript'], javascript: ['javascript', 'JavaScript'],
+  html: ['angular-html', 'HTML'], 'angular-html': ['angular-html', 'Angular template'],
+  json: ['json', 'JSON'], jsonc: ['jsonc', 'JSON'],
+  sh: ['shellscript', 'Shell'], bash: ['shellscript', 'Shell'], shell: ['shellscript', 'Shell'], console: ['shellscript', 'Shell'],
+  yaml: ['yaml', 'YAML'], yml: ['yaml', 'YAML'], css: ['css', 'CSS'], groovy: ['groovy', 'Groovy'],
+  text: [null, 'Text'], txt: [null, 'Text'], '': [null, 'Text'],
+};
+const THEMES = { dark: 'material-theme-palenight', light: 'material-theme-lighter' };
+const highlighter = await createHighlighter({
+  themes: Object.values(THEMES),
+  langs: [...new Set(Object.values(LANG).map(([g]) => g).filter(Boolean))],
+});
+// Token colors become classes (Angular's sanitizer removes `style` attributes from [innerHTML]).
+const tokenClasses = new Map();
+const classFor = (style) => {
+  if (!tokenClasses.has(style)) tokenClasses.set(style, `sk-${tokenClasses.size.toString(36)}`);
+  return tokenClasses.get(style);
+};
+
+/**
+ * Highlights `code` into one HTML string per line (spans with classes only). Unknown languages
+ * fail the build so every fence gets a deliberate language.
+ */
+export function highlight(code, fence = 'text', where = 'snippet') {
+  const spec = LANG[fence];
+  if (!spec) fail(`${where}: unsupported code fence language '${fence}' (add it to LANG)`);
+  const [grammar, label] = spec;
+  const source = code.replace(/\n+$/, '');
+  if (!grammar) return { lang: fence || 'text', label, code: source, lines: source.split('\n').map(escapeHtml) };
+  const { tokens } = highlighter.codeToTokens(source, { lang: grammar, themes: THEMES, defaultColor: false });
+  const lines = tokens.map((line) => line.map((t) => {
+    const style = Object.entries(t.htmlStyle ?? {}).map(([k, v]) => `${k}:${v}`).join(';');
+    const text = escapeHtml(t.content);
+    return style ? `<span class="${classFor(style)}">${text}</span>` : text;
+  }).join(''));
+  return { lang: fence, label, code: source, lines };
+}
 
 function render(slug, text, file) {
   const { data, body } = frontmatter(text, file);
   const headings = [];
   const used = new Set();
+  const codeBlocks = [];
   const marked = new Marked({ gfm: true });
   marked.use({
     renderer: {
@@ -298,11 +335,10 @@ function render(slug, text, file) {
         // its sanitizer (rightly) removes `id` attributes from [innerHTML] content.
         return `\n<!--ngb-heading:${depth}:${id}-->${inner}<!--/ngb-heading-->\n`;
       },
+      // Fences become structured code blocks rendered by the Angular CodeBlock component.
       code({ text: code, lang }) {
-        const language = LANGS.includes(lang) ? (lang === 'text' ? undefined : lang) : undefined;
-        if (!language) return `<pre class="code code-plain"><code>${escapeHtml(code)}</code></pre>\n`;
-        const html = highlighter.codeToHtml(code, { lang: language, themes: { dark: 'vitesse-dark', light: 'vitesse-light' }, defaultColor: false, transformers: [toClass] });
-        return html.replace('<pre class="', '<pre class="code ').replace(/ tabindex="0"/, '');
+        codeBlocks.push(highlight(code, (lang ?? '').trim().split(/\s+/)[0] ?? '', file));
+        return `\n<!--ngb-code:${codeBlocks.length - 1}-->\n`;
       },
       table(token) {
         // Wrap tables so they scroll horizontally on small screens.
@@ -325,14 +361,22 @@ function render(slug, text, file) {
   const html = marked.parse(withCallouts, { async: false });
   const blocks = [];
   let rest = html;
-  const re = /<!--ngb-heading:([23456]):([^>]+?)-->([\s\S]*?)<!--\/ngb-heading-->/;
+  const re = /<!--ngb-heading:([23456]):([^>]+?)-->([\s\S]*?)<!--\/ngb-heading-->|<!--ngb-code:(\d+)-->/;
+  const pushHtml = (chunk) => {
+    const h = chunk.trim();
+    if (!h) return;
+    const open = (h.match(/<(aside|ul|ol|li|table|blockquote)[\s>]/g) ?? []).length;
+    const close = (h.match(/<\/(aside|ul|ol|li|table|blockquote)>/g) ?? []).length;
+    if (open !== close) fail(`${file}: code fences and headings must not be nested inside lists, tables or callouts`);
+    blocks.push({ kind: 'html', html: h });
+  };
   for (let m = re.exec(rest); m; m = re.exec(rest)) {
-    const before = rest.slice(0, m.index).trim();
-    if (before) blocks.push({ kind: 'html', html: before });
-    blocks.push({ kind: 'heading', depth: Number(m[1]), id: m[2], html: m[3] });
+    pushHtml(rest.slice(0, m.index));
+    if (m[4] !== undefined) blocks.push({ kind: 'code', ...codeBlocks[Number(m[4])] });
+    else blocks.push({ kind: 'heading', depth: Number(m[1]), id: m[2], html: m[3] });
     rest = rest.slice(m.index + m[0].length);
   }
-  if (rest.trim()) blocks.push({ kind: 'html', html: rest.trim() });
+  pushHtml(rest);
   return { slug, title: data.title, description: data.description, blocks, headings };
 }
 
@@ -353,7 +397,7 @@ for (const [slug, file] of sources) {
   const section = slug.startsWith('rules') ? 'Security rules' : slug === 'changelog' ? 'Project' : 'Documentation';
   pages[slug] = { title: page.title, description: page.description, section };
   writeFileSync(path.join(generated, 'pages', `${slug.replace(/\//g, '__')}.json`), JSON.stringify({ ...page, section }));
-  search.push({ slug, title: page.title, section, headings: page.headings.map((h) => h.text), text: plain(page.blocks.map((b) => b.html).join(' ')).slice(0, 4000) });
+  search.push({ slug, title: page.title, section, headings: page.headings.map((h) => h.text), text: plain(page.blocks.map((b) => (b.kind === 'code' ? b.code : b.html)).join(' ')).slice(0, 4000) });
 }
 pages.playground = { title: 'Playground', description: 'Fixture-based NgBastion demonstration.', section: 'Project' };
 for (const group of nav) for (const slug of group.items) if (!pages[slug]) fail(`navigation references unknown page ${slug}`);
@@ -361,20 +405,100 @@ const navOut = nav.map((g) => ({ label: g.label, items: g.items.map((slug) => ({
 const order = navOut.flatMap((g) => g.items.map((i) => i.slug)).filter((s) => s !== 'playground');
 writeFileSync(path.join(generated, 'nav.json'), JSON.stringify({ groups: navOut, order }, null, 2));
 writeFileSync(path.join(generated, 'search.json'), JSON.stringify(search));
-writeFileSync(path.join(generated, 'shiki.css'), `/* Generated by scripts/generate.mjs (Shiki, class-based). */\n${toClass.getCSS()}\n`);
+// ---------------------------------------------------------------- highlighted data for components
+for (const ex of playground) {
+  for (const v of Object.values(ex.variants)) {
+    for (const f of v.files) Object.assign(f, highlight(f.code, f.name.endsWith('.html') ? 'html' : 'ts', `playground ${ex.id}/${f.name}`));
+  }
+}
+writeFileSync(path.join(generated, 'playground.json'), JSON.stringify({ examples: playground, rules: ruleDocs }));
+
+// Landing: follow the real NGB001 finding through the showcase source, line by line.
+{
+  const f = showcaseData.featured.find((x) => x.ruleId === 'NGB001');
+  const steps = f.trace.map((st) => {
+    const text = readFileSync(path.join(showcase, st.file), 'utf8').split('\n')[st.line - 1];
+    if (text === undefined) fail(`showcase trace step ${st.file}:${st.line} not found`);
+    return { kind: st.kind, file: st.file, line: st.line, description: st.description, snippet: highlight(text.trim(), 'ts', st.file) };
+  });
+  showcaseData.flow = { ruleId: f.ruleId, ruleName: f.ruleName, severity: f.severity, confidence: f.confidence, steps };
+  writeFileSync(path.join(generated, 'showcase.json'), JSON.stringify(showcaseData, null, 2));
+}
+
+// Landing: what Angular already protects vs. what it does not — verdicts from real scans.
+{
+  const SNIPPETS = [
+    {
+      id: 'binding',
+      title: 'Template binding',
+      caption: 'Angular sanitizes [innerHTML] bindings, so untrusted HTML is safe here.',
+      code: `@Component({
+  template: \`<article [innerHTML]="preview"></article>\`,
+})
+export class Preview {
+  private route = inject(ActivatedRoute);
+  preview = this.route.snapshot.queryParamMap.get('html') ?? '';
+}`,
+    },
+    {
+      id: 'bypass',
+      title: 'Trust bypass',
+      caption: 'bypassSecurityTrustHtml() switches that protection off for the same value.',
+      code: `@Component({
+  template: \`<article [innerHTML]="preview"></article>\`,
+})
+export class Preview {
+  private route = inject(ActivatedRoute);
+  private sanitizer = inject(DomSanitizer);
+  preview = this.sanitizer.bypassSecurityTrustHtml(
+    this.route.snapshot.queryParamMap.get('html') ?? '',
+  );
+}`,
+    },
+  ];
+  const imports = `import { Component, inject } from '@angular/core';\nimport { ActivatedRoute } from '@angular/router';\nimport { DomSanitizer } from '@angular/platform-browser';\n`;
+  const comparison = [];
+  for (const sn of SNIPPETS) {
+    const cwd = path.join(site, '.virtual', sn.id);
+    const config = await resolveConfig({ extends: ['recommended'], minConfidence: 'low' }, { cwd });
+    const r = await scan({ cwd, config, rules: builtinRules, files: { 'preview.ts': imports + sn.code } });
+    comparison.push({ ...sn, ...highlight(sn.code, 'ts', `landing ${sn.id}`), findings: r.findings.map(({ ruleId, ruleName, severity, confidence, message }) => ({ ruleId, ruleName, severity, confidence, message })) });
+  }
+  if (comparison[0].findings.length) fail('landing comparison: the sanitized binding unexpectedly produced findings');
+  if (!comparison[1].findings.some((x) => x.ruleId === 'NGB001')) fail('landing comparison: the trust bypass did not produce NGB001');
+  const commands = {
+    local: highlight('pnpm install && pnpm build\nnode packages/cli/dist/bin.js scan ../my-angular-app\nnode packages/cli/dist/bin.js scan ../my-angular-app \\\n  --format sarif --output results.sarif', 'sh', 'landing commands'),
+    planned: highlight('npx ngbastion scan\nnpx ngbastion init --preset recommended\nnpx ngbastion explain NGB001', 'sh', 'landing commands'),
+  };
+  writeFileSync(path.join(generated, 'landing.json'), JSON.stringify({ comparison, commands }));
+}
+
+writeFileSync(path.join(generated, 'shiki.css'), `/* Generated by scripts/generate.mjs: Shiki token colors as classes (dark + light). */\n${[...tokenClasses].map(([style, cls]) => `.${cls}{${style}}`).join('\n')}\n`);
 
 // Internal links must resolve to a page.
 const routes = ['/', ...[...sources.keys()].map((s) => `/${s}`), '/playground'];
 const routeSet = new Set(routes.map((r) => r.replace(/\/$/, '') || '/'));
 for (const [slug] of sources) {
   const { blocks } = JSON.parse(readFileSync(path.join(generated, 'pages', `${slug.replace(/\//g, '__')}.json`), 'utf8'));
-  const html = blocks.map((b) => b.html).join('\n');
+  const html = blocks.filter((b) => b.kind !== 'code').map((b) => b.html).join('\n');
   for (const [, href] of html.matchAll(/href="(\/[^"#?]*)/g)) {
     const target = href.replace(/\/$/, '') || '/';
     if (!routeSet.has(target) && !href.startsWith('/brand/')) fail(`${slug}: broken internal link ${href}`);
   }
 }
 writeFileSync(path.join(generated, 'routes.json'), JSON.stringify(routes, null, 2));
+
+// ---------------------------------------------------------------- fonts (self-hosted, stable URLs for preloading)
+const fontsOut = path.join(site, 'public/fonts');
+mkdirSync(fontsOut, { recursive: true });
+for (const [pkg, prefix] of [['geist', 'geist'], ['jetbrains-mono', 'jetbrains-mono']]) {
+  for (const subset of ['latin', 'latin-ext']) {
+    const file = `${prefix}-${subset}-wght-normal.woff2`;
+    const from = path.join(site, 'node_modules/@fontsource-variable', pkg, 'files', file);
+    if (!existsSync(from)) fail(`font file missing: ${from}`);
+    cpSync(from, path.join(fontsOut, file));
+  }
+}
 
 // ---------------------------------------------------------------- brand, sitemap
 const brand = path.join(repo, 'assets/brand');

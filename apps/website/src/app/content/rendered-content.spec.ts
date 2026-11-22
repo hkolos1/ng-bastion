@@ -24,14 +24,18 @@ describe('RenderedContent', () => {
     expect(stripped).toEqual([]);
   });
 
-  it('keeps class-based syntax highlighting and callouts', async () => {
+  it('turns every markdown code fence into a highlighted CodeBlock with a copy button', async () => {
     const page = (await loadPage('docs/configuration'))!;
     const fixture = TestBed.createComponent(RenderedContent);
     fixture.componentRef.setInput('blocks', page.blocks);
     fixture.componentRef.setInput('slug', page.slug);
     fixture.detectChanges();
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.querySelector('pre.shiki span[class^="sk-"]')).not.toBeNull();
+    const fences = page.blocks.filter((b) => b.kind === 'code');
+    expect(el.querySelectorAll('ngb-code-block')).toHaveLength(fences.length);
+    expect(el.querySelectorAll('ngb-code-block .copy-btn')).toHaveLength(fences.length);
+    expect(el.querySelector('.code-body .line span[class^="sk-"]')).not.toBeNull();
+    expect(el.querySelector('.prose-block pre')).toBeNull(); // no plain <pre> left in prose
     expect(el.querySelector('aside.callout-caution .callout-title')!.textContent).toContain('TypeScript configs execute code');
   });
 

@@ -26,3 +26,14 @@ describe('searchIndex', () => {
     expect(entries.filter((e) => e.slug.startsWith('rules/ngb'))).toHaveLength(20);
   });
 });
+
+describe('markTerms', () => {
+  it('splits text into matched and plain parts, case-insensitively and safely', async () => {
+    const { markTerms } = await import('./search');
+    expect(markTerms('Trust bypass in NGB001', ['bypass', 'ngb001'])).toEqual([
+      { text: 'Trust ', match: false }, { text: 'bypass', match: true }, { text: ' in ', match: false }, { text: 'NGB001', match: true },
+    ]);
+    expect(markTerms('a.b(c)', ['.b('])).toEqual([{ text: 'a', match: false }, { text: '.b(', match: true }, { text: 'c)', match: false }]);
+    expect(markTerms('plain', [])).toEqual([{ text: 'plain', match: false }]);
+  });
+});

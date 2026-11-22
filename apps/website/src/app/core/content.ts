@@ -16,9 +16,12 @@ export interface PageData {
   headings: Heading[];
 }
 
+import type { CodeSnippet } from '../ui/code-block';
+
 export type ContentBlock =
   | { kind: 'html'; html: string }
-  | { kind: 'heading'; depth: number; id: string; html: string };
+  | { kind: 'heading'; depth: number; id: string; html: string }
+  | ({ kind: 'code' } & CodeSnippet);
 
 export interface NavItem {
   slug: string;

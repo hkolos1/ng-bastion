@@ -1,52 +1,94 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Seo } from '../core/seo.service';
-import { SHOWCASE } from './showcase';
+import { LANDING, SHOWCASE } from './showcase';
 import { TerminalDemo } from './terminal-demo';
+import { DataFlow } from './data-flow';
+import { CodeBlock } from '../ui/code-block';
 
 const DESCRIPTION = 'NgBastion is an Angular-aware, local-first security scanner. It traces untrusted data from URLs, messages and API responses to dangerous sinks and explains every finding.';
 
 @Component({
   selector: 'ngb-home-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, TerminalDemo],
+  imports: [RouterLink, TerminalDemo, DataFlow, CodeBlock],
   template: `
-    <div class="shell">
-      <section class="hero" aria-labelledby="hero-h">
-        <div class="hero-copy">
-          <p class="label">NgBastion · Angular security scanner</p>
-          <h1 id="hero-h">Your Angular security stronghold.</h1>
-          <p class="lead">A local-first scanner that understands Angular. It follows untrusted data from URLs, window messages and API responses through services, RxJS and signals, and shows the exact path to every dangerous sink.</p>
-          <div class="hero-actions">
-            <a class="btn btn-primary" routerLink="/docs/getting-started/installation">Get started</a>
-            <a class="btn" routerLink="/rules">Browse {{ showcase.ruleCount }} rules</a>
+    <div class="hero-wrap">
+      <div class="shell">
+        <section class="hero" aria-labelledby="hero-h">
+          <div class="hero-copy">
+            <h1 id="hero-h" class="hero-title"><span class="line">Your <span class="hl">Angular</span></span>&ngsp;<span class="line">security stronghold.</span></h1>
+            <p class="lead">NgBastion follows untrusted data from URLs, window messages and API responses through your services, RxJS pipelines and signals, and shows the exact path to every dangerous sink. Locally, with the evidence attached.</p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" routerLink="/docs/getting-started/installation">Get started<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5 12 8l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+              <a class="btn" routerLink="/rules">Browse {{ showcase.ruleCount }} rules</a>
+              <a class="btn btn-ghost" routerLink="/playground">Playground</a>
+            </div>
+            <dl class="hero-stats">
+              <div><dt>{{ showcase.ruleCount }}</dt><dd>security rules</dd></div>
+              <div><dt>20–22</dt><dd>Angular versions tested</dd></div>
+              <div><dt>0</dt><dd>network requests per scan</dd></div>
+            </dl>
           </div>
-          <p class="hero-note">v{{ showcase.version }} · private development · not yet published to npm</p>
+          <ngb-terminal-demo [data]="showcase" />
+        </section>
+      </div>
+    </div>
+
+    <div class="shell">
+      <section class="section engine" aria-labelledby="engine-h">
+        <div class="engine-grid">
+          <div class="section-head sticky-head">
+            <p class="label">Type-aware data-flow engine</p>
+            <h2 id="engine-h">Follows the data, not just the function name.</h2>
+            <p class="lead">A real finding from the showcase app, step by step. Every line below is the actual source NgBastion traced, across files, from an untrusted query parameter to a trust bypass.</p>
+            <ul class="engine-points">
+              @for (p of enginePoints; track p[0]) {
+                <li><strong>{{ p[0] }}</strong><span>{{ p[1] }}</span></li>
+              }
+            </ul>
+            <a class="text-link" routerLink="/docs/security-engine">How the engine works →</a>
+          </div>
+          <ngb-data-flow [data]="showcase" />
         </div>
-        <ngb-terminal-demo [data]="showcase" />
       </section>
 
-      <section class="section" aria-labelledby="flow-h">
+      <section class="section" aria-labelledby="aware-h">
         <div class="section-head">
-          <p class="label">Source → sink tracing</p>
-          <h2 id="flow-h">Follows the data, not just the function name.</h2>
-          <p class="lead">Generic linters see <code>innerHTML</code>. NgBastion asks where the value came from, whether Angular already sanitized it, and how sure it can be.</p>
+          <p class="label">Angular-aware</p>
+          <h2 id="aware-h">Knows what Angular already protects.</h2>
+          <p class="lead">Both snippets render a query parameter as HTML. NgBastion scanned them when this site was built, and only one is a problem.</p>
         </div>
-        <div class="flow-explainer">
-          <div class="flow-step source"><p class="label"><span class="dot"></span>Source</p><p>Query parameters, fragments, <code>MessageEvent.data</code>, form input, storage and HTTP responses, each with its own trust level.</p></div>
-          <div class="flow-step"><p class="label"><span class="dot"></span>Propagation</p><p>Assignments, calls and returns across files, injected services, selected RxJS operators and signals. Sanitizers are honoured per context.</p></div>
-          <div class="flow-step sink"><p class="label"><span class="dot"></span>Sink</p><p>Trust bypasses, raw DOM writes, <code>eval</code>, redirects, storage, logging and SSR state. Every step is reported with file and line.</p></div>
+        <div class="compare">
+          @for (c of landing.comparison; track c.id) {
+            <div class="compare-item" [class.flagged]="c.findings.length">
+              <div class="compare-head">
+                <h3>{{ c.title }}</h3>
+                @if (c.findings.length) {
+                  <span class="verdict verdict-bad"><span class="sev-badge" [class]="'sev-badge sev-' + c.findings[0]!.severity">{{ c.findings[0]!.ruleId }}</span>reported</span>
+                } @else {
+                  <span class="verdict verdict-ok"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5 6.5 11.5 12.5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>no findings</span>
+                }
+              </div>
+              <p class="compare-caption">{{ c.caption }}</p>
+              <ngb-code-block [snippet]="c" filename="preview.component.ts" />
+            </div>
+          }
         </div>
       </section>
 
       <section class="section" aria-labelledby="cap-h">
         <div class="section-head">
           <p class="label">Capabilities</p>
-          <h2 id="cap-h">Security checks that understand Angular.</h2>
+          <h2 id="cap-h">Built for security reviews you can trust.</h2>
         </div>
         <div class="features">
-          @for (c of capabilities; track c[1]) {
-            <div class="feature"><p class="label">{{ c[0] }}</p><h3>{{ c[1] }}</h3><p>{{ c[2] }}</p></div>
+          @for (c of capabilities; track c.title) {
+            <div class="feature">
+              <span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path [attr.d]="c.icon" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+              <h3>{{ c.title }}</h3>
+              <p>{{ c.text }}</p>
+            </div>
           }
         </div>
       </section>
@@ -58,17 +100,12 @@ const DESCRIPTION = 'NgBastion is an Angular-aware, local-first security scanner
         </div>
         <div class="panels">
           <div class="panel-card">
-            <h3>Available now: from a checkout</h3>
-            <pre class="cmd"><code><span class="prompt">$ </span>pnpm install &amp;&amp; pnpm build
-<span class="prompt">$ </span>node packages/cli/dist/bin.js scan ../my-angular-app
-<span class="prompt">$ </span>node packages/cli/dist/bin.js scan ../my-angular-app \\
-    --format sarif --output results.sarif</code></pre>
+            <div class="panel-title"><span class="status status-ok">Available now</span><h3>From a checkout</h3></div>
+            <ngb-code-block [snippet]="landing.commands.local" filename="terminal" />
           </div>
           <div class="panel-card planned">
-            <h3>Planned: once published to npm</h3>
-            <pre class="cmd"><code><span class="prompt">$ </span>npx ngbastion scan
-<span class="prompt">$ </span>npx ngbastion init --preset recommended
-<span class="prompt">$ </span>npx ngbastion explain NGB001</code></pre>
+            <div class="panel-title"><span class="status">Planned</span><h3>Once published to npm</h3></div>
+            <ngb-code-block [snippet]="landing.commands.planned" filename="terminal" />
             <p>These commands describe the intended interface. They will not work until the first public release.</p>
           </div>
         </div>
@@ -86,11 +123,15 @@ const DESCRIPTION = 'NgBastion is an Angular-aware, local-first security scanner
         </ul>
       </section>
 
-      <section class="section" aria-labelledby="limits-h">
+      <section class="section closing" aria-labelledby="limits-h">
         <div class="section-head">
           <p class="label">Honest by design</p>
           <h2 id="limits-h">What a clean report means.</h2>
           <p class="lead">NgBastion reports the patterns and data flows it models, with the confidence its evidence supports. It does not replace penetration testing, server-side authorization or browser security controls, and no findings never proves an application is secure. The <a routerLink="/docs/limitations">limitations</a> are documented as carefully as the rules.</p>
+        </div>
+        <div class="hero-actions">
+          <a class="btn btn-primary" routerLink="/docs/getting-started/first-scan">Run your first scan</a>
+          <a class="btn" routerLink="/docs/limitations">Read the limitations</a>
         </div>
       </section>
     </div>
@@ -98,15 +139,20 @@ const DESCRIPTION = 'NgBastion is an Angular-aware, local-first security scanner
 })
 export class HomePage {
   protected readonly showcase = SHOWCASE;
-  protected readonly capabilities: [string, string, string][] = [
-    ['Angular', 'Understands Angular', 'Knows [innerHTML] bindings are sanitized; recognizes DomSanitizer, ElementRef, Renderer2, ActivatedRoute, HttpClient, interceptors, TransferState, signals and inject().'],
-    ['Data flow', 'Type-aware tracing', 'Built on the TypeScript Compiler API. Matches APIs by symbol, not by name, across files, services, RxJS and signals.'],
-    ['Evidence', 'Explains every finding', 'Data-flow findings carry the observed path. Confidence is separate from severity; analysis gaps become diagnostics.'],
-    ['Coverage', `${SHOWCASE.ruleCount} security rules`, 'Trust bypasses, DOM sinks, cross-window messaging, redirects, credential forwarding, token and payment storage, secrets, CSP, SSR state.'],
-    ['Privacy', 'Local-first', 'Runs on your machine or CI runner. No uploads, no account, no telemetry.'],
-    ['Teams', 'Policies and exceptions', 'JSON or TypeScript config, presets, shared configs, mandatory rules and expiring, justified exceptions.'],
-    ['CI', 'Built for pipelines', 'Predictable exit codes and templates for GitHub Actions, GitLab CI, Jenkins and Azure DevOps.'],
-    ['Reports', 'SARIF and JSON', 'SARIF 2.1.0 with code flows for GitHub code scanning, plus a versioned JSON schema.'],
+  protected readonly landing = LANDING;
+  protected readonly enginePoints: [string, string][] = [
+    ['Symbols, not names', 'APIs are identified through the TypeScript TypeChecker, with import-based fallback when dependencies are not installed.'],
+    ['Across your codebase', 'Arguments, returns, class fields and injected services across files, plus selected RxJS operators and signals.'],
+    ['Context-aware sanitizers', 'An HTML sanitizer does not make a URL safe; bypassSecurityTrust* never counts as sanitization.'],
+    ['Bounded and explicit', 'Depth, call-site and time limits; when one is hit you get a diagnostic, not silence.'],
+  ];
+  protected readonly capabilities = [
+    { title: 'Understands Angular', text: 'Sanitized [innerHTML] bindings, DomSanitizer, ElementRef, Renderer2, ActivatedRoute, HttpClient, interceptors, TransferState, signals and inject().', icon: 'M12 3l8 3-1.2 10.2L12 21l-6.8-4.8L4 6l8-3Zm0 0v18M8.5 15l3.5-8 3.5 8M9.6 12.5h4.8' },
+    { title: 'Explains every finding', text: 'Data-flow findings carry the observed path. Confidence is separate from severity; analysis gaps become diagnostics.', icon: 'M5 6h14M5 12h9M5 18h6M17 15l2 2 3-4' },
+    { title: `${SHOWCASE.ruleCount} security rules`, text: 'Trust bypasses, DOM sinks, cross-window messaging, redirects, credential forwarding, token and payment storage, secrets, CSP, SSR state.', icon: 'M12 3l7 3v5c0 4.4-3 8.2-7 10-4-1.8-7-5.6-7-10V6l7-3Zm-3 9 2 2 4-4' },
+    { title: 'Local-first', text: 'Runs on your machine or CI runner. No uploads, no account, no telemetry.', icon: 'M4 6h16v10H4zM2 20h20M9 16v4M15 16v4' },
+    { title: 'Policies and exceptions', text: 'JSON or TypeScript config, presets, shared configs, mandatory rules and expiring, justified exceptions.', icon: 'M6 4h9l3 3v13H6zM9 11h6M9 15h6M14 4v4h4' },
+    { title: 'Built for pipelines', text: 'Predictable exit codes, SARIF 2.1.0 for GitHub code scanning, JSON reports and templates for four CI systems.', icon: 'M5 7h4v4H5zM15 13h4v4h-4zM9 9h3a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2' },
   ];
   protected readonly docs: [string, string, string][] = [
     ['/docs/getting-started/installation', 'Getting started', 'Local setup and your first scan'],

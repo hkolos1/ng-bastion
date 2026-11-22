@@ -7,34 +7,38 @@ import { RouterLink } from '@angular/router';
   imports: [RouterLink],
   template: `
     <footer class="site-footer">
-      <div class="shell site-footer-inner">
-        <div>
-          <p class="label">NgBastion</p>
-          <p>MIT-licensed, open-source Angular security analysis in private development. Scans run locally. This site uses no analytics and loads no third-party resources.</p>
-          <p>Built with Angular {{ angularMajor }} and AnalogJS, pre-rendered for every route.</p>
+      <div class="shell footer-main">
+        <div class="footer-brand">
+          <a class="brand" routerLink="/" aria-label="NgBastion home">
+            <img class="only-dark" src="/brand/logo-mark-dark.svg" alt="" width="24" height="24" />
+            <img class="only-light" src="/brand/logo-mark-light.svg" alt="" width="24" height="24" />
+            <span>NgBastion</span>
+          </a>
+          <p>Angular-aware, local-first security analysis. Follows untrusted data from source to sink and shows its evidence.</p>
         </div>
-        <nav aria-label="Documentation links">
-          <p class="label">Documentation</p>
-          <ul>
-            <li><a routerLink="/docs/getting-started/installation">Getting started</a></li>
-            <li><a routerLink="/docs/cli-reference">CLI reference</a></li>
-            <li><a routerLink="/rules">Security rules</a></li>
-            <li><a routerLink="/docs/configuration">Configuration</a></li>
-          </ul>
-        </nav>
-        <nav aria-label="Project links">
-          <p class="label">Project</p>
-          <ul>
-            <li><a routerLink="/playground">Playground</a></li>
-            <li><a routerLink="/changelog">Changelog</a></li>
-            <li><a routerLink="/docs/limitations">Limitations</a></li>
-            <li><a routerLink="/docs/security-policy">Security policy</a></li>
-          </ul>
-        </nav>
+        @for (group of groups; track group.label) {
+          <nav class="footer-group" [attr.aria-label]="group.label">
+            <p class="label">{{ group.label }}</p>
+            <ul>
+              @for (l of group.links; track l[0]) {
+                <li><a [routerLink]="l[0]">{{ l[1] }}</a></li>
+              }
+            </ul>
+          </nav>
+        }
+      </div>
+      <div class="footer-meta">
+        <div class="shell footer-meta-inner">
+          <span>MIT license · open source</span>
+          <span>Built by <a href="https://github.com/hkolos1" target="_blank" rel="noopener noreferrer">hkolos1</a></span>
+        </div>
       </div>
     </footer>
   `,
 })
 export class SiteFooter {
-  protected readonly angularMajor = 22;
+  protected readonly groups = [
+    { label: 'Product', links: [['/docs', 'Documentation'], ['/rules', 'Security rules'], ['/playground', 'Playground'], ['/changelog', 'Changelog']] },
+    { label: 'Reference', links: [['/docs/cli-reference', 'CLI reference'], ['/docs/configuration', 'Configuration'], ['/docs/limitations', 'Limitations'], ['/docs/security-policy', 'Security policy']] },
+  ];
 }
