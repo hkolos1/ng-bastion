@@ -26,6 +26,7 @@ type Binding =
   | { kind: 'emitted'; obs: ts.Expression; upto: number | undefined; env: Env };
 
 let envIds = 0;
+/** Environment with no parameter bindings. Shared so equivalent visits deduplicate. */
 class Env {
   readonly id = ++envIds;
   readonly bindings = new Map<ts.ParameterDeclaration, Binding>();
@@ -38,6 +39,8 @@ class Env {
     return undefined;
   }
 }
+
+const EMPTY_ENV = new Env();
 
 interface Path {
   step?: TraceStep;
@@ -70,6 +73,7 @@ const PASSTHROUGH_OPERATORS = new Set([
 ]);
 const MAP_OPERATORS = new Set(['map']);
 const FLATTEN_OPERATORS = new Set(['switchMap', 'mergeMap', 'concatMap', 'exhaustMap', 'flatMap']);
+const COMBINATORS = new Set(['combineLatest', 'forkJoin', 'zip', 'merge', 'concat', 'race']);
 const VALUE_ADDING_OPERATORS = new Set(['startWith', 'defaultIfEmpty', 'endWith']);
 const STRING_METHODS = new Set([
   'trim', 'trimStart', 'trimEnd', 'toLowerCase', 'toUpperCase', 'toLocaleLowerCase', 'toLocaleUpperCase', 'slice',
@@ -135,7 +139,7 @@ export class TaintEngine implements TaintAnalyzer {
       names: new Set(), explored: new Set(), visited: 0, truncated: false,
     };
     const file = expression.getSourceFile().fileName;
-    this.visit(expression, new Env(), { depth: 0, hops: 0, file });
+    this.visit(expression, EMPTY_ENV, { depth: 0, hops: 0, file });
     const s = this.state;
     if (s.truncated) this.stats.truncated++;
     const result: TaintResult = {
@@ -199,8 +203,13 @@ export class TaintEngine implements TaintAnalyzer {
     if (value !== undefined && this.state.constants.length < 20) this.state.constants.push(value);
   }
 
+  private readonly unsupportedNodes = new Set<string>();
   private unsupported(what: string, node: ts.Node) {
-    this.stats.unsupported.set(what, (this.stats.unsupported.get(what) ?? 0) + 1);
+    const key = nodeKey(node);
+    if (!this.unsupportedNodes.has(key)) {
+      this.unsupportedNodes.add(key);
+      this.stats.unsupported.set(what, (this.stats.unsupported.get(what) ?? 0) + 1);
+    }
     this.unresolved(`unsupported: ${what}`, node);
   }
 
@@ -376,7 +385,7 @@ export class TaintEngine implements TaintAnalyzer {
 
   private visitProperty(decl: ts.Declaration, sym: ts.Symbol, ref: ts.Node, path: Path, mode: Mode) {
     const name = sym.name;
-    const env = new Env();
+    const env = EMPTY_ENV;
     const p = this.extend(path, 'property', ref, `read from property '${name}'`, name);
     let found = false;
     if ((ts.isPropertyDeclaration(decl) || ts.isPropertyAssignment(decl)) && decl.initializer) {
@@ -538,7 +547,7 @@ export class TaintEngine implements TaintAnalyzer {
     for (const call of calls.slice(0, this.limits.maxCallSites)) {
       const args = call.arguments ?? [];
       const selected = param.dotDotDotToken ? args.slice(idx) : args[idx] ? [args[idx]!] : [];
-      const callerEnv = new Env();
+      const callerEnv = EMPTY_ENV;
       for (const a of selected) {
         found = true;
         const arg = ts.isSpreadElement(a) ? a.expression : a;
@@ -712,7 +721,9 @@ export class TaintEngine implements TaintAnalyzer {
   }
 
   private visitReturns(fn: ts.SignatureDeclaration, args: ts.Expression[][], env: Env, path: Path, mode: Mode) {
-    const callee = new Env(ts.isArrowFunction(fn) || ts.isFunctionExpression(fn) ? env : undefined);
+    const lexical = ts.isArrowFunction(fn) || ts.isFunctionExpression(fn) ? env : undefined;
+    // Parameterless callees add no bindings: reuse the environment so equivalent visits deduplicate.
+    const callee = fn.parameters.length ? new Env(lexical) : (lexical ?? EMPTY_ENV);
     fn.parameters.forEach((p, i) => {
       const exprs = p.dotDotDotToken ? args.slice(i).flat() : args[i] ?? (p.initializer ? [p.initializer] : []);
       callee.bindings.set(p, { kind: 'expr', exprs, env, mode: 'value' });
@@ -783,7 +794,7 @@ export class TaintEngine implements TaintAnalyzer {
     if (!sig) return this.unresolved('signal declaration not found', expr);
     const { factory, init, sym } = sig;
     const p = this.extend(path, 'signal', expr, `read from signal '${sym.name}'`, sym.name);
-    const fresh = new Env();
+    const fresh = EMPTY_ENV;
     const a0 = init.arguments[0];
     switch (factory) {
       case 'signal':
@@ -791,10 +802,10 @@ export class TaintEngine implements TaintAnalyzer {
         else this.constant();
         for (const c of this.index.methodCallsOn(sym)) {
           const m = memberName(c.expression);
-          if (m === 'set' && c.arguments[0]) this.visit(c.arguments[0], new Env(), this.extend(p, 'signal', c, `written via ${sym.name}.set()`));
+          if (m === 'set' && c.arguments[0]) this.visit(c.arguments[0], EMPTY_ENV, this.extend(p, 'signal', c, `written via ${sym.name}.set()`));
           if (m === 'update' && c.arguments[0]) {
             const fn = this.flow.resolveFunction(c.arguments[0]);
-            if (fn) for (const r of returnExpressions(fn)) this.visit(r, new Env(), this.extend(p, 'signal', c, `written via ${sym.name}.update()`));
+            if (fn) for (const r of returnExpressions(fn)) this.visit(r, EMPTY_ENV, this.extend(p, 'signal', c, `written via ${sym.name}.update()`));
           }
         }
         return;
@@ -831,13 +842,13 @@ export class TaintEngine implements TaintAnalyzer {
     let found = false;
     if (cls.text === 'BehaviorSubject' && init.arguments?.[0]) {
       found = true;
-      this.visit(init.arguments[0], new Env(), path);
+      this.visit(init.arguments[0], EMPTY_ENV, path);
     }
     for (const c of this.index.methodCallsOn(sym)) {
       const m = memberName(c.expression);
       if ((m === 'next' || m === 'emit') && c.arguments[0]) {
         found = true;
-        this.visit(c.arguments[0], new Env(), this.extend(path, 'reactive', c, `pushed via ${sym.name}.${m}()`));
+        this.visit(c.arguments[0], EMPTY_ENV, this.extend(path, 'reactive', c, `pushed via ${sym.name}.${m}()`));
       }
     }
     return found;
@@ -901,6 +912,19 @@ export class TaintEngine implements TaintAnalyzer {
         return;
       }
       if (name === 'from' && e.arguments[0]) return this.visit(e.arguments[0], env, this.approx(path, 'from() element'));
+      if (name && COMBINATORS.has(name) && e.arguments.length) {
+        // combineLatest([a, b]) / forkJoin({ a, b }) / merge(a, b): emitted values derive from every input.
+        const inputs = e.arguments.flatMap((a) => {
+          const x = skipOuter(a);
+          if (ts.isArrayLiteralExpression(x)) return [...x.elements];
+          if (ts.isObjectLiteralExpression(x)) return x.properties.flatMap((m) => (ts.isPropertyAssignment(m) ? [m.initializer] : ts.isShorthandPropertyAssignment(m) ? [m.name] : []));
+          return [a];
+        });
+        const tuple = name === 'combineLatest' || name === 'forkJoin' || name === 'zip';
+        const p = this.extend(path, 'reactive', e, `combined by ${name}()`);
+        for (const input of inputs) this.visitEmitted(input as ts.Expression, env, tuple ? this.approx(p, `${name}() tuple element (element-insensitive)`) : p, undefined);
+        return;
+      }
       if (name === 'toObservable' && e.arguments[0]) return this.visitSignal(e.arguments[0], env, this.extend(path, 'signal', e, 'converted by toObservable()'));
       if (name === 'defer' && e.arguments[0]) {
         const fn = this.flow.resolveFunction(e.arguments[0]);

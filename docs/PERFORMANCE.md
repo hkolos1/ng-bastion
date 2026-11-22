@@ -24,3 +24,16 @@ Notes:
   rules sharing a sink (e.g. NGB011/NGB012) do not repeat work.
 - The benchmark is synthetic. Real projects with deep call graphs or very large `node_modules`
   type graphs will be slower; tune `limits` and watch for `analysis-incomplete` diagnostics.
+
+## Real-world check
+
+The public [Angular RealWorld example app](https://github.com/realworld-apps/angular-realworld-example-app)
+(Angular 21, 41 analyzed files, 18 templates, dependencies not installed) was scanned with
+`--min-confidence low`:
+
+| Engine version | Scan time | Findings | Truncated traces |
+|---|---:|---|---:|
+| before shared empty environments + RxJS combinators | 0.8 s | 1 | 4 (`combineLatest` visited 1,020×) |
+| current | 0.3 s | 1 (NGB014: JWT stored in `localStorage` — accurate for that app's design) | 0 |
+
+No false positives were reported. The app was not modified or vendored into this repository.

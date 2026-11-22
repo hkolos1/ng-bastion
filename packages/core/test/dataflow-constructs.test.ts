@@ -203,3 +203,28 @@ export class C {
     expect(results.map((r) => r.flows[0]?.confidence)).toEqual(['high', 'high', 'medium', 'high', 'high', 'low', 'medium', 'low', 'medium']);
   });
 });
+
+describe('scalability regressions', () => {
+  it('follows combineLatest/forkJoin tuples and merge() inputs', async () => {
+    const [tuple, merged] = await traceSink({
+      'a.ts': `${SINK}${ROUTE}import { combineLatest, merge, of } from 'rxjs';
+export class C { r = inject(ActivatedRoute);
+  go() {
+    combineLatest([of('x'), this.r.fragment]).subscribe(([a, b]) => sink(b));
+    merge(of('static'), this.r.queryParams).subscribe((v) => sink(v));
+  } }`,
+    });
+    expect(kinds(tuple!)).toEqual(['url']);
+    expect(tuple!.flows[0]!.approximations.some((a) => a.includes('combineLatest'))).toBe(true);
+    expect(kinds(merged!)).toEqual(['url']);
+  });
+
+  it('follows diamond-shaped field dependencies without hitting limits', async () => {
+    const fields = Array.from({ length: 16 }, (_, i) => i === 0
+      ? '  f0 = location.hash;'
+      : `  f${i} = this.f${i - 1} + this.f${Math.max(0, i - 2)};`).join('\n');
+    const [r] = await traceSink({ 'a.ts': `${SINK}export class Diamond {\n${fields}\n  go() { sink(this.f15); }\n}` });
+    expect(r!.truncated).toBe(false);
+    expect(kinds(r!)).toEqual(['url']);
+  });
+});
