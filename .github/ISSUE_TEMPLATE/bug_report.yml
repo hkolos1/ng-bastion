@@ -1,0 +1,19 @@
+name: Bug report
+description: The scanner crashes, misbehaves or produces invalid output.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes: { label: What happened?, description: Include the command you ran and the output. }
+    validations: { required: true }
+  - type: textarea
+    id: repro
+    attributes: { label: Minimal reproduction, description: Smallest code/config that reproduces it. Never paste real secrets. }
+    validations: { required: true }
+  - type: input
+    id: versions
+    attributes: { label: Versions, placeholder: "ngbastion 0.1.0 · Node 24.15.0 · Angular 22.3.0" }
+    validations: { required: true }
+  - type: textarea
+    id: doctor
+    attributes: { label: "`ngbastion doctor` output", render: text }

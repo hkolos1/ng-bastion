@@ -1,0 +1,16 @@
+name: Rule proposal
+description: Propose a new security rule or a significant extension.
+labels: [rule-proposal]
+body:
+  - type: textarea
+    id: risk
+    attributes: { label: Security risk and references }
+    validations: { required: true }
+  - type: textarea
+    id: detection
+    attributes: { label: Proposed detection (sources, sinks, safe patterns) }
+    validations: { required: true }
+  - type: textarea
+    id: fp
+    attributes: { label: Expected false positives / negatives }
+    validations: { required: true }
