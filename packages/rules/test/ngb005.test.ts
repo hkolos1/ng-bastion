@@ -49,3 +49,22 @@ export class L {
     expect(await one('NGB005', `const img = document.createElement('img'); img.src = location.hash;`)).toEqual([]);
   });
 });
+
+describe('NGB005 regressions found by scanning the NgBastion website', () => {
+  it('does not report non-executable data blocks such as JSON-LD', async () => {
+    expect(await one('NGB005', `export function jsonLd(data: unknown) {
+  const s = document.createElement('script');
+  s.type = 'application/ld+json';
+  s.textContent = JSON.stringify(data);
+  document.head.appendChild(s);
+  const t = document.createElement('script');
+  t.setAttribute('type', 'text/template');
+  t.textContent = String(data);
+}`)).toEqual([]);
+  });
+
+  it('still reports executable types', async () => {
+    const res = await one('NGB005', `export function f() { const s = document.createElement('script'); s.type = 'module'; s.textContent = location.hash; }`);
+    expect(res).toHaveLength(1);
+  });
+});
