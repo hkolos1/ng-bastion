@@ -1,5 +1,6 @@
 // Generates the NgBastion brand assets into /assets/brand (run once; outputs are committed).
-// The mark is a five-bastion star-fort trace (trace italienne) enclosing a terminal prompt.
+// The mark is a crenellated bastion shield split into two facets, with a terminal prompt chevron cut through it:
+// fortress (battlements), defence (shield), Angular (faceted shield geometry) and developer tooling (the prompt).
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,57 +9,56 @@ import sharp from 'sharp';
 const out = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../assets/brand');
 mkdirSync(out, { recursive: true });
 
-// Palette matches the site's design tokens (src/styles.css): near-black base, Electric Royal Blue primary, amber prompt.
-const C = { slate: '#0d101a', bg: '#090b12', steel: '#315bff', amber: '#f0b45b', ink: '#315bff', stone: '#f8f9fc', text: '#f1f4ff', muted: '#a4abc0' };
+// Electric Royal Blue identity (matches src/styles.css).
+const C = { primary: '#315bff', accent: '#7290ff', deep: '#1f3fd1', bg: '#090b12', fg: '#f1f4ff', ink: '#0f1424', muted: '#a4abc0' };
+// Dark backgrounds: light facet accent, shaded facet primary. Light backgrounds: one step deeper for contrast on white.
+const ON_DARK = { lit: C.accent, shade: C.primary };
+const ON_LIGHT = { lit: C.primary, shade: C.deep };
 
-/** Star-fort outline centred at (cx, cy) with outer radius R. */
-function fort(cx, cy, R) {
-  const pts = [];
-  for (let k = 0; k < 5; k++) {
-    const t = -90 + k * 72;
-    for (const [r, d] of [[0.6, -25], [0.8, -19], [1, 0], [0.8, 19], [0.6, 25]]) {
-      const a = ((t + d) * Math.PI) / 180;
-      pts.push(`${(cx + R * r * Math.cos(a)).toFixed(2)},${(cy + R * r * Math.sin(a)).toFixed(2)}`);
-    }
-  }
-  return pts.join(' ');
-}
-
-const mark = ({ outline, fill, prompt, size = 64 }) => `
-  <polygon points="${fort(size / 2, size / 2 + 1.5, size * 0.44)}" fill="${fill}" stroke="${outline}" stroke-width="${size / 16}" stroke-linejoin="miter"/>
-  <path d="M${size * 0.36} ${size * 0.4} L${size * 0.5} ${size * 0.52} L${size * 0.36} ${size * 0.64}" fill="none" stroke="${prompt}" stroke-width="${size / 12}" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M${size * 0.55} ${size * 0.66} H${size * 0.68}" stroke="${prompt}" stroke-width="${size / 12}" stroke-linecap="round"/>`;
+// 64×64 grid. Shield with three merlons over a tapered point; prompt chevron cut out with even-odd fill.
+const SHIELD = 'M5 5H18V14H26V5H38V14H46V5H59L55 41L32 59L9 41Z';
+const CHEVRON = 'M19 24H29L41 35L29 46H19L31 35Z';
+const mark = ({ lit, shade }) => `
+  <defs><clipPath id="ngb-lit"><rect width="32" height="64"/></clipPath></defs>
+  <path fill="${shade}" fill-rule="evenodd" d="${SHIELD}${CHEVRON}"/>
+  <path fill="${lit}" fill-rule="evenodd" clip-path="url(#ngb-lit)" d="${SHIELD}${CHEVRON}"/>`;
 
 const svg = (w, h, body, title) =>
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="${title}"><title>${title}</title>${body}</svg>\n`;
+const write = (name, content) => writeFileSync(path.join(out, name), content);
 
-// Mark: themeable via currentColor for the outline; prompt in amber.
-writeFileSync(path.join(out, 'logo-mark.svg'), svg(64, 64, mark({ outline: 'currentColor', fill: 'none', prompt: C.amber }), 'NgBastion'));
-// Solid marks for fixed backgrounds.
-writeFileSync(path.join(out, 'logo-mark-dark.svg'), svg(64, 64, mark({ outline: C.steel, fill: C.slate, prompt: C.amber }), 'NgBastion'));
-writeFileSync(path.join(out, 'logo-mark-light.svg'), svg(64, 64, mark({ outline: C.ink, fill: C.stone, prompt: '#b7791f' }), 'NgBastion'));
-writeFileSync(path.join(out, 'favicon.svg'), svg(64, 64, mark({ outline: C.steel, fill: C.slate, prompt: C.amber }), 'NgBastion'));
+// Icon-only. The dark-background colours also hold up on white, so they double as the neutral mark and favicon.
+write('logo-mark.svg', svg(64, 64, mark(ON_DARK), 'NgBastion'));
+write('logo-mark-dark.svg', svg(64, 64, mark(ON_DARK), 'NgBastion'));
+write('logo-mark-light.svg', svg(64, 64, mark(ON_LIGHT), 'NgBastion'));
+write('favicon.svg', svg(64, 64, mark(ON_DARK), 'NgBastion'));
 
-const wordmark = (color) => `<text x="76" y="44" font-family="'Geist', 'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="33" font-weight="600" letter-spacing="-1" fill="${color}">NgBastion</text>`;
-writeFileSync(path.join(out, 'logo-full-dark.svg'), svg(260, 64, mark({ outline: C.steel, fill: C.slate, prompt: C.amber }) + wordmark(C.text), 'NgBastion'));
-// Neutral variant readable on light and dark backgrounds (e.g. GitHub README).
-writeFileSync(path.join(out, 'logo-full.svg'), svg(260, 64, mark({ outline: C.steel, fill: C.slate, prompt: C.amber }) + wordmark(C.steel), 'NgBastion'));
-writeFileSync(path.join(out, 'logo-full-light.svg'), svg(260, 64, mark({ outline: C.ink, fill: C.stone, prompt: '#b7791f' }) + wordmark('#0f1424'), 'NgBastion'));
+// Horizontal wordmark: "Ng" in the brand tint, "Bastion" in the foreground colour.
+const FONT = `font-family="'Geist', 'Inter', 'Helvetica Neue', Arial, sans-serif" font-weight="600"`;
+const wordmark = (ng, rest) => `<text x="76" y="44" ${FONT} font-size="33" letter-spacing="-1"><tspan fill="${ng}">Ng</tspan><tspan fill="${rest}">Bastion</tspan></text>`;
+write('logo-full-dark.svg', svg(260, 64, mark(ON_DARK) + wordmark(C.accent, C.fg), 'NgBastion'));
+write('logo-full-light.svg', svg(260, 64, mark(ON_LIGHT) + wordmark(C.primary, C.ink), 'NgBastion'));
+// Neutral primary logo, readable on light and dark backgrounds (e.g. GitHub README).
+write('logo-full.svg', svg(260, 64, mark(ON_DARK) + wordmark(C.primary, C.primary), 'NgBastion'));
 
 // Social preview 1280×640.
 const social = svg(1280, 640, `
-  <defs><radialGradient id="glow" cx="0.82" cy="0.5" r="0.6"><stop offset="0" stop-color="${C.steel}" stop-opacity="0.16"/><stop offset="1" stop-color="${C.steel}" stop-opacity="0"/></radialGradient></defs>
+  <defs><radialGradient id="glow" cx="0.8" cy="0.5" r="0.6"><stop offset="0" stop-color="${C.primary}" stop-opacity="0.18"/><stop offset="1" stop-color="${C.primary}" stop-opacity="0"/></radialGradient></defs>
   <rect width="1280" height="640" fill="${C.bg}"/>
   <rect width="1280" height="640" fill="url(#glow)"/>
-  <g opacity="0.12" stroke="${C.steel}" fill="none" stroke-width="2">
-    <polygon points="${fort(1060, 330, 420)}"/><polygon points="${fort(1060, 330, 300)}"/>
+  <g fill="none" stroke="${C.primary}" stroke-width="0.25" opacity="0.22">
+    <path transform="translate(800 40) scale(9)" d="${SHIELD}"/>
+    <path transform="translate(890 130) scale(6.2)" d="${SHIELD}"/>
   </g>
-  <g transform="translate(96 120) scale(2.4)">${mark({ outline: C.steel, fill: C.slate, prompt: C.amber })}</g>
-  <text x="96" y="370" font-family="'Geist', 'Inter', 'Helvetica Neue', Arial, sans-serif" font-size="92" font-weight="600" letter-spacing="-3" fill="${C.text}">NgBastion</text>
+  <g transform="translate(96 112) scale(2.5)">${mark(ON_DARK)}</g>
+  <text x="96" y="370" ${FONT} font-size="92" letter-spacing="-3"><tspan fill="${C.accent}">Ng</tspan><tspan fill="${C.fg}">Bastion</tspan></text>
   <text x="98" y="438" font-family="'Helvetica Neue', Arial, sans-serif" font-size="38" fill="${C.muted}">Your Angular security stronghold.</text>
-  <text x="98" y="540" font-family="Menlo, 'DejaVu Sans Mono', monospace" font-size="26" fill="${C.amber}">$ ngbastion scan</text>
+  <text x="98" y="540" font-family="Menlo, 'DejaVu Sans Mono', monospace" font-size="26" fill="${C.accent}">$ ngbastion scan</text>
   <text x="380" y="540" font-family="Menlo, 'DejaVu Sans Mono', monospace" font-size="26" fill="${C.muted}">local-first · type-aware data-flow · SARIF</text>`, 'NgBastion — Your Angular security stronghold.');
-writeFileSync(path.join(out, 'social-preview.svg'), social);
+write('social-preview.svg', social);
 await sharp(Buffer.from(social)).png().toFile(path.join(out, 'social-preview.png'));
-await sharp(Buffer.from(svg(64, 64, mark({ outline: C.steel, fill: C.slate, prompt: C.amber }), 'NgBastion'))).resize(180, 180).png().toFile(path.join(out, 'apple-touch-icon.png'));
+
+// Apple touch icon: opaque tile, mark at ~70% with padding.
+const touch = svg(180, 180, `<rect width="180" height="180" fill="${C.bg}"/><g transform="translate(26 24) scale(2)">${mark(ON_DARK)}</g>`, 'NgBastion');
+await sharp(Buffer.from(touch)).png().toFile(path.join(out, 'apple-touch-icon.png'));
 console.log(`brand assets written to ${out}`);
