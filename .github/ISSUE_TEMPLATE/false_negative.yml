@@ -1,0 +1,15 @@
+name: Missed vulnerability (false negative)
+description: A risky pattern or data flow NgBastion does not report.
+labels: [false-negative]
+body:
+  - type: input
+    id: rule
+    attributes: { label: Expected rule, placeholder: NGB011 }
+  - type: textarea
+    id: code
+    attributes: { label: Minimal vulnerable code (synthetic values only), render: ts }
+    validations: { required: true }
+  - type: textarea
+    id: flow
+    attributes: { label: Expected source → sink path }
+    validations: { required: true }
