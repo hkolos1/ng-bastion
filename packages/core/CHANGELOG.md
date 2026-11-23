@@ -1,5 +1,12 @@
 # @ngbastion/core
 
+## 0.3.0
+
+### Patch Changes
+
+- @ngbastion/config@0.3.0
+  - @ngbastion/plugin-api@0.3.0
+
 ## 0.2.0
 
 ### Minor Changes

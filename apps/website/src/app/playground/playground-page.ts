@@ -1,3 +1,4 @@
+import { SnippetEditor } from './snippet-editor';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Seo } from '../core/seo.service';
@@ -21,15 +22,16 @@ export function hitLines(variant: PgVariant, file: string): Set<number> {
 @Component({
   selector: 'ngb-playground-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, CodeBlock],
+  imports: [RouterLink, CodeBlock, SnippetEditor],
   template: `
     <section class="shell pg">
       <div class="pg-head">
         <p class="label">Playground</p>
         <h1>See a finding, then its fix.</h1>
-        <p class="lead">Three Angular examples, each in an unsafe and a safer variant, with the findings NgBastion reported for them.</p>
+        <p class="lead">Test a snippet locally or explore three Angular examples and their fixes.</p>
       </div>
-      <p class="notice" role="note"><strong>Demonstration:</strong>&ngsp;results were produced by NgBastion at build time for these fixtures; this page does not scan arbitrary input.</p>
+      <ngb-snippet-editor />
+      <p class="notice" role="note"><strong>Demonstration:</strong>&ngsp;the following fixture results were produced at build time.</p>
 
       <div class="controls">
         <fieldset class="control">

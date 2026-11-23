@@ -8,7 +8,7 @@ Source of **[ngbastion.web.app](https://ngbastion.web.app)** — an Angular 22 a
 | `/` | `src/app/home/` — landing page with a terminal demo of a real scan |
 | `/docs`, `/docs/**` | `content/docs/*.md` (hand-written) + generated CLI reference |
 | `/rules`, `/rules/ngb001` … `/rules/ngb020` | generated from `@ngbastion/rules` metadata |
-| `/playground` | `src/app/playground/` — signals-based demo over build-time scan results |
+| `/playground` | `src/app/playground/` — live NGB018 snippet analysis and build-time fixture walkthroughs |
 | `/changelog` | generated from the repository `CHANGELOG.md` |
 
 The original scaffold planned separate `apps/docs`, `apps/website` and `apps/playground`; they are
@@ -48,3 +48,7 @@ pnpm --filter @ngbastion/website dev        # local dev server
 - The site is scanned by NgBastion itself in `tests/integration/website-selfscan.test.ts`.
 
 Deploy (Firebase Hosting, manual): build, then `firebase deploy --only hosting` from this folder. `.firebaserc` is local and ignored; pass `--project` or run `firebase use --add` once.
+
+## Browser analysis assets
+
+Only the browser bootstrap installs the global Angular WebMCP provider. Catalog lookup, the dedicated TypeScript worker and standalone report rendering load on demand. The TypeScript compiler accounts for most of the worker's 3.58 MB (about 1.00 MB gzip). Neither prerendering nor ordinary landing-page visits start a worker. On the local production build the main JavaScript entry grew from 104.70 kB to about 106.30 kB gzip with the integration enabled.

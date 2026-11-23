@@ -13,7 +13,7 @@ describe('PlaygroundPage', () => {
   };
 
   it('labels the page as a build-time demonstration', () => {
-    expect(render().el.querySelector('.notice')!.textContent).toContain('this page does not scan arbitrary input');
+    expect(render().el.querySelector('.notice')!.textContent).toContain('fixture results were produced at build time');
   });
 
   it('shows real findings for unsafe variants and none for safe variants', () => {
@@ -37,7 +37,7 @@ describe('PlaygroundPage', () => {
     safe.checked = true;
     safe.click();
     fixture.detectChanges();
-    expect(el.querySelector('.pg-panel h2')!.textContent).toContain('safe variant');
+    expect(el.querySelector('.controls + .pg-panel h2')!.textContent).toContain('safe variant');
   });
 
   it('highlights source, sink and trace lines of the shown file', () => {

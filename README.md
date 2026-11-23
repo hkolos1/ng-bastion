@@ -254,6 +254,10 @@ the plugin API and CI/CD. Repository docs:
 - [docs/ROADMAP.md](docs/ROADMAP.md) — progress and deferred work
 - [ci-templates/](ci-templates) — GitHub Actions, GitLab CI, Jenkins, Azure DevOps
 
+## Browser agent tools
+
+The website exposes the rule catalog, search, explanations, CLI instructions, local snippet analysis and HTML reports through Angular’s experimental WebMCP integration. The playground uses the same TypeScript source check for NGB018. Run the CLI for full project coverage. [Browser tools and examples](apps/website/content/docs/webmcp.md)
+
 ## Security limitations
 
 NgBastion is a static analyzer with a deliberately bounded model. It does **not** replace

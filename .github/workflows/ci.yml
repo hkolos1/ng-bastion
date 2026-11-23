@@ -99,3 +99,5 @@ jobs:
         run: pnpm build
       - name: Website unit tests (Vitest + Angular TestBed)
         run: pnpm --filter @ngbastion/website test
+      - name: Native WebMCP, fallback playground and HTML download
+        run: node tests/browser/playground.mjs

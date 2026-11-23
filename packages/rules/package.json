@@ -1,6 +1,6 @@
 {
   "name": "@ngbastion/rules",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Built-in NgBastion security rules NGB001–NGB020.",
   "license": "MIT",
   "repository": {
@@ -23,6 +23,10 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
+    "./snippet": {
+      "types": "./dist/snippet.d.ts",
+      "import": "./dist/snippet.js"
+    },
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"

@@ -58,7 +58,7 @@ const h1Text = (/<h1[^>]*>([\s\S]*?)<\/h1>/.exec(home)?.[1] ?? '').replace(/<[^>
 if (h1Text !== 'Your Angular security stronghold.') problem(`/: tagline missing (h1 is "${h1Text}")`);
 if (!home.includes('captured when this site was built')) problem('/: real-scan terminal demo missing');
 const playground = readFileSync(htmlFor('/playground'), 'utf8');
-if (!playground.includes('this page does not scan arbitrary input')) problem('/playground: demonstration label missing');
+if (!playground.includes('fixture results were produced at build time')) problem('/playground: demonstration label missing');
 
 // 404.html is served by Firebase Hosting for unknown URLs; it must be the app's page and never indexed.
 const notFound = existsSync(path.join(out, '404.html')) ? readFileSync(path.join(out, '404.html'), 'utf8') : '';
