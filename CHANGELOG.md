@@ -4,7 +4,7 @@ All notable changes to NgBastion are documented here. The project follows
 [Semantic Versioning](https://semver.org/) and [Conventional Commits](https://www.conventionalcommits.org/);
 user-visible changes are tracked with [Changesets](.changeset).
 
-## Unreleased
+## 0.3.0 — 2026-11-23
 
 - Expose six experimental browser-agent tools and add live NGB018 TypeScript analysis and downloadable HTML reports to the playground.
 

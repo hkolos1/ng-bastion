@@ -1,5 +1,19 @@
 # ngbastion
 
+## 0.3.0
+
+### Minor Changes
+
+- 84ff6b2: Expose the reusable HTML document renderer and TypeScript literal check used by the website’s local snippet analysis.
+
+### Patch Changes
+
+- Updated dependencies [84ff6b2]
+  - @ngbastion/rules@0.3.0
+  - @ngbastion/config@0.3.0
+  - @ngbastion/core@0.3.0
+  - @ngbastion/plugin-api@0.3.0
+
 ## 0.2.0
 
 ### Minor Changes
