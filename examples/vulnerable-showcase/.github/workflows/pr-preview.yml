@@ -1,0 +1,22 @@
+# Intentionally vulnerable workflow for the NgBastion showcase. GitHub only runs workflows in the
+# repository-root .github/workflows, so this file is never executed.
+name: PR preview
+on:
+  pull_request_target:
+    types: [opened, synchronize]
+# NGB092: every scope writable for a workflow that handles fork pull requests.
+permissions: write-all
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      # NGB091: checks out the contributor's code under pull_request_target …
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      # NGB093: third-party action referenced by a movable tag.
+      - uses: some-org/setup-preview@v2
+      # NGB094: the PR title is expanded into the shell script.
+      - run: |
+          echo "Building preview for ${{ github.event.pull_request.title }}"
+          npm ci && npm run build

@@ -46,6 +46,12 @@ user-visible changes are tracked with [Changesets](.changeset).
   details sent to clients, NGB086 Static password-hashing salt, NGB087 Insufficient password-hashing
   work factor, NGB088 Insufficient asymmetric key size, NGB089 Truncated authentication tag, NGB090
   Signature verification result ignored. NGB084 only warn in `recommended`.
+- NGB091 Untrusted code in a privileged workflow, NGB092 Excessive workflow token permissions,
+  NGB093 Third-party action not pinned to a commit, NGB094 Untrusted expression in a workflow
+  script, NGB095 Untrusted artifact in a privileged workflow, NGB096 Development server exposed to
+  the network, NGB097 Package manager TLS verification disabled, NGB098 TLS certificate validation
+  disabled, NGB099 Untrusted module federation remote, NGB100 Untrusted import map. NGB096 only warn
+  in `recommended`.
 - The `recommended` preset enables them; the heuristic ones (NGB022, NGB027, NGB028, NGB030,
   NGB033, NGB037, NGB044, NGB045) only warn. Configurations without `extends` keep their explicit rule selection. To keep the previous
   behaviour on upgrade, set the new IDs to `"off"`.

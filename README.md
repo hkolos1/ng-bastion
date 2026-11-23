@@ -61,7 +61,7 @@ HIGH     NGB001  Unsafe HTML trust bypass  confidence: high · dataflow
 - **Severity and confidence are separate**; heuristic findings are labelled as such.
 - **Bounded analysis**: depth, call-site, file-hop, node and time limits; when one is hit you get an
   explicit `analysis-incomplete` diagnostic instead of silent gaps.
-- **90 security rules** (below), **terminal / JSON / SARIF 2.1.0** reports, **CI security gates**.
+- **100 security rules** (below), **terminal / JSON / SARIF 2.1.0** reports, **CI security gates**.
 - **Enterprise configuration**: presets, shared configs, organizational policies with mandatory
   rules, expiring exceptions, inline suppressions with required justification.
 - **Local-first**: no telemetry, no uploads, no network access during scans.
@@ -224,6 +224,16 @@ policies, exceptions, inline suppressions, analysis limits and trusted sanitizer
 | NGB088 | Insufficient asymmetric key size | Medium |
 | NGB089 | Truncated authentication tag | Medium |
 | NGB090 | Signature verification result ignored | High |
+| NGB091 | Untrusted code in a privileged workflow | Critical |
+| NGB092 | Excessive workflow token permissions | Medium |
+| NGB093 | Third-party action not pinned to a commit | Medium |
+| NGB094 | Untrusted expression in a workflow script | High |
+| NGB095 | Untrusted artifact in a privileged workflow | High |
+| NGB096 | Development server exposed to the network | Low |
+| NGB097 | Package manager TLS verification disabled | High |
+| NGB098 | TLS certificate validation disabled | High |
+| NGB099 | Untrusted module federation remote | High |
+| NGB100 | Untrusted import map | High |
 
 Every rule documents its detected patterns, limitations, false-positive considerations and
 remediation: `ngbastion explain <ID>` or the generated rule pages of the documentation site.

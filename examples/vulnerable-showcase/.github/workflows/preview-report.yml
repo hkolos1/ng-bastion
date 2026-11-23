@@ -1,0 +1,18 @@
+# Intentionally vulnerable workflow for the NgBastion showcase (never executed, see pr-preview.yml).
+name: Preview report
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+permissions:
+  pull-requests: write
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      # NGB095: artifacts of the (fork-controlled) triggering run are executed with a write token.
+      - uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - run: bash ./report/post-comment.sh

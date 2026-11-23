@@ -101,3 +101,4 @@ metadata (`ngbastion explain NGBxxx`, website rule pages) and summarised below a
 | B | NGB061–NGB070 | ✅ implemented, tested (positive / safe / false-positive regression), in the showcase |
 | C | NGB071–NGB080 | ✅ implemented, tested (positive / safe / false-positive regression), in the showcase |
 | D | NGB081–NGB090 | ✅ implemented, tested (positive / safe / false-positive regression), in the showcase |
+| E | NGB091–NGB100 | ✅ implemented, tested (positive / safe / false-positive regression), in the showcase |
