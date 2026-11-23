@@ -1,6 +1,3 @@
-dist/
-node_modules/
-.angular/
 # Generated at build time by scripts/generate.mjs from the real packages
 src/generated/
 content/generated/

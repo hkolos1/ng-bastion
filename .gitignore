@@ -1,14 +1,31 @@
+# Dependencies
 node_modules/
+
+# Build output and caches
 dist/
 coverage/
 .turbo/
 .angular/
-*.log
-.DS_Store
-results.sarif
-ngbastion-report.*
-.idea/
+*.tsbuildinfo
+*.tgz
 
-# copied from repo root by prepack
+# Copied from the repository root by prepack
 packages/*/LICENSE
 packages/cli/README.md
+
+# NgBastion reports (local runs, CI templates)
+*.sarif
+ngbastion.json
+ngbastion-report.*
+
+# Environment and secrets
+.env
+.env.*
+
+# Logs
+*.log
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
