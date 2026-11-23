@@ -13,8 +13,14 @@ user-visible changes are tracked with [Changesets](.changeset).
   NGB025 Authentication cookie set from JavaScript, NGB026 Untrusted HTTP request destination
   (client-side path traversal), NGB027 Sensitive data in DOM attributes, NGB028 Sensitive data on
   global objects, NGB029 Sensitive data in navigation state, NGB030 Permissive referrer policy.
-- The `recommended` preset enables them; the heuristic ones (NGB022, NGB027, NGB028, NGB030) only
-  warn. Configurations without `extends` keep their explicit rule selection. To keep the previous
+- NGB031 Sensitive data in CacheStorage, NGB032 Service worker caches user-specific responses
+  (`ngsw-config.json` data groups and custom workers), NGB033 `window.open()` without noopener,
+  NGB034 Untrusted postMessage target origin, NGB035 Untrusted dynamic method dispatch,
+  NGB036 Prototype pollution, NGB037 Regular expression injection, NGB038 Sensitive form
+  submission target, NGB039 JSONP request, NGB040 Plaintext network transport (HTTP, WebSocket,
+  EventSource, production environment URLs).
+- The `recommended` preset enables them; the heuristic ones (NGB022, NGB027, NGB028, NGB030,
+  NGB033, NGB037) only warn. Configurations without `extends` keep their explicit rule selection. To keep the previous
   behaviour on upgrade, set the new IDs to `"off"`.
 
 ### Fixes

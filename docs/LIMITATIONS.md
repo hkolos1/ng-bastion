@@ -339,4 +339,97 @@ Possible false positives:
 
 - An `unsafe-url` policy on a single element whose destination is your own origin leaks nothing; it is still reported because the setting is fragile.
 
+### NGB031 — Sensitive data in CacheStorage
+
+- Cache keys built dynamically without a constant prefix are not classified.
+- Code inside service workers is covered by NGB032, which also analyzes Angular `ngsw-config.json`.
+- Whether the application clears the cache on logout (`caches.delete()`) is not verified.
+
+Possible false positives:
+
+- Endpoints matched by name (e.g. a public `/api/orders/statuses` list) can be reported; suppress with a justification.
+
+### NGB032 — Service worker caches user-specific responses
+
+- Workbox configurations (`workbox-config.js`, `registerRoute(...)` strategies) are not analyzed.
+- Custom workers are matched by file name; workers with other names are not found.
+- Whether the application clears caches on logout is not verified.
+
+Possible false positives:
+
+- Data groups for endpoints that look user-specific but return public data (e.g. `/api/orders/statuses`) can be reported.
+
+### NGB033 — window.open() without noopener
+
+- Popups whose handle is kept (e.g. OAuth or payment popups that use `postMessage`) need the opener and are not reported.
+- Dynamic feature strings are treated as not containing `noopener`.
+
+Possible false positives:
+
+- A dynamic URL that always points to your own origin is reported; the impact is nil in that case.
+
+### NGB034 — Untrusted postMessage target origin
+
+- Origins stored in fields or services and used later are followed by the taint engine only for modeled sources; a stored `event.origin` from an earlier message is not followed.
+- The payload is classified by names and types only.
+
+Possible false positives:
+
+- Public widgets that deliberately answer any embedder with non-sensitive data are reported with medium severity; document an exception.
+
+### NGB035 — Untrusted dynamic method dispatch
+
+- Dispatch through `Map.get(key)` is not reported (Maps have no prototype keys); only computed member calls are.
+- Keys that pass through unmodeled libraries lose confidence or are not followed.
+
+Possible false positives:
+
+- Handler maps created with `Object.create(null)` and frozen are safe from prototype keys but still let the sender pick any handler; the finding is still reported with medium severity.
+
+### NGB036 — Prototype pollution
+
+- Hand-written recursive merge functions are only covered when the nested assignment pattern is visible; recursion depth is not modeled.
+- Library versions are not checked: patched lodash versions still pollute through `merge` with `constructor.prototype` paths in some configurations, so all calls are reported.
+- HTTP responses and Web Storage are not treated as attacker-controlled here.
+
+Possible false positives:
+
+- Merging a message payload that was already validated by a schema in another function is reported; schema validation is only recognized by NGB009.
+
+### NGB037 — Regular expression injection
+
+- Whether the resulting pattern is exponential is not analyzed; any unescaped untrusted pattern is reported.
+- Code shared between browser and SSR is reported with medium severity unless it is in a server file.
+
+Possible false positives:
+
+- Search boxes that intentionally accept regular expressions from the user typing them only affect that user; such findings are low confidence.
+
+### NGB038 — Sensitive form submission target
+
+- Fields are attributed to the closest preceding `<form>` in the template (document order); fields placed after a form closes but before the next one are attributed to the earlier form.
+- Forms built with Renderer2 / DOM APIs are not covered; dynamic `form.action = …` assignments are handled by NGB012 (scheme) and NGB011 (redirects).
+
+Possible false positives:
+
+- Intended posts to a payment provider (3-D Secure ACS, hosted payment page) are reported with low confidence; document an exception.
+
+### NGB039 — JSONP request
+
+- Hand-written JSONP (creating `<script src="…?callback=…">`) is covered by NGB005, not this rule.
+- `withJsonpSupport()` / `HttpClientJsonpModule` registrations without visible `jsonp()` calls are not reported.
+
+Possible false positives:
+
+- Legacy first-party JSONP endpoints on the same origin are reported with low confidence.
+
+### NGB040 — Plaintext network transport
+
+- URLs assembled from configuration that is not a constant (`environment.apiUrl` with a non-constant value, runtime config files) are only covered through the environment-file check.
+- The serving protocol of the application itself (HTTP vs HTTPS, HSTS) is not visible.
+
+Possible false positives:
+
+- Internal hostnames that are only reachable on a trusted network (e.g. `http://intranet-api`) are reported; they still travel unencrypted.
+
 _Generated from rule metadata in `packages/rules` by `scripts/generate-limitations.mjs`._

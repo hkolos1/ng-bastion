@@ -1,6 +1,6 @@
 import type * as ts from 'typescript';
 import { defineRule, lowerConfidence, type AnalysisContext, type RuleFinding, type TaintFlow } from '@ngbastion/plugin-api';
-import { flowEvidence, sinkStep, strip } from '../shared/common.js';
+import { flowEvidence, sinkStep, strip, codeFiles } from '../shared/common.js';
 import { words } from '../shared/sensitivity.js';
 
 const GUARD_TYPES = new Set(['CanActivateFn', 'CanActivateChildFn', 'CanMatchFn', 'CanLoadFn']);
@@ -16,7 +16,7 @@ function guardFunctions(ctx: AnalysisContext): ts.SignatureDeclaration[] {
   const addClass = (cls: ts.ClassDeclaration) => {
     for (const m of cls.members) if (t.isMethodDeclaration(m) && GUARD_METHODS.has(m.name.getText())) out.add(m);
   };
-  for (const sf of ctx.sourceFiles) {
+  for (const sf of codeFiles(ctx)) {
     const visit = (n: ts.Node): void => {
       if (t.isVariableDeclaration(n) && n.type && t.isTypeReferenceNode(n.type) && GUARD_TYPES.has(n.type.typeName.getText()) && n.initializer) {
         const fn = ctx.flow.resolveFunction(n.initializer);

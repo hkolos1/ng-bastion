@@ -1,6 +1,6 @@
 import type * as ts from 'typescript';
 import { defineRule, type AnalysisContext, type Confidence, type RuleFinding, type Severity } from '@ngbastion/plugin-api';
-import { is, strip } from '../shared/common.js';
+import { is, strip, codeFiles } from '../shared/common.js';
 
 const CONFIG_KEYS = /^(issuer|authority|clientId|client_id|redirectUri|redirect_uri|loginUrl|tokenEndpoint|postLogoutRedirectUri)$/;
 
@@ -103,7 +103,7 @@ export const ngb024 = defineRule({
   analyze(ctx) {
     const t = ctx.ts;
     const findings: RuleFinding[] = [];
-    for (const sf of ctx.sourceFiles) {
+    for (const sf of codeFiles(ctx)) {
       const visit = (n: ts.Node): void => {
         if (t.isObjectLiteralExpression(n)) {
           const props = n.properties.filter((p): p is ts.PropertyAssignment => t.isPropertyAssignment(p) && (t.isIdentifier(p.name) || t.isStringLiteralLike(p.name)));

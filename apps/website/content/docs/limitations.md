@@ -18,7 +18,7 @@ NgBastion reports the patterns it models. The following are known gaps.
 ## Potential false positives
 
 - HTTP responses from your own backend are treated as untrusted (medium trust). If the backend guarantees sanitized content, document an exception.
-- Name-based sensitivity (tokens, card data, secrets in NGB006, NGB014–NGB018, NGB020, NGB025, NGB027–NGB029) can match values that are not sensitive.
+- Name-based sensitivity (tokens, card data, secrets in NGB006, NGB014–NGB018, NGB020, NGB025, NGB027–NGB029, NGB031, NGB034, NGB040) can match values that are not sensitive.
 - Calls into unmodeled libraries propagate taint from their arguments with reduced confidence.
 
 ## Potential false negatives

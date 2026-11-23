@@ -61,7 +61,7 @@ HIGH     NGB001  Unsafe HTML trust bypass  confidence: high · dataflow
 - **Severity and confidence are separate**; heuristic findings are labelled as such.
 - **Bounded analysis**: depth, call-site, file-hop, node and time limits; when one is hit you get an
   explicit `analysis-incomplete` diagnostic instead of silent gaps.
-- **30 security rules** (below), **terminal / JSON / SARIF 2.1.0** reports, **CI security gates**.
+- **40 security rules** (below), **terminal / JSON / SARIF 2.1.0** reports, **CI security gates**.
 - **Enterprise configuration**: presets, shared configs, organizational policies with mandatory
   rules, expiring exceptions, inline suppressions with required justification.
 - **Local-first**: no telemetry, no uploads, no network access during scans.
@@ -164,6 +164,16 @@ policies, exceptions, inline suppressions, analysis limits and trusted sanitizer
 | NGB028 | Sensitive data on global objects | Medium |
 | NGB029 | Sensitive data in navigation state | High |
 | NGB030 | Permissive referrer policy | Medium |
+| NGB031 | Sensitive data in CacheStorage | Medium |
+| NGB032 | Service worker caches user-specific responses | Medium |
+| NGB033 | window.open() without noopener | Low |
+| NGB034 | Untrusted postMessage target origin | High |
+| NGB035 | Untrusted dynamic method dispatch | High |
+| NGB036 | Prototype pollution | High |
+| NGB037 | Regular expression injection | Medium |
+| NGB038 | Sensitive form submission target | High |
+| NGB039 | JSONP request | Medium |
+| NGB040 | Plaintext network transport | Medium |
 
 Every rule documents its detected patterns, limitations, false-positive considerations and
 remediation: `ngbastion explain <ID>` or the generated rule pages of the documentation site.
