@@ -38,7 +38,7 @@ afterAll(() => rmSync(tmpRoot, { recursive: true, force: true }));
 describe('cli basics', () => {
   it('prints help and version', async () => {
     expect((await cli(['--help'])).stdout).toContain('Commands:');
-    expect((await cli(['--version'])).stdout.trim()).toBe('0.1.0');
+    expect((await cli(['--version'])).stdout.trim()).toBe(JSON.parse(readFileSync(path.join(repo, 'packages/cli/package.json'), 'utf8')).version);
     expect((await cli(['scan', '--help'])).stdout).toContain('--fail-on');
   });
 

@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { createRequire } from 'node:module';
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import picomatch from 'picomatch';
@@ -33,7 +34,8 @@ import {
   type Workspace,
 } from './workspace.js';
 
-export const ENGINE_VERSION = '0.1.0';
+// Read at runtime so `changeset version` is the single source of truth ('../package.json' works from src/ and dist/).
+export const ENGINE_VERSION: string = (createRequire(import.meta.url)('../package.json') as { version: string }).version;
 
 export interface RelativeLocation {
   file: string;
