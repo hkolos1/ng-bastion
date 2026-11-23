@@ -29,3 +29,10 @@ ngbastion-report.*
 .idea/
 .vscode/
 .DS_Store
+
+# Firebase: local project binding, deploy cache and credentials stay off git
+.firebaserc
+.firebase/
+*service-account*.json
+*serviceAccount*.json
+*-adminsdk-*.json

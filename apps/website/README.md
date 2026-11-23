@@ -1,6 +1,6 @@
 # @ngbastion/website
 
-Source of **ngbastion.dev** — an Angular 22 application built with [AnalogJS](https://analogjs.org)
+Source of **[ngbastion.web.app](https://ngbastion.web.app)** — an Angular 22 application built with [AnalogJS](https://analogjs.org)
 (Vite) and Tailwind CSS v4, statically pre-rendered (SSG) for every route:
 
 | Route | Source |
@@ -47,4 +47,4 @@ pnpm --filter @ngbastion/website dev        # local dev server
   during pre-rendering. `scripts/verify-build.mjs` checks every route after the build.
 - The site is scanned by NgBastion itself in `tests/integration/website-selfscan.test.ts`.
 
-Nothing here deploys the site. Publishing ngbastion.dev requires explicit approval.
+Deploy (Firebase Hosting, manual): build, then `firebase deploy --only hosting` from this folder. `.firebaserc` is local and ignored; pass `--project` or run `firebase use --add` once.
