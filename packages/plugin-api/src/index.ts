@@ -39,7 +39,9 @@ export type RuleCategory =
   | 'navigation-auth'
   | 'sensitive-data'
   | 'security-config'
-  | 'ssr';
+  | 'ssr'
+  | 'cryptography'
+  | 'supply-chain';
 
 export interface RuleDocs {
   /** One paragraph: what the rule checks. */
@@ -116,7 +118,9 @@ export type SourceKind =
   | 'user-input'
   | 'storage'
   | 'http-response'
-  | 'cookie';
+  | 'cookie'
+  /** Host / X-Forwarded-* request headers read by server-side (SSR) code. */
+  | 'request-header';
 
 export interface TaintSource {
   kind: SourceKind;

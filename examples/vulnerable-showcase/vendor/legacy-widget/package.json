@@ -1,0 +1,8 @@
+{
+  "name": "legacy-widget",
+  "private": true,
+  "description": "NGB049 fixture: never installed (not a workspace package).",
+  "dependencies": {
+    "chart-helpers": "github:acme/chart-helpers#main"
+  }
+}

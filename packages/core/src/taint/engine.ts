@@ -65,6 +65,7 @@ interface TraceState {
   truncated: boolean;
 }
 
+const ORIGIN_PARTS = new Set(['origin', 'host', 'hostname', 'protocol', 'port']);
 const SIGNAL_MODULES = ['@angular/core', '@angular/core/rxjs-interop'];
 const PASSTHROUGH_OPERATORS = new Set([
   'tap', 'filter', 'take', 'takeUntil', 'takeUntilDestroyed', 'takeWhile', 'first', 'last', 'distinctUntilChanged',
@@ -468,6 +469,8 @@ export class TaintEngine implements TaintAnalyzer {
   private visitMember(e: ts.PropertyAccessExpression | ts.ElementAccessExpression, env: Env, path: Path, mode: Mode) {
     const name = memberName(e);
     if (name === 'length') return this.constant();
+    // `location.origin` / `.host` / `.protocol` are the application's own origin, not attacker-controlled URL parts.
+    if (name && ORIGIN_PARTS.has(name) && originIs(this.symbols.typeOrigin(e.expression), 'dom', 'Location')) return this.constant();
     if (name) this.addName(name);
     let sym = this.symbols.symbolAt(e);
     let decl = sym?.valueDeclaration ?? sym?.declarations?.[0];
@@ -657,7 +660,7 @@ export class TaintEngine implements TaintAnalyzer {
           for (const a of call.arguments) this.visit(a, env, p);
           return;
         }
-        if (RECEIVER_PASSTHROUGH[ro.name]?.has(name)) {
+        if (Object.hasOwn(RECEIVER_PASSTHROUGH, ro.name) && RECEIVER_PASSTHROUGH[ro.name]!.has(name)) {
           return this.visit(recv, env, this.extend(path, 'transform', call, `${ro.name}.${name}()`));
         }
       }
@@ -750,7 +753,7 @@ export class TaintEngine implements TaintAnalyzer {
       const ctxName = ctxArg ? memberName(ctxArg) ?? this.symbols.constantString(ctxArg) : undefined;
       const map: Record<string, SinkContext[]> = { HTML: ['html'], '1': ['html'], URL: ['url'], '4': ['url'], RESOURCE_URL: ['resource-url'], '5': ['resource-url'], SCRIPT: ['script'], '3': ['script'] };
       const valueArg = call.arguments[1];
-      return { description: `DomSanitizer.sanitize(SecurityContext.${ctxName ?? '?'})`, contexts: map[ctxName ?? ''] ?? [], ...(valueArg ? { valueArg } : {}) };
+      return { description: `DomSanitizer.sanitize(SecurityContext.${ctxName ?? '?'})`, contexts: ctxName && Object.hasOwn(map, ctxName) ? map[ctxName]! : [], ...(valueArg ? { valueArg } : {}) };
     }
     if (name === 'sanitize' && recvExpr && (['dompurify', 'isomorphic-dompurify'].includes(receiver?.module ?? '')
       || (ts.isIdentifier(skipOuter(recvExpr)) && (skipOuter(recvExpr) as ts.Identifier).text === 'DOMPurify'))) {

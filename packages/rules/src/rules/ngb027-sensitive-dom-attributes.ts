@@ -1,15 +1,20 @@
 import type * as ts from 'typescript';
-import { defineRule, type Confidence, type RuleFinding } from '@ngbastion/plugin-api';
+import { defineRule, lowerConfidence, type Confidence, type RuleFinding } from '@ngbastion/plugin-api';
 import { domElement, is, memberName, receiverOf, strip } from '../shared/common.js';
 import { classifyName, sensitiveValue, words } from '../shared/sensitivity.js';
 
 /** Attributes that end up in the serialized DOM (and in SSR HTML). `value` only counts on hidden inputs. */
-const REFLECTED = /^(data-[\w-]+|aria-[\w-]+|title|alt|name|id|content|placeholder|label|class)$/i;
+const REFLECTED = /^(data-[\w-]+|aria-[\w-]+|title|alt|name|id|content|placeholder)$/i;
 
 /** Credential / payment identifiers inside a template expression (`user.accessToken`, `card.cvv | slice:0:3`). */
 function sensitiveTemplateNames(expr: string): { term: string; confidence: Confidence }[] {
   const out: { term: string; confidence: Confidence }[] = [];
-  const head = expr.split(/\|(?!\|)/)[0]!;
+  // Interpolated attributes (`id="row-credentials-{{ r.id }}"`): only the expressions inside {{ }} are values.
+  if (expr.includes('{{')) expr = [...expr.matchAll(/\{\{([\s\S]*?)\}\}/g)].map((m) => m[1]).join(' ');
+  // Call arguments (`getCopyText(credential)`) are inputs to a formatter, not the rendered value.
+  for (let i = 0; i < 3; i++) expr = expr.replace(/[A-Za-z_$][\w$]*\s*\([^()]*\)/g, ' ');
+  // Drop string literals ('login.form.password.placeholder' is a translation key, not a value) and pipes.
+  const head = expr.replace(/'(?:[^'\\]|\\.)*'|"(?:[^"\\]|\\.)*"|`(?:[^`\\]|\\.)*`/g, "''").split(/\|(?!\|)/)[0]!;
   for (const m of head.matchAll(/[A-Za-z_$][\w$]*/g)) {
     const name = m[0];
     const next = head[m.index! + name.length];
@@ -33,13 +38,15 @@ export const ngb027 = defineRule({
       rationale:
         'Attributes are part of the serialized document: they appear in SSR HTML, are captured by session-replay and analytics tools, are visible to every script and browser extension through simple DOM queries (`[data-token]`), and survive in saved pages. Secrets that only code needs belong in memory, not in markup.',
       patterns: [
-        'Template attribute/property bindings on reflected attributes: `data-*`, `aria-*`, `title`, `alt`, `name`, `id`, `content`, `placeholder`, `label`, `class`',
+        'Template attribute/property bindings on reflected attributes of native elements: `data-*`, `aria-*`, `title`, `alt`, `name`, `id`, `placeholder`, `content` (on `<meta>`); on components (`<app-x>`) only `data-*` / `aria-*` (other bindings are inputs)',
+        'Interpolated attribute values (`id="row-{{ r.id }}"`) are classified by the expressions inside `{{ }}`; arguments of formatter calls and string literals (translation keys) are ignored',
         '`<input type="hidden" [value]="…">` (hidden form fields)',
         'Expression names classified as credentials or payment data (`accessToken`, `apiKey`, `password`, `sessionId`, `cardNumber`, `cvv`); CSRF tokens, `last4`, `maskedPan` and method calls are ignored',
         '`el.setAttribute(name, v)`, `renderer.setAttribute(el, name, v)`, `el.dataset.key = v` where the value is classified as sensitive (by name, type or data flow)',
       ],
       limitations: [
         'Template expressions are classified by identifier names only (no type information inside templates).',
+        'Directive inputs on native elements that share a name with a reflected attribute (`[title]` consumed by a tooltip directive) are treated as attributes.',
         'Attributes set by third-party components from their inputs are not followed.',
       ],
       falsePositives: [
@@ -61,8 +68,12 @@ export const ngb027 = defineRule({
     for (const tpl of ctx.templates) {
       for (const el of tpl.elements) {
         const hiddenInput = el.name.toLowerCase() === 'input' && el.attributes.some((a) => !a.bound && a.name.toLowerCase() === 'type' && a.value.toLowerCase() === 'hidden');
+        const component = el.name.includes('-');
         for (const a of el.attributes) {
           if (!a.bound) continue;
+          // On components most bindings are inputs, not DOM attributes; only data-/aria- attributes are certain.
+          if (component && !/^(data|aria)-/i.test(a.name)) continue;
+          if (a.name.toLowerCase() === 'content' && el.name.toLowerCase() !== 'meta') continue;
           if (!REFLECTED.test(a.name) && !(hiddenInput && a.name === 'value')) continue;
           const hits = sensitiveTemplateNames(a.value);
           if (!hits.length) continue;
@@ -86,7 +97,8 @@ export const ngb027 = defineRule({
       findings.push({
         node,
         message: `${how} stores ${s.category === 'payment' ? 'payment data' : 'a credential'} in the${attr ? ` '${attr}'` : ''} DOM attribute, where every script and DOM-capturing tool can read it.`,
-        confidence: s.confidence,
+        // Evidence only from names along the data flow is weak for a heuristic rule.
+        confidence: s.strongest.via === 'origin' ? lowerConfidence(s.confidence) : s.confidence,
         evidenceKind: 'heuristic',
         evidence: s.evidence,
         redactSnippet: true,

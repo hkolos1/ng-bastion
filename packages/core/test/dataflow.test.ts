@@ -130,6 +130,29 @@ describe('taint engine: messages, storage, sanitizers', () => {
     expect(results[3]!.flows[0]!.approximations.join()).toMatch(/not HTML-escaped/);
   });
 
+  it('models server request headers (Host / X-Forwarded-*) and Express query values as sources', async () => {
+    const results = await traceSink({
+      'a.ts': `${SINK}import type { Request } from 'express';\nexport function h(req: Request, r: globalThis.Request, other: { headers: { host: string } }) {\n  sink(req.headers.host);\n  sink(req.get('x-forwarded-host'));\n  sink(req.hostname);\n  sink(r.headers.get('host'));\n  sink(req.query['next']);\n  sink(other.headers.host);\n  sink(req.headers['user-agent']);\n}`,
+    }, 'generic');
+    expect(results.slice(0, 4).map((r) => r.flows[0]?.source.kind)).toEqual(['request-header', 'request-header', 'request-header', 'request-header']);
+    expect(results[4]!.flows[0]!.source.kind).toBe('url');
+    expect(results[5]!.flows).toHaveLength(0);
+    expect(results[6]!.flows).toHaveLength(0);
+  });
+
+  it('does not crash on receiver types named like Object.prototype members', async () => {
+    // `Object.prototype.toString.call(v)`: the receiver's type origin is named `toString`.
+    const [r] = await traceSink({ 'a.ts': `${SINK}export function f() { sink(Object.prototype.toString.call(location.hash)); }` }, 'generic');
+    expect(r).toBeDefined();
+  });
+
+  it('does not treat the own origin (location.origin / host / protocol) as attacker-controlled', async () => {
+    const [origin, host, href] = await traceSink({ 'a.ts': `${SINK}export function f() {\n  sink(window.location.origin);\n  sink(location.host + '/x');\n  sink(location.href);\n}` }, 'generic');
+    expect(origin!.flows).toHaveLength(0);
+    expect(host!.flows).toHaveLength(0);
+    expect(href!.flows).toHaveLength(1);
+  });
+
   it('treats encodeURIComponent() as a sanitizer for URL contexts only, and encodeURI() for none', async () => {
     const SRC = `${SINK}export function run() {\n  sink(encodeURIComponent(location.hash));\n  sink(encodeURI(location.hash));\n}`;
     const [url, urlRaw] = await traceSink({ 'a.ts': SRC }, 'url');

@@ -51,4 +51,7 @@ export class Frame { constructor(private s: DomSanitizer) {} src = this.s.bypass
     expect(res).toHaveLength(1);
     expect(res[0]!.trace![0]!.file).toBe('src/app/url.ts');
   });
+  it('false-positive regression: Object.prototype method names (hasOwnProperty, toString) are not trust-bypass APIs', async () => {
+    expect(await one('NGB002', `export function f(map: any, key: any, n: any) { if (map.hasOwnProperty(key)) return n.toString(16); return n.valueOf(); }`)).toEqual([]);
+  });
 });

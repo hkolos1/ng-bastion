@@ -39,6 +39,20 @@ function isDom(o: TypeOrigin | undefined, ...names: string[]): boolean {
   return originIs(o, 'dom', ...names);
 }
 
+/** Request headers that carry the client-chosen host or scheme. */
+const HOST_HEADERS = new Set(['host', 'x-forwarded-host', 'x-forwarded-proto', 'x-forwarded-server', 'x-original-host', 'x-host', 'forwarded']);
+const NODE_REQUEST_MODULES = ['express', 'express-serve-static-core', 'http', 'node:http', 'http2', 'node:http2'];
+
+/** Server-side incoming request: Express / Node `IncomingMessage`, or the Fetch `Request` (Angular `REQUEST` token). */
+function requestKind(expr: ts.Expression, symbols: Symbols): 'node' | 'fetch' | undefined {
+  const o = symbols.typeOrigin(skipOuter(expr));
+  if (originIs(o, NODE_REQUEST_MODULES, 'Request', 'IncomingMessage', 'Http2ServerRequest')) return 'node';
+  if (isDom(o, 'Request')) return 'fetch';
+  return undefined;
+}
+
+const headerSource = (name: string): SourceMatch => ({ kind: 'request-header', description: `request header '${name}'`, trust: 'medium' });
+
 /** Classifies an expression that directly yields an untrusted value. */
 export function matchSource(expression: ts.Expression, symbols: Symbols): SourceMatch | undefined {
   const e = skipOuter(expression);
@@ -75,6 +89,12 @@ export function matchMemberSource(obj: ts.Expression, name: string | undefined, 
     }
     if (name === 'value' && originIs(objOrigin, FORMS, ...FORM_TYPES)) return { kind: 'user-input', description: `${objOrigin!.name}.value (Angular forms)`, trust: 'medium' };
     if (name === 'url' && originIs(objOrigin, ROUTER, 'Router')) return { kind: 'url', description: 'Router.url', trust: 'high' };
+    if (HOST_HEADERS.has(name.toLowerCase()) && memberName(obj) === 'headers' && requestKind(memberObject(obj)!, symbols) === 'node') return headerSource(name.toLowerCase());
+    if ((name === 'hostname' || name === 'host' || name === 'protocol') && requestKind(obj, symbols) === 'node') return { kind: 'request-header', description: `request.${name} (from the Host / X-Forwarded-* headers)`, trust: 'medium' };
+    // Express / Node only: browser code builds Fetch `Request` objects itself, so their `url` is not attacker input.
+    if ((name === 'query' || name === 'params' || name === 'originalUrl' || name === 'url') && requestKind(obj, symbols) === 'node') {
+      return { kind: 'url', description: `server request ${name} (Express / Node)`, trust: 'high' };
+    }
     if (isDom(objOrigin, 'Storage') && name !== 'length' && !['getItem', 'setItem', 'removeItem', 'clear', 'key'].includes(name)) {
       return { kind: 'storage', description: `Web Storage key '${name}'`, trust: 'low' };
     }
@@ -97,6 +117,14 @@ function matchNonMemberSource(e: ts.Expression, symbols: Symbols): SourceMatch |
     if (recv && name === 'getItem' && isDom(symbols.typeOrigin(recv), 'Storage')) {
       const key = e.arguments[0] ? symbols.constantString(e.arguments[0]) : undefined;
       return { kind: 'storage', description: `Web Storage getItem(${key ? `'${key}'` : '…'})`, trust: 'low' };
+    }
+    // req.get('host') / req.header('x-forwarded-host') (Express); request.headers.get('host') / headers.get(…) (Fetch)
+    if (recv && (name === 'get' || name === 'header') && e.arguments[0]) {
+      const key = symbols.constantString(e.arguments[0])?.toLowerCase();
+      if (key && HOST_HEADERS.has(key)) {
+        if (requestKind(recv, symbols) === 'node') return headerSource(key);
+        if (name === 'get' && (isDom(symbols.typeOrigin(recv), 'Headers') || (memberName(recv) === 'headers' && requestKind(memberObject(recv)!, symbols)))) return headerSource(key);
+      }
     }
     if (recv && name === 'path' && originIs(symbols.typeOrigin(recv), '@angular/common', 'Location')) {
       return { kind: 'url', description: 'Location.path() (@angular/common)', trust: 'high' };

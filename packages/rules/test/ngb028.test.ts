@@ -21,6 +21,10 @@ describe('NGB028 sensitive data on global objects', () => {
     expect(await one('NGB028', `export function f(cfg: { theme: string }) { (window as any).appVersion = '1.0'; (window as any).config = cfg; window.location.href = '/'; }`)).toEqual([]);
   });
 
+  it('false-positive regression: API polyfills on globalThis', async () => {
+    expect(await one('NGB028', `export function setup() { (globalThis as any).PublicKeyCredential = class {}; (window as any).credentialsFactory = () => null; }`)).toEqual([]);
+  });
+
   it('false-positive regression: local variables named window and window.name (NGB029)', async () => {
     expect(await one('NGB028', `export function f(token: string) { const window = { token: '' }; window.token = token; }
 export function g(token: string) { globalThis.name = token; }`)).toEqual([]);

@@ -19,12 +19,30 @@ user-visible changes are tracked with [Changesets](.changeset).
   NGB036 Prototype pollution, NGB037 Regular expression injection, NGB038 Sensitive form
   submission target, NGB039 JSONP request, NGB040 Plaintext network transport (HTTP, WebSocket,
   EventSource, production environment URLs).
+- NGB041 Unsafe inline state serialization (SSR), NGB042 Host header injection in SSR, NGB043
+  Insecure session cookie attributes, NGB044 Public production source maps, NGB045 Missing
+  subresource integrity, NGB046 Insecure randomness for security values, NGB047 Static IV in Web
+  Crypto encryption, NGB048 Weak hash algorithm, NGB049 Insecure dependency source, NGB050
+  `document.domain` relaxation. New categories: Cryptography, Supply chain.
 - The `recommended` preset enables them; the heuristic ones (NGB022, NGB027, NGB028, NGB030,
-  NGB033, NGB037) only warn. Configurations without `extends` keep their explicit rule selection. To keep the previous
+  NGB033, NGB037, NGB044, NGB045) only warn. Configurations without `extends` keep their explicit rule selection. To keep the previous
   behaviour on upgrade, set the new IDs to `"off"`.
+
+### Engine
+
+- New taint sources for SSR code: `Host` / `X-Forwarded-*` request headers (source kind
+  `request-header`) and Express / Node `req.query`, `req.params`, `req.url`.
+- `location.origin`, `host`, `hostname`, `protocol` and `port` are no longer tainted.
+- Callee and type resolution is memoized: scans with 50 rules are faster than 0.1.2 with 20
+  (bitwarden/clients monorepo 36.8 s → 26.5 s).
+- Plugin API: `SourceKind` gained `request-header`, `RuleCategory` gained `cryptography` and
+  `supply-chain` (additive; exhaustive switches in plugins need a default branch).
 
 ### Fixes
 
+- NGB002 reported every `obj.hasOwnProperty(key)` / `toString()` call on untyped receivers, and
+  NGB009 crashed on `Object.prototype.toString.call(v)`: method and type names were looked up in
+  plain objects, where `Object.prototype` members match.
 - `encodeURIComponent()` was accepted as an HTML sanitizer and `encodeURI()` as an HTML sanitizer.
   URL encoding is not HTML escaping (`'`, `(`, `)` survive and break out of single-quoted
   attributes). Flows through them into HTML sinks (NGB001, NGB003) are now reported with one

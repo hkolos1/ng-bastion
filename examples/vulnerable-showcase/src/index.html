@@ -8,6 +8,8 @@
   <meta name="referrer" content="unsafe-url">
   <!-- NGB019: inline scripts allowed without nonces, eval allowed -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'">
+  <!-- NGB045: third-party script without integrity -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
   <app-root></app-root>

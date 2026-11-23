@@ -6,7 +6,7 @@
             │ (packages/   │     │ config         │  extends, policies, exceptions
             │  cli)        │     └────────────────┘
             │ reporters:   │     ┌────────────────┐
-            │ terminal,    │────▶│ @ngbastion/    │  builtinRules NGB001–NGB040
+            │ terminal,    │────▶│ @ngbastion/    │  builtinRules NGB001–NGB050
             │ JSON, SARIF  │     │ rules          │──┐ (depend only on plugin-api)
             └──────┬───────┘     └────────────────┘  │
                    │ scan()                           │ SecurityRule.analyze(ctx)

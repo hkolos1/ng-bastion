@@ -65,7 +65,7 @@ export default defineConfig({
 
 | Preset | Rules | `failOn` | `minConfidence` | Policy |
 |---|---|---|---|---|
-| `recommended` | Every built-in rule as `error`, except the context-dependent or heuristic rules NGB008, NGB010, NGB019, NGB022, NGB027, NGB028, NGB030, NGB033, NGB037 as `warn`; excludes `*.spec.ts`, `*.test.ts`, `e2e`, `cypress`, `playwright` | `high` | `medium` | none |
+| `recommended` | Every built-in rule as `error`, except the context-dependent or heuristic rules NGB008, NGB010, NGB019, NGB022, NGB027, NGB028, NGB030, NGB033, NGB037, NGB044, NGB045 as `warn`; excludes `*.spec.ts`, `*.test.ts`, `e2e`, `cypress`, `playwright` | `high` | `medium` | none |
 | `strict` | All 20 as `error`; same exclusions | `medium` | `low` | none |
 | `enterprise` | Extends `strict` | `high` | `medium` | Mandatory NGB001–NGB005, NGB007, NGB011, NGB013–NGB016, NGB018, NGB020; `maxFailOn: high`; no inline suppressions; exceptions must expire within 180 days |
 | `payments` | Extends `recommended`; NGB013–NGB018 as `error` | `high` | `low` | Mandatory NGB013, NGB015, NGB016, NGB017, NGB018; exceptions must expire |

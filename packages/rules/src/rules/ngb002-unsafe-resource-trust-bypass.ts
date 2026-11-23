@@ -48,7 +48,8 @@ if (/^[\\w-]{11}$/.test(id)) {
     const findings: RuleFinding[] = [];
     for (const call of ctx.index.calls) {
       const info = ctx.symbols.callee(call);
-      const spec = info && METHODS[info.name];
+      // Own keys only: `obj.hasOwnProperty(k)` / `x.toString(16)` must not match Object.prototype members.
+      const spec = info && Object.hasOwn(METHODS, info.name) ? METHODS[info.name] : undefined;
       if (!info || !spec || info.declaration || !call.arguments[0]) continue;
       const certain = is(info.receiver, ANGULAR_SANITIZER_MODULES, 'DomSanitizer');
       if (!certain && info.receiver) continue;

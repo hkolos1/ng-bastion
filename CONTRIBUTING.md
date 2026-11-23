@@ -26,7 +26,7 @@ Run the CLI from source after building: `node packages/cli/dist/bin.js scan exam
 | `packages/plugin-api` | Versioned rule contract (`PLUGIN_API_VERSION`) |
 | `packages/config` | Config schema, validation, presets, policies, loading |
 | `packages/core` | Workspace discovery, TypeScript program, templates, taint engine, scan orchestration |
-| `packages/rules` | Built-in rules NGB001–NGB040 and shared rule helpers |
+| `packages/rules` | Built-in rules NGB001–NGB050 and shared rule helpers |
 | `packages/cli` | `ngbastion` command, reporters (terminal, JSON, SARIF) |
 | `apps/website` | [ngbastion.web.app](https://ngbastion.web.app): Angular 22 + AnalogJS app (landing, docs, rule pages, playground), statically pre-rendered |
 | `examples/angular-{20,21,22}` | Compatibility fixtures with installed framework packages |

@@ -58,7 +58,7 @@ export const ngb030 = defineRule({
     const report = (at: { node: ts.Node } | { location: SourceLocation }, value: string | undefined, where: string) => {
       if (value === undefined) return;
       const policy = effective(value);
-      const w = WEAK[policy];
+      const w = Object.hasOwn(WEAK, policy) ? WEAK[policy] : undefined;
       if (!w) return;
       findings.push({ ...at, message: `${where} sets referrer policy '${policy}', which ${w.why}.`, confidence: 'high', severity: w.severity, evidenceKind: 'pattern', evidence: [`referrer policy: ${value}`] });
     };

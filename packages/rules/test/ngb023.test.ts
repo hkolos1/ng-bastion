@@ -54,6 +54,12 @@ describe('NGB023 missing OAuth state validation', () => {
 }`)).toEqual([]);
   });
 
+  it('false-positive regression: state concatenated from a separate literal counts as sent', async () => {
+    expect(await one('NGB023', `export function login(state: string, verifier: string) {
+  location.href = 'https://idp.example.com/authorize?client_id=spa&' + 'response_type=code&scope=api&' + 'state=' + state + '&code_challenge=' + verifier;
+}`)).toEqual([]);
+  });
+
   it('false-positive regression: JSON modules containing protocol text are not code', async () => {
     expect(await findings('NGB023', {
       'src/app/docs.json': JSON.stringify({ text: 'POST /token grant_type=authorization_code&code=…' }),

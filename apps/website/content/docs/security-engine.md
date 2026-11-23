@@ -35,6 +35,10 @@ Analysis is demand-driven and runs backwards from each sink argument. It stops a
 | `HttpClient` responses, `fetch()` responses | medium |
 | Web Storage reads (`getItem`, property access) | low |
 | `document.cookie` | low |
+| Server-side (SSR) request values: Express / Node `req.query`, `req.params`, `req.url`, `req.originalUrl` | high |
+| Server-side `Host` / `X-Forwarded-Host` / `X-Forwarded-Proto` / `Forwarded` headers: `req.headers.host`, `req.get('host')`, `req.hostname`, `req.protocol`, Fetch `request.headers.get('host')` (source kind `request-header`) | medium |
+
+`location.origin`, `location.host`, `location.hostname`, `location.protocol` and `location.port` describe the application's own origin and are **not** sources, unlike `href` / `search` / `hash` / `pathname`.
 
 ### Propagation
 

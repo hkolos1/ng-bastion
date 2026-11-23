@@ -80,7 +80,9 @@ export const ngb036 = defineRule({
       const info = ctx.symbols.callee(call);
       if (!info || info.declaration) continue;
       const fromLodash = is(info.origin, LODASH) || is(info.receiver, LODASH) || (info.origin?.module.startsWith('lodash') ?? false);
-      const spec = MERGERS[info.name] ?? (info.origin && /^lodash[./]/.test(info.origin.module) ? MERGERS[info.origin.module.split(/[./]/).pop()!.replace('defaultsdeep', 'defaultsDeep').replace('mergewith', 'mergeWith')] : undefined);
+      const fromModule = info.origin && /^lodash[./]/.test(info.origin.module) ? info.origin.module.split(/[./]/).pop()!.replace('defaultsdeep', 'defaultsDeep').replace('mergewith', 'mergeWith') : undefined;
+      const key = Object.hasOwn(MERGERS, info.name) ? info.name : fromModule && Object.hasOwn(MERGERS, fromModule) ? fromModule : undefined;
+      const spec = key ? MERGERS[key] : undefined;
       if (fromLodash && spec) {
         for (const i of spec.args) {
           const a = call.arguments[i];
