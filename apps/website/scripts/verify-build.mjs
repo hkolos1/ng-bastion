@@ -60,6 +60,11 @@ if (!home.includes('captured when this site was built')) problem('/: real-scan t
 const playground = readFileSync(htmlFor('/playground'), 'utf8');
 if (!playground.includes('this page does not scan arbitrary input')) problem('/playground: demonstration label missing');
 
+// 404.html is served by Firebase Hosting for unknown URLs; it must be the app's page and never indexed.
+const notFound = existsSync(path.join(out, '404.html')) ? readFileSync(path.join(out, '404.html'), 'utf8') : '';
+if (!notFound.includes('<ngb-root') || !/<h1[^>]*>Page not found<\/h1>/.test(notFound)) problem('404.html: missing or not the NotFoundPage');
+if (!notFound.includes('<meta name="robots" content="noindex"')) problem('404.html: robots noindex missing');
+
 const sitemap = existsSync(path.join(out, 'sitemap.xml')) ? readFileSync(path.join(out, 'sitemap.xml'), 'utf8') : '';
 for (const route of routes) if (!sitemap.includes(`<loc>${canonical(route)}</loc>`)) problem(`sitemap.xml: ${canonical(route)} missing`);
 const robots = existsSync(path.join(out, 'robots.txt')) ? readFileSync(path.join(out, 'robots.txt'), 'utf8') : '';

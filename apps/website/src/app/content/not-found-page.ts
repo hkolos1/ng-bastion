@@ -12,6 +12,10 @@ import { Seo } from '../core/seo.service';
       <p class="label">404</p>
       <h1>Page not found</h1>
       <p class="lead">This page is outside the walls. Try the <a routerLink="/docs">documentation</a>, the <a routerLink="/rules">rule reference</a> or search with <kbd>/</kbd>.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" routerLink="/">Back to home</a>
+        <a class="btn" routerLink="/docs">Documentation</a>
+      </div>
     </section>
   `,
 })

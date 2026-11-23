@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => ({
     analog({
       ssr: true,
       static: true,
-      prerender: mode === 'test' ? undefined : { routes: async () => prerenderRoutes() },
+      prerender: mode === 'test' ? undefined : { routes: async () => [...prerenderRoutes(), '/404'] },
     }),
     tailwindcss(),
   ],
