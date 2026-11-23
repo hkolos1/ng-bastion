@@ -151,6 +151,17 @@ export function notAHandler(req: { body: string }, other: unknown) { sink(req.bo
     expect(results.map((r) => r.flows[0]?.source.kind)).toEqual(['user-input', 'url', 'cookie', 'user-input', undefined, undefined, undefined]);
   });
 
+  it('propagates through Node path functions (not modeled as Array#join)', async () => {
+    const results = await traceSink({
+      'a.ts': `${SINK}import path from 'node:path';
+import { join } from 'path';
+import type { Request } from 'express';
+export function h(req: Request) { sink(path.join('/srv', req.params.f)); sink(join('/srv', String(req.query.f))); sink(path.basename(req.path)); sink(path.join('/srv', 'x')); }`,
+    }, 'generic');
+    expect(results.map((r) => r.flows[0]?.steps.some((s) => /^path\./.test(s.description)))).toEqual([true, true, true, undefined]);
+    expect(results[3]!.constant).toBe(true);
+  });
+
   it('does not crash on receiver types named like Object.prototype members', async () => {
     // `Object.prototype.toString.call(v)`: the receiver's type origin is named `toString`.
     const [r] = await traceSink({ 'a.ts': `${SINK}export function f() { sink(Object.prototype.toString.call(location.hash)); }` }, 'generic');

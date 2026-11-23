@@ -36,6 +36,11 @@ user-visible changes are tracked with [Changesets](.changeset).
   Sensitive data copied to the clipboard, NGB067 Sensitive data sent to analytics, NGB068 Hardcoded
   cryptographic key, NGB069 Reflected XSS in server responses, NGB070 Timing-unsafe secret
   comparison. NGB062, NGB063, NGB066 and NGB067 only warn in `recommended`.
+- NGB071 Service worker scope expansion, NGB072 Service worker attaches credentials to any origin,
+  NGB073 SQL injection in server code, NGB074 Service worker caches unvalidated responses, NGB075
+  Untrusted worker script, NGB076 Server-side request forgery, NGB077 Path traversal in server code,
+  NGB078 OS command injection, NGB079 Server-side template injection, NGB080 NoSQL injection in
+  server code. NGB074 only warn in `recommended`.
 - The `recommended` preset enables them; the heuristic ones (NGB022, NGB027, NGB028, NGB030,
   NGB033, NGB037, NGB044, NGB045) only warn. Configurations without `extends` keep their explicit rule selection. To keep the previous
   behaviour on upgrade, set the new IDs to `"off"`.
@@ -47,6 +52,8 @@ user-visible changes are tracked with [Changesets](.changeset).
 - `location.origin`, `host`, `hostname`, `protocol` and `port` are no longer tainted.
 - Server request sources: `req.body`, `req.path` and `req.cookies` (Express / Node); untyped
   `(req, res)` handler parameters are recognized when Express types are not installed.
+- Node `path` functions (`path.join()`, `resolve()`, `basename()`, …) propagate taint from every
+  argument; `path.join()` was previously treated like `Array#join()` and lost the flow.
 - Plugin API: `AnalysisContext.findWorkspaceFiles(glob)` (additive) lists workspace-level files;
   `.github` is no longer skipped when listing files. Directory listings are cached per scan.
 - Callee and type resolution is memoized: scans with 50 rules are faster than 0.1.2 with 20

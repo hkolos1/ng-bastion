@@ -87,6 +87,8 @@ const RECEIVER_PASSTHROUGH: Record<string, Set<string>> = {
   URL: new Set(['toString', 'toJSON']),
   Response: new Set(['json', 'text', 'blob', 'arrayBuffer', 'formData']),
 };
+const NODE_PATH_MODULES = new Set(['path', 'node:path', 'path/posix', 'node:path/posix', 'path/win32', 'node:path/win32']);
+const NODE_PATH_FUNCTIONS = new Set(['join', 'resolve', 'normalize', 'relative', 'basename', 'dirname', 'extname', 'format', 'toNamespacedPath']);
 const GLOBAL_PASSTHROUGH = new Set(['String', 'decodeURIComponent', 'decodeURI', 'atob', 'btoa', 'unescape', 'structuredClone']);
 const NUMERIC = new Set(['Number', 'parseInt', 'parseFloat', 'Boolean', 'isNaN', 'isFinite']);
 
@@ -643,6 +645,11 @@ export class TaintEngine implements TaintAnalyzer {
       return this.visitEmitted(arg0, env, this.extend(path, 'reactive', call, `awaited via ${name}()`), undefined);
     }
 
+    if (!recv && name && NODE_PATH_FUNCTIONS.has(name) && NODE_PATH_MODULES.has(info?.origin?.module ?? '')) {
+      const p = this.extend(path, 'transform', call, `path.${name}()`);
+      for (const a of call.arguments) this.visit(a, env, p);
+      return;
+    }
     const libFn = !recv && (!info?.origin || info.origin.module === 'lib' || info.origin.module === 'dom');
     if (name && libFn && GLOBAL_PASSTHROUGH.has(name) && arg0) {
       return this.visit(arg0, env, this.extend(path, 'transform', call, `transformed by ${name}()`));
@@ -670,6 +677,12 @@ export class TaintEngine implements TaintAnalyzer {
         if (name === 'replace' || name === 'replaceAll') {
           if (call.arguments[1]) this.visit(call.arguments[1], env, p);
         } else if (name === 'concat') for (const a of call.arguments) this.visit(a, env, p);
+        return;
+      }
+      // Node `path` functions (`path.join(dir, name)`): every argument flows into the result.
+      if (NODE_PATH_FUNCTIONS.has(name) && NODE_PATH_MODULES.has(info?.receiver?.module ?? '')) {
+        const p = this.extend(path, 'transform', call, `path.${name}()`);
+        for (const a of call.arguments) this.visit(a, env, p);
         return;
       }
       if (this.isArrayLike(recv)) {
