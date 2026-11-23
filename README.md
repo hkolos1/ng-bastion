@@ -61,7 +61,7 @@ HIGH     NGB001  Unsafe HTML trust bypass  confidence: high · dataflow
 - **Severity and confidence are separate**; heuristic findings are labelled as such.
 - **Bounded analysis**: depth, call-site, file-hop, node and time limits; when one is hit you get an
   explicit `analysis-incomplete` diagnostic instead of silent gaps.
-- **80 security rules** (below), **terminal / JSON / SARIF 2.1.0** reports, **CI security gates**.
+- **90 security rules** (below), **terminal / JSON / SARIF 2.1.0** reports, **CI security gates**.
 - **Enterprise configuration**: presets, shared configs, organizational policies with mandatory
   rules, expiring exceptions, inline suppressions with required justification.
 - **Local-first**: no telemetry, no uploads, no network access during scans.
@@ -214,6 +214,16 @@ policies, exceptions, inline suppressions, analysis limits and trusted sanitizer
 | NGB078 | OS command injection | Critical |
 | NGB079 | Server-side template injection | Critical |
 | NGB080 | NoSQL injection in server code | High |
+| NGB081 | Permissive CORS with credentials | High |
+| NGB082 | Spoofable client IP used for access control | High |
+| NGB083 | Cross-site WebSocket hijacking | High |
+| NGB084 | Session not regenerated after login | Medium |
+| NGB085 | Error details sent to clients | Medium |
+| NGB086 | Static password-hashing salt | Medium |
+| NGB087 | Insufficient password-hashing work factor | Medium |
+| NGB088 | Insufficient asymmetric key size | Medium |
+| NGB089 | Truncated authentication tag | Medium |
+| NGB090 | Signature verification result ignored | High |
 
 Every rule documents its detected patterns, limitations, false-positive considerations and
 remediation: `ngbastion explain <ID>` or the generated rule pages of the documentation site.

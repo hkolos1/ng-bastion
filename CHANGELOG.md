@@ -41,6 +41,11 @@ user-visible changes are tracked with [Changesets](.changeset).
   Untrusted worker script, NGB076 Server-side request forgery, NGB077 Path traversal in server code,
   NGB078 OS command injection, NGB079 Server-side template injection, NGB080 NoSQL injection in
   server code. NGB074 only warn in `recommended`.
+- NGB081 Permissive CORS with credentials, NGB082 Spoofable client IP used for access control,
+  NGB083 Cross-site WebSocket hijacking, NGB084 Session not regenerated after login, NGB085 Error
+  details sent to clients, NGB086 Static password-hashing salt, NGB087 Insufficient password-hashing
+  work factor, NGB088 Insufficient asymmetric key size, NGB089 Truncated authentication tag, NGB090
+  Signature verification result ignored. NGB084 only warn in `recommended`.
 - The `recommended` preset enables them; the heuristic ones (NGB022, NGB027, NGB028, NGB030,
   NGB033, NGB037, NGB044, NGB045) only warn. Configurations without `extends` keep their explicit rule selection. To keep the previous
   behaviour on upgrade, set the new IDs to `"off"`.
