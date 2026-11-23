@@ -1,6 +1,7 @@
 import { searchIndex, type SearchEntry } from './search';
 import index from '../../generated/search.json';
 import showcase from '../../generated/showcase.json';
+import { NAV } from '../core/content';
 
 const entries = index as SearchEntry[];
 
@@ -23,7 +24,8 @@ describe('searchIndex', () => {
   });
 
   it('indexes every generated page', () => {
-    expect(entries.length).toBe(16 + showcase.ruleCount);
+    const expected = NAV.groups.flatMap(group => group.items.map(item => item.slug)).filter(slug => slug !== 'playground');
+    expect(entries.map(entry => entry.slug).sort()).toEqual(expected.sort());
     expect(entries.filter((e) => e.slug.startsWith('rules/ngb'))).toHaveLength(showcase.ruleCount);
   });
 });

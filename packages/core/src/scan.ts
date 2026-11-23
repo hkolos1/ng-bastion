@@ -101,7 +101,9 @@ export interface ScanResult {
   tool: { name: 'NgBastion'; version: string; pluginApiVersion: number };
   /** Unique rule IDs completed in at least one project. Older results may omit coverage. */
   ruleCoverage?: { available: number; evaluated: string[] };
-  comparisonCoverage?: { files: string[]; hidden: string[] };
+  comparisonCoverage?: { files: string[]; hidden: string[]; projectSettings?: string[] };
+  /** Only simple expressions already loaded by the TypeScript program, indexed by exact trace region. */
+  traceContext?: ReadonlyMap<string, string>;
   workspaceRoot: string;
   startedAt: string;
   durationMs: number;
@@ -125,6 +127,7 @@ export interface ScanOptions {
   pluginRuleIds?: ReadonlySet<string>;
   now?: Date;
   toolVersion?: string;
+  captureTraceContext?: boolean;
 }
 
 const SUPPRESS_RE = /ngbastion-ignore(-next-line)?\s+([A-Z][A-Z0-9_-]*\d+(?:\s*,\s*[A-Z][A-Z0-9_-]*\d+)*)(?:\s+--\s*(.*?))?\s*(?:\*\/|-->)?\s*$/;
@@ -224,6 +227,10 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
   const unresolvedModules = new Set<string>();
   let templatesAnalyzed = 0;
   const analyzedFiles = new Set<string>();
+  const projectSettings: string[] = [];
+  const traceFiles = new Map<string, ts.SourceFile>();
+  const sensitiveFiles = new Set<string>();
+  const linesByFile = new Map<string, string[]>();
 
   for (const target of projects) {
     const projectDiagnostics: WorkspaceDiagnosticSink = [];
@@ -231,6 +238,9 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
       ? createInMemoryProgram(Object.fromEntries([...memory].filter(([k]) => k.endsWith('.ts'))), root)
       : createProjectProgram(target, projectDiagnostics);
     diagnostics.push(...projectDiagnostics.map((d) => ({ ...d, project: target.name })));
+    const settings = JSON.stringify([target.name, target.angularProject, program.getCompilerOptions()], (_key, value) =>
+      typeof value === 'string' && path.isAbsolute(value) ? rel(value) : value);
+    projectSettings.push(hashIdentity(settings));
     const checker = program.getTypeChecker();
     const inProject = (f: string) => {
       const abs = path.resolve(f);
@@ -241,6 +251,7 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
     const sourceFiles = program.getSourceFiles().filter((sf) => !sf.isDeclarationFile && inProject(sf.fileName));
     for (const sf of sourceFiles) {
       analyzedFiles.add(sf.fileName);
+      if (options.captureTraceContext) traceFiles.set(rel(sf.fileName), sf);
       const parseDiags = (sf as unknown as { parseDiagnostics?: ts.Diagnostic[] }).parseDiagnostics ?? [];
       if (parseDiags.length) {
         diagnostics.push({ code: 'parse-error', level: 'warning', project: target.name, file: rel(sf.fileName), message: `${parseDiags.length} syntax error(s) (first: ${ts.flattenDiagnosticMessageText(parseDiags[0]!.messageText, ' ')}); analysis of this file may be incomplete` });
@@ -316,9 +327,14 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
         if (!loc) continue;
         const fileRel = rel(loc.file);
         if (isExcluded(fileRel) || !isIncluded(fileRel)) continue;
-        const text = readSourceText(loc.file, program, readFile);
-        const line = text?.split(/\r?\n/)[loc.line - 1];
+        let lines = linesByFile.get(fileRel);
+        if (!lines) {
+          lines = readSourceText(loc.file, program, readFile)?.split(/\r?\n/);
+          if (lines) linesByFile.set(fileRel, lines);
+        }
+        const line = lines?.[loc.line - 1];
         if (r.redactSnippet) {
+          sensitiveFiles.add(fileRel);
           const start = JSON.stringify([fileRel, loc.line]);
           redactedRanges.set(start, Math.max(loc.endLine, redactedRanges.get(start) ?? loc.line));
         }
@@ -409,7 +425,7 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
       continue;
     }
 
-    const inline = inlineSuppression(f, readFile(path.resolve(root, f.location.file)));
+    const inline = inlineSuppression(f, linesByFile.get(f.location.file));
     if (inline) {
       if (!config.policy.allowInlineSuppressions) {
         diagnostics.push({ code: 'suppression-disallowed', level: 'warning', file: f.location.file, message: `inline suppression of ${f.ruleId} at line ${f.location.line} ignored: policy disallows inline suppressions` });
@@ -450,10 +466,27 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
     ? []
     : findings.filter((f) => f.level === 'error' && severityRank(f.severity) >= severityRank(config.failOn as Severity));
 
+  const traceContext = new Map<string, string>();
+  if (options.captureTraceContext) {
+    for (const finding of [...findings, ...suppressed]) {
+      for (const step of finding.trace ?? []) {
+        const source = traceFiles.get(step.file);
+        if (!source || sensitiveFiles.has(step.file) || step.line !== step.endLine) continue;
+        const start = source.getLineStarts()[step.line - 1];
+        if (start === undefined || step.endColumn - step.column > 240) continue;
+        const expression = source.text.slice(start + step.column - 1, start + step.endColumn - 1);
+        // Additional trace excerpts contain only identifiers and simple member/call syntax.
+        // Literals, comments, template text and unrelated neighboring source stay out of the report.
+        if (/^[\p{L}_$][\p{L}\p{N}_$?.()[\] \t]*$/u.test(expression)) traceContext.set(traceLocationKey(step), expression);
+      }
+    }
+  }
+
   return {
     tool: { name: 'NgBastion', version: options.toolVersion ?? ENGINE_VERSION, pluginApiVersion: PLUGIN_API_VERSION },
     workspaceRoot: root,
-    comparisonCoverage: { files: [...new Set([...observed, ...analyzedFiles].map(rel))].sort(), hidden: hiddenIds },
+    ...(options.captureTraceContext ? { traceContext } : {}),
+    comparisonCoverage: { projectSettings: projectSettings.sort(), files: [...new Set([...observed, ...analyzedFiles].map(rel))].sort(), hidden: hiddenIds },
     ruleCoverage: { available: known.size, evaluated: [...evaluated] },
     startedAt: new Date(started).toISOString(),
     durationMs: Date.now() - started,
@@ -468,15 +501,18 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
   };
 }
 
+export function traceLocationKey(step: RelativeLocation) {
+  return JSON.stringify([step.file, step.line, step.column, step.endLine, step.endColumn]);
+}
+
 type WorkspaceDiagnosticSink = { code: string; level: 'error' | 'warning' | 'info'; message: string; file?: string }[];
 
 function readSourceText(file: string, program: ts.Program, readFile: (f: string) => string | undefined): string | undefined {
   return program.getSourceFile(file)?.text ?? readFile(file);
 }
 
-function inlineSuppression(f: Finding, text: string | undefined): { justification?: string; line: number } | undefined {
-  if (!text) return undefined;
-  const lines = text.split(/\r?\n/);
+function inlineSuppression(f: Finding, lines: string[] | undefined): { justification?: string; line: number } | undefined {
+  if (!lines) return undefined;
   const check = (lineNo: number, nextLine: boolean) => {
     const line = lines[lineNo - 1];
     const m = line && SUPPRESS_RE.exec(line);

@@ -1,28 +1,44 @@
 ---
-title: Reports
-description: Terminal, JSON (schema v1) and SARIF 2.1.0 reports produced by NgBastion.
+title: Security reports
+description: Generate an offline HTML report, interpret trace evidence and share results in JSON or SARIF.
 ---
 
-Select a format with `--format terminal|json|sarif` and write it to a file with `--output`.
+## HTML reporting
 
-## Terminal
+```sh
+ngbastion scan --format html --output security-report.html
+```
 
-Concise, human-oriented output: findings sorted by severity and confidence, traces, a one-line fix per finding, diagnostics and the gate result. `--quiet` prints only the summary, `--verbose` adds evidence and informational diagnostics, `--show-suppressed` also lists suppressed findings.
+Open the file directly in your browser. The artifact contains its styles, script, font and scan data. It works offline and can be uploaded as a single CI artifact. The CLI requires an output file for HTML. Gate failures still produce a report.
 
-## JSON
+![Offline NgBastion report showing the severity and confidence distributions for the vulnerable showcase](/reporting/showcase-overview.png)
 
-A versioned, documented format. The JSON Schema is `packages/cli/schema/report-v1.json` (`schemaVersion: 1`); every report is validated against it in the test suite.
+The overview counts active findings after suppression and confidence filtering. It reports registered rules, enabled rules and unique rules that completed in at least one project. The engine currently leaves applicability unmeasured. The diagnostic list includes parse failures, analysis limits and unresolved imports. A zero count applies to the observed scan coverage.
 
-Top-level fields: `tool`, `scan` (time, duration, Angular version, projects, effective `failOn`/`minConfidence`, config sources, stats), `rules`, `findings`, `suppressed`, `diagnostics`, `summary`.
+Search by rule, path, fingerprint or evidence. Combine filters and sort by severity, confidence, rule or location. Expand a finding to review its recorded source-to-sink steps in order, locations, confidence and remediation. Trace steps labeled trust-bypass retain that meaning. A heuristic match requires manual review. Available TypeScript expressions can be opened in the trace. Sensitive or unavailable source context is omitted.
 
-Each finding contains a stable `fingerprint` (independent of line numbers), `ruleId`, `severity`, `confidence`, `evidenceKind`, `level`, `message`, `location`, `snippet`, `trace`, `evidence` and, for suppressed findings, `suppression` with its justification and source.
+Switch the theme with the header button. Browser Print or Save as PDF expands the filtered findings across all result pages. With JavaScript disabled, the static overview and expandable finding details remain available.
 
-All paths are relative to the workspace root; reports never include absolute paths.
+## Sharing and redaction
 
-## SARIF 2.1.0
+```sh
+ngbastion scan --format html --redact-source -o review.html
+```
 
-The SARIF log includes rule metadata with help text, `security-severity` scores for GitHub code scanning (critical 9.5, high 8.0, medium 5.5, low 3.0), results with `partialFingerprints`, `codeFlows` built from traces, suppressions, and tool execution notifications for diagnostics. Output is validated against the official SARIF 2.1.0 schema in the test suite.
+Use redaction to omit snippets, expressions, finding messages, evidence text, suppression justifications and diagnostic messages. Paths, project names, rule metadata, identifiers and comparison metadata remain visible. Treat any shared report as internal project information. The ordinary report respects scanner-requested redactions. The HTML artifact encodes source text and restricts executable content to its packaged script by hash.
 
-## Sensitive values
+## JSON reports
 
-Reports never print secret values. NGB018 redacts detected secrets to their first four characters and length and omits the source line; payment findings omit the snippet as well.
+```sh
+ngbastion scan --format json --output scan.json
+```
+
+The JSON v1 finding structure and its legacy fingerprint remain available. The CLI adds optional metadata under `scan`. The `identities` array maps legacy finding fingerprints to v2. The `snapshot` field carries the minimal records and coverage used for saved comparisons. With the corresponding CLI flags, `comparison` adds statuses keyed by v2 and `git` adds changed paths and associations. The published [JSON schema](/schemas/report-v1.json) describes these extensions.
+
+## SARIF and terminal
+
+SARIF 2.1.0 includes trace locations in `codeFlows`, severity, confidence, suppression data and both fingerprint generations in `partialFingerprints`. Comparable current findings carry `baselineState`. Comparable disappearances produce results with state `absent` and the prior file path. Run properties retain the comparison details, including unverified prior entries. Git association appears in result properties. An uncertain comparison has no standard baseline state.
+
+Terminal output supports `--quiet`, `--verbose` and `--show-suppressed`. A comparison adds status counts alongside the gate result. Use JSON for complete structured comparison details.
+
+Continue with [baselines and fingerprints](/docs/baselines/) or [Git and report comparison](/docs/git-comparison/).

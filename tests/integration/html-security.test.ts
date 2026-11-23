@@ -39,3 +39,14 @@ it('preserves redaction across overlapping rules even when the sensitive finding
   }
   expect(result).toEqual(before);
 });
+
+it('renders only simple trace expressions from in-scope source, honors redaction, and never adds them to JSON findings', async () => {
+  const cwd = '/virtual/trace-review';
+  const config = await resolveConfig({ extends: [], rules: { NGB003: 'error' } }, { cwd });
+  const result = await scan({ cwd, config, rules: builtinRules, captureTraceContext: true,
+    files: { 'src/main.ts': 'export function render(el: HTMLElement) { el.innerHTML = location.hash; }' } });
+  expect([...result.traceContext!.values()]).toContain('location.hash');
+  expect(renderHtml(result)).toContain('View expression');
+  expect(renderHtml(result, { redactSource: true })).not.toContain('View expression');
+  expect(JSON.stringify(result.findings)).not.toContain('traceContext');
+});

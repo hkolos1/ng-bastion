@@ -13,7 +13,7 @@ It runs entirely on your machine. Source code is never uploaded, and there is no
 - **Traces data flow.** A finding such as "query parameter reaches `bypassSecurityTrustHtml()`" comes with the path it followed — across services, files, RxJS operators and signals — so you can verify it yourself.
 - **Separates severity from confidence.** A critical sink reached through a heuristic match is reported as critical with *low* confidence, not as a certainty.
 - **Says what it could not see.** Unsupported constructs, unresolved imports and analysis limits are reported as diagnostics instead of being silently ignored.
-- **Fits CI.** Terminal, JSON and SARIF 2.1.0 output, configurable gates and predictable exit codes.
+- **Fits CI.** Terminal, offline HTML, JSON and SARIF 2.1.0 output, configurable gates and predictable exit codes.
 
 ## What it is not
 

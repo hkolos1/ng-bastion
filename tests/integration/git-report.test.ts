@@ -31,6 +31,9 @@ it('uses local working tree hunks, untracked files and trace locations across a 
   rmSync(path.join(app, 'remove.ts'));
   git('add', '-A');
   writeFileSync(path.join(app, 'untracked.ts'), 'export const another = 1;');
+  writeFileSync(path.join(repo, '.gitattributes'), '*.ts filter=fixture\n');
+  git('config', 'filter.fixture.clean', 'exit 1');
+  git('config', 'filter.fixture.required', 'true');
   const scan = await cli(app, ['scan', '--diff', 'HEAD', '-f', 'json', '-o', current]);
   expect(scan.code, scan.stderr).toBe(1);
   const report = JSON.parse(readFileSync(current, 'utf8'));

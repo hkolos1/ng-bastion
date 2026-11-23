@@ -6,7 +6,7 @@
             │ (packages/   │     │ config         │  extends, policies, exceptions
             │  cli)        │     └────────────────┘
             │ reporters:   │     ┌────────────────┐
-            │ terminal,    │────▶│ @ngbastion/    │  builtinRules NGB001–NGB050
+            │ terminal/HTML│────▶│ @ngbastion/    │  builtinRules NGB001–NGB100
             │ JSON, SARIF  │     │ rules          │──┐ (depend only on plugin-api)
             └──────┬───────┘     └────────────────┘  │
                    │ scan()                           │ SecurityRule.analyze(ctx)
@@ -42,7 +42,7 @@ so future ESLint plugins, IDE integrations and the website generator reuse it un
 5. **Rules** run against a read-only `AnalysisContext` (program, checker, index, templates, taint
    analyzer, symbol resolver, guard helpers). A crashing rule becomes an `error` diagnostic.
 6. **Normalization** — relative paths, snippets (redactable), stable fingerprints
-   (rule + file + normalized line text + occurrence), confidence filter, inline suppressions,
+   (legacy line fingerprint and v2 semantic fingerprint), confidence filter, inline suppressions,
    config exceptions (with expiry), deduplication across projects, security gate.
 
 ## Symbol identification (`symbols.ts`)
@@ -88,3 +88,7 @@ rating and is independent of confidence.
 `maxDepth`, `maxCallSites`, `maxFileHops`, `maxVisitedNodes`, `maxPathsPerSink`, `maxTimeMs` (see
 `packages/config/src/presets.ts`). Cycles are cut by an explored set per trace. Any truncation is
 reported as `analysis-incomplete` / `analysis-timeout`.
+
+## Reporting pipeline
+
+The core returns a ScanResult with observed file and rule coverage. The CLI derives a portable comparison snapshot from the result and effective configuration. The baseline comparator, local Git classifier and gate consume that data independently. Reporters receive the scan plus optional comparison context. HTML can request simple trace expressions already in the TypeScript program. Filtering and printing use only embedded data. The JSON reporter keeps its v1 finding shape and adds comparison metadata under `scan`.

@@ -208,7 +208,7 @@ async function scanCommand(argv: string[], io: Io): Promise<number> {
   const prior = !create && (values.baseline || update) ? readSnapshot(baseline) : undefined;
   const gateStatus = oneOf('fail-on-status', values['fail-on-status'], ['all', 'new'] as const);
   const gateConfidence = oneOf('fail-on-confidence', values['fail-on-confidence'], CONFIDENCES);
-  const scanned = await scan({ cwd, config, rules, pluginRuleIds, toolVersion: VERSION });
+  const scanned = await scan({ cwd, config, rules, pluginRuleIds, toolVersion: VERSION, captureTraceContext: format === 'html' && !values['redact-source'] });
   const current = snapshot(scanned, config);
   const comparison = prior ? compare(prior, current) : undefined;
   const context: ReportingContext = { snapshot: current, comparison, gateScope: { status: gateStatus ?? 'all', confidence: gateConfidence } };
