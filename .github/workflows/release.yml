@@ -5,6 +5,7 @@ name: Release
 # Each package on npmjs.com must list this repository and workflow (release.yml) as a trusted publisher.
 
 on:
+  workflow_dispatch: {} # Publish the committed package versions to npm only.
   push:
     tags: ['v*']
 
@@ -18,6 +19,7 @@ concurrency:
 
 jobs:
   publish:
+    if: github.event_name == 'push' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -32,8 +34,14 @@ jobs:
       - run: pnpm lint
       - run: pnpm test
       - name: Publish to npm
-        run: node scripts/publish.mjs "${GITHUB_REF_NAME#v}"
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+            version=$(node -p "require('./packages/cli/package.json').version")
+          fi
+          node scripts/publish.mjs "$version"
       - name: GitHub release
+        if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
