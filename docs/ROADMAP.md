@@ -9,18 +9,15 @@ Status legend: ✅ done · 🚧 in progress · ⏳ planned · ⏸ deferred (need
 | 3 | Rules NGB001–NGB020 with positive/negative/false-positive tests | ✅ |
 | 4 | CLI (init/scan/explain/rules/doctor), hybrid config, presets, policies, plugins, reporters | ✅ |
 | 5 | Compatibility (Angular 20/21/22), regression, SARIF validation, coverage, CI templates | ✅ |
-| 6 | README, docs site, landing page, playground, logo, SEO, changelog | ✅ (not deployed) |
+| 6 | README, docs site, landing page, playground, logo, SEO, changelog | ✅ (site not deployed yet) |
+
+## Released
+
+- 0.1.0 published to npm (`ngbastion`, `@ngbastion/*`) on 2026-11-23; repository public
 
 ## Deferred (require explicit approval)
-- Public npm publishing, Trusted Publishing, release automation
-- Making the repository public, public GitHub releases
+- Trusted Publishing, release automation, public GitHub releases
 - Deploying ngbastion.dev, DNS changes, announcements
-
-## Remote collaboration status
-
-The GitHub repository `hkolos1/ng-bastion` does not exist yet and no GitHub API credentials are
-available in the development environment, so branches were merged **locally** with `--no-ff`
-merge commits (one per milestone). No push, pull request or remote merge has happened.
 
 ## Next candidates (post 0.1.0)
 

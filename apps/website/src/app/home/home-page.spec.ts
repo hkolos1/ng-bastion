@@ -18,7 +18,7 @@ describe('HomePage', () => {
     expect(el.querySelector('h1')!.textContent).toBe('Your Angular security stronghold.');
     expect(el.querySelector('h1 .hl')!.textContent).toBe('Angular');
     expect(el.querySelectorAll('h1 .line')).toHaveLength(2);
-    expect(el.textContent).toContain('will not work until the first public release');
+    expect(el.textContent).toContain('npm install --save-dev ngbastion');
     expect(TestBed.inject(DOCUMENT).querySelector('script[data-ngb-jsonld]')!.textContent).toContain('"SoftwareApplication"');
   });
 

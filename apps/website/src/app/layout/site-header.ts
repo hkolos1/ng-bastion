@@ -24,7 +24,7 @@ import { SHOWCASE } from '../home/showcase';
           </ul>
         </nav>
         <div class="header-actions">
-          <span class="version-pill" title="Private development; not published to npm">v{{ version }}</span>
+          <span class="version-pill" title="Latest release on npm">v{{ version }}</span>
           <ngb-search-dialog />
           <button class="icon-btn" type="button" (click)="theme.toggle()"
                   aria-label="Toggle color theme">

@@ -21,6 +21,6 @@ NgBastion is not a penetration test, a server-side authorization review or a rep
 
 ## Next steps
 
-- [Install and run it locally](/docs/getting-started/installation/)
+- [Install and run it](/docs/getting-started/installation/)
 - [Run a first scan](/docs/getting-started/first-scan/)
 - [Learn to read findings](/docs/getting-started/reading-findings/)

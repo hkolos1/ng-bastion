@@ -147,9 +147,7 @@ title: CLI reference
 description: Commands, options and exit codes of the ngbastion command-line interface.
 ---
 
-:::note[Installation status]
-The npm package is not published yet. Until it is, run the CLI from a clone of the repository: \`node packages/cli/dist/bin.js <command>\` (or \`pnpm ngbastion <command>\` from the repository root). The commands below use the intended \`ngbastion\` name.
-:::
+Run any command with \`npx ngbastion <command>\`, or install \`ngbastion\` as a dev dependency. See [Installation](/docs/getting-started/installation/).
 
 The help texts on this page are captured from the CLI at build time.
 
@@ -467,8 +465,8 @@ export class Preview {
   if (comparison[0].findings.length) fail('landing comparison: the sanitized binding unexpectedly produced findings');
   if (!comparison[1].findings.some((x) => x.ruleId === 'NGB001')) fail('landing comparison: the trust bypass did not produce NGB001');
   const commands = {
-    local: highlight('pnpm install && pnpm build\nnode packages/cli/dist/bin.js scan ../my-angular-app\nnode packages/cli/dist/bin.js scan ../my-angular-app \\\n  --format sarif --output results.sarif', 'sh', 'landing commands'),
-    planned: highlight('npx ngbastion scan\nnpx ngbastion init --preset recommended\nnpx ngbastion explain NGB001', 'sh', 'landing commands'),
+    npx: highlight('npx ngbastion scan\nnpx ngbastion scan --format sarif --output results.sarif\nnpx ngbastion explain NGB001', 'sh', 'landing commands'),
+    install: highlight('npm install --save-dev ngbastion\nnpx ngbastion init --preset recommended\nnpx ngbastion scan', 'sh', 'landing commands'),
   };
   writeFileSync(path.join(generated, 'landing.json'), JSON.stringify({ comparison, commands }));
 }

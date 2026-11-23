@@ -2,10 +2,8 @@
 
 Ready-to-copy pipelines that run `ngbastion scan` as a security gate and keep the reports as artifacts.
 
-> **Installation status:** the `ngbastion` npm package is **not published yet**. Until it is, set
-> `NGBASTION_CMD` to a locally available build (for example a vendored checkout:
-> `node tools/ng-bastion/packages/cli/dist/bin.js`). After publication the default
-> `npx --yes ngbastion@0.1.0` will work unchanged.
+Each template reads the command from `NGBASTION_CMD` (default `npx --yes ngbastion@0.1.0`).
+Pin the version you have tested, or point it at a locally installed `ngbastion`.
 
 | File | Platform | Gate | Reports |
 |---|---|---|---|

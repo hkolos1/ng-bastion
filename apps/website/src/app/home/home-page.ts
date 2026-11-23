@@ -100,13 +100,12 @@ const DESCRIPTION = 'NgBastion is an Angular-aware, local-first security scanner
         </div>
         <div class="panels">
           <div class="panel-card">
-            <div class="panel-title"><span class="status status-ok">Available now</span><h3>From a checkout</h3></div>
-            <ngb-code-block [snippet]="landing.commands.local" filename="terminal" />
+            <div class="panel-title"><span class="status status-ok">No install</span><h3>Run with npx</h3></div>
+            <ngb-code-block [snippet]="landing.commands.npx" filename="terminal" />
           </div>
-          <div class="panel-card planned">
-            <div class="panel-title"><span class="status">Planned</span><h3>Once published to npm</h3></div>
-            <ngb-code-block [snippet]="landing.commands.planned" filename="terminal" />
-            <p>These commands describe the intended interface. They will not work until the first public release.</p>
+          <div class="panel-card">
+            <div class="panel-title"><span class="status status-ok">npm</span><h3>Add to your project</h3></div>
+            <ngb-code-block [snippet]="landing.commands.install" filename="terminal" />
           </div>
         </div>
       </section>
@@ -155,7 +154,7 @@ export class HomePage {
     { title: 'Built for pipelines', text: 'Predictable exit codes, SARIF 2.1.0 for GitHub code scanning, JSON reports and templates for four CI systems.', icon: 'M5 7h4v4H5zM15 13h4v4h-4zM9 9h3a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2' },
   ];
   protected readonly docs: [string, string, string][] = [
-    ['/docs/getting-started/installation', 'Getting started', 'Local setup and your first scan'],
+    ['/docs/getting-started/installation', 'Getting started', 'Install and run your first scan'],
     ['/docs/cli-reference', 'CLI reference', 'scan, init, explain, rules and doctor'],
     ['/rules', 'Security rules', 'What each rule detects, and what it does not'],
     ['/docs/configuration', 'Configuration', 'Presets, policies and exceptions'],

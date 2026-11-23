@@ -8,7 +8,7 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
-  NGBASTION_CMD: 'npx --yes ngbastion@0.1.0' # replace with a local build until published
+  NGBASTION_CMD: 'npx --yes ngbastion@0.1.0'
 
 steps:
   - task: NodeTool@0

@@ -10,7 +10,9 @@
 </p>
 
 <p align="center">
-  <strong>Status:</strong> v0.1.0 · private development · npm package not published yet
+  <a href="https://www.npmjs.com/package/ngbastion"><img src="https://img.shields.io/npm/v/ngbastion?color=cb3837&logo=npm" alt="npm version"></a>
+  <a href="https://github.com/hkolos1/ng-bastion/actions/workflows/ci.yml"><img src="https://github.com/hkolos1/ng-bastion/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/npm/l/ngbastion" alt="MIT license"></a>
 </p>
 
 ---

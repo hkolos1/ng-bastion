@@ -44,7 +44,7 @@ export const SHOWCASE = data as unknown as Showcase;
 
 export interface LandingData {
   comparison: (CodeSnippet & { id: string; title: string; caption: string; findings: { ruleId: string; ruleName: string; severity: string; confidence: string; message: string }[] })[];
-  commands: { local: CodeSnippet; planned: CodeSnippet };
+  commands: { npx: CodeSnippet; install: CodeSnippet };
 }
 
 /** Snippets and verdicts produced by scanning them at build time. */

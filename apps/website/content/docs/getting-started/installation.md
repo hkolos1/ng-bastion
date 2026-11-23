@@ -1,52 +1,44 @@
 ---
-title: Installation and local setup
-description: Installation status of NgBastion and how to run the scanner from a local checkout today.
+title: Installation
+description: Run NgBastion with npx or install it as a dev dependency of your Angular workspace.
 ---
-
-:::caution[Not published yet]
-The `ngbastion` npm package has **not been published**. Commands such as `npx ngbastion scan` show the planned interface; they do not work yet. Until the first public release, run NgBastion from a local checkout as described below.
-:::
 
 ## Requirements
 
 - Node.js **22.22.3 or newer within 22.x**, or **24.15.0 or newer within 24.x**
-- pnpm 10 (via `corepack enable`)
 
 These requirements apply to the machine running the scanner. The project being scanned only needs its sources; it is never built or executed.
 
-## Run from a checkout
+## Run without installing
+
+From the root of your Angular workspace:
 
 ```sh
-git clone <repository-url> ng-bastion   # private during development
-cd ng-bastion
-corepack enable
-pnpm install
-pnpm build
-```
-
-Then scan any Angular workspace:
-
-```sh
-node packages/cli/dist/bin.js scan /path/to/your-angular-app
-# or, from the repository root:
-pnpm ngbastion scan /path/to/your-angular-app
+npx ngbastion scan
 ```
 
 Check that the environment is ready:
 
 ```sh
-node packages/cli/dist/bin.js doctor /path/to/your-angular-app
+npx ngbastion doctor
 ```
 
-## Planned installation
+## Install as a dev dependency
 
-Once published, the intended usage is:
+Pinning the version in `package.json` keeps local runs and CI on the same rules:
 
 ```sh
-npx ngbastion scan            # planned
-npm install --save-dev ngbastion   # planned
+npm install --save-dev ngbastion
+npx ngbastion init --preset recommended
+npx ngbastion scan
 ```
+
+pnpm and Yarn work the same way (`pnpm add -D ngbastion`, `yarn add -D ngbastion`).
 
 ## Dependencies of the scanned project
 
 Installing your project's dependencies (`npm ci`) before scanning is recommended. With `node_modules` present, NgBastion identifies framework APIs through the TypeChecker. Without it, it falls back to reading import declarations and type annotations, and reports an `unresolved-imports` diagnostic so you know which mode was used.
+
+## Run from source
+
+To work on NgBastion itself, see [Contributing](/docs/contributing/).

@@ -12,9 +12,7 @@ Ready-to-copy templates live in the repository under `ci-templates/`:
 | `ci-templates/Jenkinsfile` | Jenkins (declarative) | archived JSON and SARIF |
 | `ci-templates/azure-pipelines.yml` | Azure DevOps | SARIF published as `CodeAnalysisLogs` |
 
-:::note[Installation status]
-The npm package is not published yet. The templates read the command from `NGBASTION_CMD`; point it at a local build until publication.
-:::
+The templates read the command from `NGBASTION_CMD` (default `npx --yes ngbastion@0.1.0`). Pin the version you have tested, or point it at a locally installed `ngbastion`.
 
 ## Gates and exit codes
 

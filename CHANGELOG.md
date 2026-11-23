@@ -4,7 +4,7 @@ All notable changes to NgBastion are documented here. The project follows
 [Semantic Versioning](https://semver.org/) and [Conventional Commits](https://www.conventionalcommits.org/);
 user-visible changes are tracked with [Changesets](.changeset).
 
-## 0.1.0 — Unreleased (private development, not published)
+## 0.1.0 — 2026-11-23
 
 ### Security engine (`@ngbastion/core`)
 

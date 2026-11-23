@@ -6,9 +6,8 @@ Please **do not open a public issue** for security problems in NgBastion itself 
 crafted project that makes the scanner execute code, leak file contents into reports, or hide
 findings).
 
-While the repository is private, report directly to the maintainers through the private channel
-you use to access the repository. Once the repository is public, use GitHub's
-**private vulnerability reporting** ("Report a vulnerability" on the Security tab). No dedicated
+Use GitHub's **private vulnerability reporting** ("Report a vulnerability" on the
+[Security tab](https://github.com/hkolos1/ng-bastion/security)). No dedicated
 security e-mail address exists yet; none should be assumed.
 
 Please include the NgBastion version, Node.js version, a minimal reproduction and the impact.

@@ -3,7 +3,7 @@ ngbastion:
   stage: test
   image: node:24
   variables:
-    NGBASTION_CMD: "npx --yes ngbastion@0.1.0" # replace with a local build until published
+    NGBASTION_CMD: "npx --yes ngbastion@0.1.0"
     NGBASTION_FAIL_ON: "high"
   script:
     - npm ci
