@@ -7,10 +7,15 @@ const LEVEL: Record<Severity, 'error' | 'warning' | 'note'> = { critical: 'error
 const SECURITY_SEVERITY: Record<Severity, string> = { critical: '9.5', high: '8.0', medium: '5.5', low: '3.0', info: '1.0' };
 const PRECISION = { high: 'high', medium: 'medium', low: 'low' } as const;
 
+/** Encode each relative path segment so #, ?, %, and : stay part of the filename. */
+function artifactUri(file: string) {
+  return file.split('/').map(encodeURIComponent).join('/');
+}
+
 function location(file: string, region: { line: number; column: number; endLine: number; endColumn: number }, message?: string) {
   return {
     physicalLocation: {
-      artifactLocation: { uri: encodeURI(file), uriBaseId: '%SRCROOT%' },
+      artifactLocation: { uri: artifactUri(file), uriBaseId: '%SRCROOT%' },
       region: { startLine: region.line, startColumn: region.column, endLine: region.endLine, endColumn: region.endColumn },
     },
     ...(message ? { message: { text: message } } : {}),
@@ -86,7 +91,7 @@ export function toSarif(result_: ScanResult, context: ReportingContext = {}) {
         ...(context.comparison?.resolved ?? []).map(f => ({
           ruleId: f.rule, level: LEVEL[f.severity], baselineState: 'absent',
           message: { text: 'Previously observed finding absent from comparable current coverage.' },
-          locations: [{ physicalLocation: { artifactLocation: { uri: encodeURI(f.file), uriBaseId: '%SRCROOT%' } } }],
+          locations: [{ physicalLocation: { artifactLocation: { uri: artifactUri(f.file), uriBaseId: '%SRCROOT%' } } }],
           partialFingerprints: { 'ngbastion/v2': f.fingerprint },
         })),
       ],
@@ -95,7 +100,7 @@ export function toSarif(result_: ScanResult, context: ReportingContext = {}) {
         toolExecutionNotifications: result_.diagnostics.map((d) => ({
           level: d.level === 'info' ? 'note' : d.level,
           message: { text: `${d.code}: ${d.message}` },
-          ...(d.file ? { locations: [{ physicalLocation: { artifactLocation: { uri: encodeURI(d.file), uriBaseId: '%SRCROOT%' } } }] } : {}),
+          ...(d.file ? { locations: [{ physicalLocation: { artifactLocation: { uri: artifactUri(d.file), uriBaseId: '%SRCROOT%' } } }] } : {}),
         })),
       }],
     }],

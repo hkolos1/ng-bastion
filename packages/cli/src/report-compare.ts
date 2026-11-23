@@ -12,7 +12,7 @@ const validate = validator.compile<ReturnType<typeof toJsonReport>>(require('../
 function reportSnapshot(file: string) {
   try {
     const report = JSON.parse(readFileSync(file, 'utf8'));
-    if (report?.schemaVersion !== 1 || !report.scan?.snapshot) throw new Error('Missing comparison data. Generate JSON reports with the Reporting Release CLI.');
+    if (report?.schemaVersion !== 1 || !report.scan?.snapshot || !Array.isArray(report.scan.identities)) throw new Error('Missing comparison data. Generate JSON reports with the Reporting Release CLI.');
     if (!validate(report)) throw new Error('Invalid NgBastion JSON report: ' + validator.errorsText(validate.errors));
     const snapshot = parseSnapshot(report.scan.snapshot);
     const legacy = new Map(report.scan.identities.map(i => [i.legacy, i.v2]));

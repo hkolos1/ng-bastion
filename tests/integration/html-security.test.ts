@@ -4,6 +4,7 @@ import { scan } from '@ngbastion/core';
 import type { SecurityRule } from '@ngbastion/plugin-api';
 import { builtinRules } from '@ngbastion/rules';
 import { expect, it } from 'vitest';
+import { toSarif } from '../../packages/cli/src/reporters/sarif.js';
 import { renderHtml } from '../../packages/cli/src/reporters/html.js';
 
 it('preserves redaction across overlapping rules even when the sensitive finding is filtered', async () => {
@@ -44,7 +45,8 @@ it('renders only simple trace expressions from in-scope source, honors redaction
   const cwd = '/virtual/trace-review';
   const config = await resolveConfig({ extends: [], rules: { NGB003: 'error' } }, { cwd });
   const result = await scan({ cwd, config, rules: builtinRules, captureTraceContext: true,
-    files: { 'src/main.ts': 'export function render(el: HTMLElement) { el.innerHTML = location.hash; }' } });
+    files: { 'src/odd#?%:name.ts': 'export function render(el: HTMLElement) { el.innerHTML = location.hash; }' } });
+  expect(toSarif(result).runs[0]!.results[0]!.locations[0]!.physicalLocation.artifactLocation.uri).toBe('src/odd%23%3F%25%3Aname.ts');
   expect([...result.traceContext!.values()]).toContain('location.hash');
   expect(renderHtml(result)).toContain('View expression');
   expect(renderHtml(result, { redactSource: true })).not.toContain('View expression');

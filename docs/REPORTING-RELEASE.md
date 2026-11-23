@@ -54,7 +54,7 @@ HTML sharing mode omits source and dynamic evidence text. Additional trace excer
 - A v2 fingerprint uses the rule, path, significant operation tokens, named scope, source/sink identity and an occurrence index. Renames, major refactoring or reordering identical operations can change it. Rules with only a location use a tokenized line fallback.
 - Compare scans from the same logical workspace. Identical fingerprints establish a match even when severity or confidence changes. Missing or changed coverage, diagnostics and suppressed or hidden identities can make unmatched observations uncertain. This deliberately favors inconclusive results over false resolution claims.
 - Git associations describe working-tree locations and recorded trace steps. There is no base-revision build, installation or rescan. Unstaged moves may appear as a deletion and addition. A missing or ignored trace step cannot contribute a changed-line association.
-- Browser automation exercised Chromium. Manual assistive-technology and cross-browser coverage is narrower than the automated CLI coverage.
+- Chromium ran the full browser suite. Separate offline smoke tests opened the actual showcase report in Firefox 159 and WebKit 27.2 and verified keyboard expansion, severity filtering, reset and theme switching. Manual screen-reader testing remains outstanding.
 
 ## Release steps
 
