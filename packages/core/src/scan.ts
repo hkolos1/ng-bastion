@@ -19,6 +19,7 @@ import {
   type TraceStepKind,
 } from '@ngbastion/plugin-api';
 import type { ResolvedConfig, RuleLevel } from '@ngbastion/config';
+import { fingerprintBase, hashIdentity, operationAnchor } from './fingerprint.js';
 import { Index } from './code-index.js';
 import { Flow } from './flow.js';
 import { createInMemoryProgram, createProjectProgram } from './program.js';
@@ -61,6 +62,7 @@ export interface Suppression {
 export interface Finding {
   /** Stable across unrelated edits (not tied to line numbers). */
   fingerprint: string;
+  fingerprintV2?: string;
   ruleId: string;
   ruleName: string;
   category: string;
@@ -99,6 +101,7 @@ export interface ScanResult {
   tool: { name: 'NgBastion'; version: string; pluginApiVersion: number };
   /** Unique rule IDs completed in at least one project. Older results may omit coverage. */
   ruleCoverage?: { available: number; evaluated: string[] };
+  comparisonCoverage?: { files: string[]; hidden: string[] };
   workspaceRoot: string;
   startedAt: string;
   durationMs: number;
@@ -136,12 +139,19 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
     : undefined;
   const diagnostics: ScanDiagnostic[] = config.diagnostics.map((d) => ({ code: d.code, level: d.level, message: d.message, ...(d.file ? { file: d.file } : {}) }));
 
+  const observed = new Set<string>();
   const readFile = (file: string): string | undefined => {
     const abs = path.resolve(file);
-    if (memory) return memory.get(abs);
+    if (memory) {
+      if (memory.has(abs)) observed.add(abs);
+      return memory.get(abs);
+    }
     if (!abs.startsWith(root + path.sep) && abs !== root) return undefined;
     try {
-      return existsSync(abs) ? readFileSync(abs, 'utf8') : undefined;
+      if (!existsSync(abs)) return undefined;
+      const content = readFileSync(abs, 'utf8');
+      observed.add(abs);
+      return content;
     } catch {
       return undefined;
     }
@@ -314,6 +324,10 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
         }
         all.push({
           fingerprint: '',
+          fingerprintV2: fingerprintBase(rule.meta.id, fileRel,
+            operationAnchor(r.node?.getText() ?? line ?? '', r.node),
+            (r.trace ?? []).filter(step => step.kind === 'source' || step.kind === 'sink')
+              .map(step => JSON.stringify([step.kind, rel(step.location.file), step.symbol ?? '']))),
           ruleId: rule.meta.id,
           ruleName: rule.meta.name,
           category: rule.meta.category,
@@ -355,6 +369,8 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
 
   // ---- normalize: dedupe, fingerprint, suppressions, exceptions, confidence filter
   const seen = new Set<string>();
+  const semanticOccurrences = new Map<string, number>();
+  const hiddenIds: string[] = [];
   const occurrence = new Map<string, number>();
   const findings: Finding[] = [];
   const suppressed: Finding[] = [];
@@ -382,7 +398,13 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
     occurrence.set(base, n);
     f.fingerprint = createHash('sha256').update(`${base}\0${n}`).digest('hex').slice(0, 20);
 
+    const semantic = f.fingerprintV2!;
+    const ordinal = (semanticOccurrences.get(semantic) ?? 0) + 1;
+    semanticOccurrences.set(semantic, ordinal);
+    f.fingerprintV2 = hashIdentity([semantic, ordinal]);
+
     if (confidenceRank(f.confidence) < confidenceRank(config.minConfidence)) {
+      hiddenIds.push(f.fingerprintV2);
       hidden++;
       continue;
     }
@@ -400,7 +422,7 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
     }
 
     const exc = exceptionMatchers.find(({ e, match }) =>
-      e.rule === f.ruleId && match(f.location.file) && (!e.line || e.line === f.location.line) && (!e.fingerprint || e.fingerprint === f.fingerprint));
+      e.rule === f.ruleId && match(f.location.file) && (!e.line || e.line === f.location.line) && (!e.fingerprint || (e.fingerprint === f.fingerprint || e.fingerprint === f.fingerprintV2)));
     if (exc) {
       if (exc.e.expires && exc.e.expires < today) {
         const k = `${exc.e.source}:${exc.e.rule}:${exc.e.files.join(',')}`;
@@ -431,6 +453,7 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
   return {
     tool: { name: 'NgBastion', version: options.toolVersion ?? ENGINE_VERSION, pluginApiVersion: PLUGIN_API_VERSION },
     workspaceRoot: root,
+    comparisonCoverage: { files: [...new Set([...observed, ...analyzedFiles].map(rel))].sort(), hidden: hiddenIds },
     ruleCoverage: { available: known.size, evaluated: [...evaluated] },
     startedAt: new Date(started).toISOString(),
     durationMs: Date.now() - started,

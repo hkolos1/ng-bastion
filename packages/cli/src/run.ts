@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, statSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { parseArgs, type ParseArgsConfig } from 'node:util';
@@ -7,6 +7,9 @@ import { CONFIG_FILE_NAMES, ConfigError, loadConfig, type ConfigOverrides } from
 import { discoverWorkspace, resolveProjectFiles, scan, SUPPORTED_ANGULAR_MAJORS, type WorkspaceDiagnostic } from '@ngbastion/core';
 import { builtinRules } from '@ngbastion/rules';
 import { PluginError, loadPlugins } from './plugins.js';
+import { readSnapshot, writeSnapshot, ReportingError } from './baseline.js';
+import { compare, snapshot, type ReportingContext } from './comparison.js';
+import { statusGate } from './status-gate.js';
 import { renderHtml } from './reporters/html.js';
 import { renderJson } from './reporters/json.js';
 import { renderSarif } from './reporters/sarif.js';
@@ -58,6 +61,11 @@ const HELPS: Record<string, string> = {
 Options:
   -f, --format <terminal|json|sarif|html>   Output format (default: terminal)
   -o, --output <file>                  Write the report to a file
+  --baseline <file>                    Compare with a local baseline
+  --create-baseline                    Create baseline (default .ngbastion-baseline.json)
+  --update-baseline                    Explicitly replace an existing comparable baseline
+  --fail-on-status <all|new>           Gate all or new and uncertain findings
+  --fail-on-confidence <level>         Minimum confidence for the gate only
   --redact-source                      Omit snippets and free-text scan evidence from HTML
   -c, --config <file>                  Config file (default: ngbastion.config.{json,ts,…} in dir)
   --fail-on <severity|none>            Gate threshold: critical|high|medium|low|info|none
@@ -127,7 +135,7 @@ export async function run(argv: string[], io: Io = defaultIo()): Promise<number>
       default: throw new UsageError(`unknown command '${command}'. Run 'ngbastion --help'.`);
     }
   } catch (e) {
-    if (e instanceof UsageError || e instanceof ConfigError || e instanceof PluginError) {
+    if (e instanceof ReportingError || e instanceof UsageError || e instanceof ConfigError || e instanceof PluginError) {
       io.stderr(`ngbastion: ${e.message}\n`);
       return EXIT_ERROR;
     }
@@ -145,6 +153,12 @@ async function loadRules(pluginSpecs: Parameters<typeof loadPlugins>[0]) {
   return { rules: [...builtinRules, ...pluginRules] as SecurityRule[], pluginRuleIds: new Set(pluginRules.map((r) => r.meta.id)) };
 }
 
+function sameFile(a: string, b: string) {
+  if (a === b) return true;
+  const x = statSync(a, { throwIfNoEntry: false }), y = statSync(b, { throwIfNoEntry: false });
+  return !!x && !!y && x.dev === y.dev && x.ino === y.ino;
+}
+
 async function scanCommand(argv: string[], io: Io): Promise<number> {
   const { values, positionals } = parse(argv, {
     format: { type: 'string', short: 'f' },
@@ -153,6 +167,11 @@ async function scanCommand(argv: string[], io: Io): Promise<number> {
     'fail-on': { type: 'string' },
     'min-confidence': { type: 'string' },
     project: { type: 'string', short: 'p', multiple: true },
+    baseline: { type: 'string' },
+    'create-baseline': { type: 'boolean' },
+    'update-baseline': { type: 'boolean' },
+    'fail-on-status': { type: 'string' },
+    'fail-on-confidence': { type: 'string' },
     'redact-source': { type: 'boolean' },
     'show-suppressed': { type: 'boolean' },
     quiet: { type: 'boolean', short: 'q' },
@@ -173,24 +192,40 @@ async function scanCommand(argv: string[], io: Io): Promise<number> {
 
   const { config, file } = await loadConfig({ cwd, ...(values.config ? { configFile: path.resolve(io.cwd, values.config as string) } : {}), overrides });
   const { rules, pluginRuleIds } = await loadRules(config.plugins);
-  const result = await scan({ cwd, config, rules, pluginRuleIds, toolVersion: VERSION });
+  const create = values['create-baseline'] === true, update = values['update-baseline'] === true;
+  if (create && update) throw new UsageError('Choose either --create-baseline or --update-baseline');
+  const baseline = values.baseline ? path.resolve(io.cwd, String(values.baseline)) : path.join(cwd, '.ngbastion-baseline.json');
+  if (values.output && (values.baseline || create || update) && sameFile(baseline, path.resolve(io.cwd, String(values.output)))) {
+    throw new UsageError('Report output and baseline must use different files');
+  }
+  const prior = !create && (values.baseline || update) ? readSnapshot(baseline) : undefined;
+  const gateStatus = oneOf('fail-on-status', values['fail-on-status'], ['all', 'new'] as const);
+  const gateConfidence = oneOf('fail-on-confidence', values['fail-on-confidence'], CONFIDENCES);
+  const scanned = await scan({ cwd, config, rules, pluginRuleIds, toolVersion: VERSION });
+  const current = snapshot(scanned, config);
+  const comparison = prior ? compare(prior, current) : undefined;
+  const context: ReportingContext = { snapshot: current, comparison, gateScope: { status: gateStatus ?? 'all', confidence: gateConfidence } };
+  const result = statusGate(scanned, config.policy, comparison, gateStatus === 'new', gateConfidence);
+  if ((create || update) && result.diagnostics.some(d => d.level === 'error')) throw new ReportingError('Scan failed. Baseline was not written.');
+  if (update && comparison?.unverified.length) throw new ReportingError('Cannot update baseline with unverified disappearances. Inspect the comparison or create a separate baseline.');
   const configSources = config.sources.map((s) => (path.isAbsolute(s) ? path.relative(cwd, s) || path.basename(s) : s));
   if (!file) configSources.unshift('(zero-config defaults)');
 
   const remediation = new Map(rules.map((r) => [r.meta.id, r.meta.docs.remediation]));
   const colors = colorsFor(io, values);
   let report: string;
-  if (format === 'json') report = renderJson(result, configSources);
+  if (format === 'json') report = renderJson(result, configSources, context);
   else if (format === 'html') {
     try {
-      report = renderHtml(result, { redactSource: values['redact-source'] === true });
+      report = renderHtml(result, { ...context, redactSource: values['redact-source'] === true });
     } catch (error) {
       throw new UsageError(`could not generate HTML report: ${(error as Error).message}`);
     }
   }
-  else if (format === 'sarif') report = renderSarif(result);
+  else if (format === 'sarif') report = renderSarif(result, context);
   else {
     report = renderTerminal(result, {
+      ...context,
       colors: values.output ? createColors(false) : colors,
       verbose: values.verbose === true,
       quiet: values.quiet === true,
@@ -210,6 +245,10 @@ async function scanCommand(argv: string[], io: Io): Promise<number> {
     io.stderr(`ngbastion: wrote ${format} report to ${path.relative(io.cwd, out) || out} (${summary})\n`);
   } else {
     io.stdout(report);
+  }
+  if (create || update) {
+    writeSnapshot(baseline, current, update ? prior : undefined);
+    io.stderr(`ngbastion: ${update ? 'updated' : 'created'} baseline ${baseline}\n`);
   }
   const errors = result.diagnostics.filter((d) => d.level === 'error');
   if (errors.length) {

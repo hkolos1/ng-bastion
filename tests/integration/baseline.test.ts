@@ -1,0 +1,70 @@
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { afterAll, expect, it } from 'vitest';
+import { compare, type Snapshot } from '../../packages/cli/src/comparison.js';
+import { parseSnapshot } from '../../packages/cli/src/baseline.js';
+import { fingerprintBase } from '../../packages/core/src/fingerprint.js';
+import { run } from '../../packages/cli/src/run.js';
+
+const root = mkdtempSync(path.join(os.tmpdir(), 'ngb-baselines-'));
+afterAll(() => rmSync(root, { recursive: true, force: true }));
+const command = async (cwd: string, args: string[]) => {
+  let stdout = '', stderr = '';
+  const code = await run(['scan', ...args], { stdout: s => { stdout += s; }, stderr: s => { stderr += s; }, cwd, env: {}, isTTY: false });
+  return { code, stdout, stderr };
+};
+const baseName = '.ngbastion-baseline.json';
+const fixture = () => {
+  const cwd = mkdtempSync(path.join(root, 'workspace-'));
+  writeFileSync(path.join(cwd, 'ngbastion.config.json'), JSON.stringify({ extends: [], rules: { NGB003: 'error' }, failOn: 'high', minConfidence: 'low' }));
+  return cwd;
+};
+it('keeps ordinary edits stable, distinguishes repeated operations, resolves only covered findings and writes explicitly', async () => {
+  const cwd = fixture(), source = path.join(cwd, 'app.ts');
+  const operation = 'el.innerHTML = location.hash;';
+  const program = (ops: string) => `export function show(el: HTMLElement) {\n${ops}\n}`;
+  writeFileSync(source, program(operation + '\n' + operation));
+  expect((await command(cwd, ['--create-baseline'])).code).toBe(1);
+  const baselineFile = path.join(cwd, baseName);
+  const bytes = readFileSync(baselineFile, 'utf8');
+  const initial = parseSnapshot(JSON.parse(bytes));
+  expect(initial.findings).toHaveLength(2);
+  expect(new Set(initial.findings.map(f => f.fingerprint)).size).toBe(2);
+  expect(bytes).not.toContain(operation);
+  expect((await command(cwd, ['--create-baseline'])).code).toBe(2);
+  writeFileSync(source, '\n// unrelated\n' + program('const other = 1;\n' + operation.replace(' = ', ' /* comment */=') + '\n' + operation));
+  const options = ['--baseline', baseName, '--fail-on-status', 'new', '-f', 'json'];
+  const edited = await command(cwd, options);
+  expect(edited.code).toBe(0);
+  expect(JSON.parse(edited.stdout).scan.comparison).toMatchObject({ existing: 2, new: 0, resolved: [] });
+  expect(readFileSync(baselineFile, 'utf8')).toBe(bytes);
+  writeFileSync(source, program(operation.replace('location.hash', 'location.search')));
+  const changed = await command(cwd, options);
+  expect(changed.code).toBe(1);
+  const comparison = JSON.parse(changed.stdout).scan.comparison;
+  expect(comparison.new).toBe(1);
+  expect(comparison.resolved).toHaveLength(2);
+  expect((await command(cwd, ['--update-baseline'])).code).toBe(1);
+  expect(readFileSync(baselineFile, 'utf8')).not.toBe(bytes);
+  expect((await command(cwd, ['--baseline', baseName, '-o', baseName])).code).toBe(2);
+  expect((await command(cwd, ['--fail-on-status', 'new'])).code).toBe(2);
+  expect(fingerprintBase('R', 'src\\a.ts', 'op', [])).toBe(fingerprintBase('R', './src/a.ts', 'op', []));
+});
+it('reports uncertainty for changed eligibility, omissions, suppression and failed analysis', async () => {
+  const cwd = fixture();
+  writeFileSync(path.join(cwd, 'app.ts'), 'export function show(el: HTMLElement) { el.innerHTML = location.hash; }');
+  await command(cwd, ['--create-baseline']);
+  const before = parseSnapshot(JSON.parse(readFileSync(path.join(cwd, baseName), 'utf8')));
+  for (const patch of [{ files: [] }, { rules: [] }, { limitations: ['rule-failed'] }, { configHash: 'other' }, { scannerVersion: 'other' }, { inactive: [before.findings[0]!.fingerprint] }]) {
+    const result = compare(before, { ...before, ...patch, findings: [] });
+    expect(result.resolved).toEqual([]);
+    expect(result.unverified).toHaveLength(1);
+  }
+  expect(() => parseSnapshot({ ...before, schemaVersion: 99 })).toThrow(/schema/);
+  expect(() => parseSnapshot({ ...before, fingerprintVersion: 99 })).toThrow(/fingerprint/);
+  expect(() => parseSnapshot({ ...before, findings: [before.findings[0], before.findings[0]] })).toThrow(/duplicate/);
+  expect(() => parseSnapshot({ ...before, files: 'file' } as unknown as Snapshot)).toThrow(/Invalid baseline/);
+  writeFileSync(path.join(cwd, 'ngbastion.config.json'), '{"extends":["enterprise"]}');
+  expect((await command(cwd, ['--baseline', baseName, '--fail-on-status', 'new'])).stderr).toMatch(/policy/);
+});
