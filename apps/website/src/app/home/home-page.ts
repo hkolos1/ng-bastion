@@ -93,6 +93,19 @@ const DESCRIPTION = 'NgBastion is an Angular-aware, local-first security scanner
         </div>
       </section>
 
+      <section class="section" aria-labelledby="agent-h">
+        <div class="section-head"><p class="label">Experimental WebMCP</p>
+          <h2 id="agent-h">AI-ready Angular security</h2>
+          <p class="lead">A compatible browser agent can call NgBastion tools directly while this page is open. Ask it to find a rule, explain a finding or inspect a TypeScript snippet locally.</p>
+        </div>
+        <ul class="link-grid">
+          @for (item of agentTools; track item[0]) {
+            <li><a class="link-card" routerLink="/docs/webmcp"><strong>{{ item[0] }}</strong><span>{{ item[1] }}</span></a></li>
+          }
+        </ul>
+        <a class="btn" routerLink="/playground">Open the playground</a>
+      </section>
+
       <section class="section" aria-labelledby="start-h">
         <div class="section-head">
           <p class="label">Getting started</p>
@@ -137,6 +150,14 @@ const DESCRIPTION = 'NgBastion is an Angular-aware, local-first security scanner
   `,
 })
 export class HomePage {
+  protected readonly agentTools = [
+    ['Browse rules', 'Page through the catalog by severity or category.'],
+    ['Explain a rule', 'Read detection criteria, examples and remediation.'],
+    ['Search rules', 'Find relevant checks by keyword or API name.'],
+    ['Analyze a snippet', 'Check TypeScript literals for hardcoded secrets.'],
+    ['Generate a report', 'Save recent snippet findings as standalone HTML.'],
+    ['Install the CLI', 'Get commands and runtime requirements for a project scan.'],
+  ];
   protected readonly showcase = SHOWCASE;
   protected readonly landing = LANDING;
   protected readonly enginePoints: [string, string][] = [

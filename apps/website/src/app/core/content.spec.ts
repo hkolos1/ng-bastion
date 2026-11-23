@@ -2,7 +2,7 @@ import { NAV, hasPage, loadPage, neighbours, slugFromUrl } from './content';
 import showcase from '../../generated/showcase.json';
 
 /** Hand-written docs pages + rule index; rule pages come from the registry (showcase.ruleCount). */
-const DOC_PAGES = 18;
+const DOC_PAGES = 19;
 
 describe('content model', () => {
   it('normalizes URLs to slugs', () => {

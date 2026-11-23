@@ -23,6 +23,10 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
+    "./snippet": {
+      "types": "./dist/snippet.d.ts",
+      "import": "./dist/snippet.js"
+    },
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"

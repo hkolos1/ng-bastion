@@ -15,7 +15,8 @@ import { fileURLToPath } from 'node:url';
 import { Marked } from 'marked';
 import { createHighlighter } from 'shiki';
 import { loadConfig, resolveConfig, PRESETS } from '@ngbastion/config';
-import { scan } from '@ngbastion/core';
+import { ENGINE_VERSION, scan } from '@ngbastion/core';
+import { loadReportAssets } from 'ngbastion';
 import { builtinRules } from '@ngbastion/rules';
 
 export const SITE = 'https://ngbastion.web.app';
@@ -35,6 +36,11 @@ for (const d of [genContent, generated]) {
 }
 mkdirSync(path.join(genContent, 'rules'), { recursive: true });
 mkdirSync(path.join(generated, 'pages'), { recursive: true });
+
+const cliPackage = JSON.parse(readFileSync(path.join(repo, 'packages/cli/package.json'), 'utf8'));
+writeFileSync(path.join(generated, 'cli.json'), JSON.stringify({ name: cliPackage.name, node: cliPackage.engines.node, version: ENGINE_VERSION }));
+writeFileSync(path.join(generated, 'rule-metadata.json'), JSON.stringify(builtinRules.map(rule => rule.meta)));
+writeFileSync(path.join(generated, 'report-assets.json'), JSON.stringify(loadReportAssets()));
 
 const CATEGORY = {
   'angular-xss': 'Angular security & XSS',
@@ -405,7 +411,7 @@ function render(slug, text, file) {
 /** Sidebar: same structure as the previous documentation site. */
 const nav = [
   { label: 'Getting started', items: ['docs', 'docs/getting-started/installation', 'docs/getting-started/first-scan', 'docs/getting-started/reading-findings', 'docs/getting-started/compatibility'] },
-  { label: 'Reference', items: ['docs/cli-reference', 'docs/configuration', 'docs/security-engine', 'docs/reports', 'docs/baselines', 'docs/git-comparison', 'docs/plugin-api', 'docs/ci-cd', 'docs/limitations'] },
+  { label: 'Reference', items: ['docs/cli-reference', 'docs/configuration', 'docs/security-engine', 'docs/reports', 'docs/webmcp', 'docs/baselines', 'docs/git-comparison', 'docs/plugin-api', 'docs/ci-cd', 'docs/limitations'] },
   { label: 'Security rules', items: ['rules', ...builtinRules.map((r) => `rules/${r.meta.id.toLowerCase()}`)] },
   { label: 'Project', items: ['docs/contributing', 'docs/security-policy', 'changelog', 'playground'] },
 ];

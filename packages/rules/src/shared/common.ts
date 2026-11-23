@@ -15,13 +15,13 @@ import {
 
 export const ANGULAR_SANITIZER_MODULES = ['@angular/platform-browser', '@angular/core'];
 
-export function strip(ctx: AnalysisContext, e: ts.Expression): ts.Expression {
+export function strip(ctx: Pick<AnalysisContext, 'ts'>, e: ts.Expression): ts.Expression {
   const t = ctx.ts;
   while (t.isParenthesizedExpression(e) || t.isAsExpression(e) || t.isNonNullExpression(e) || t.isTypeAssertionExpression(e) || t.isSatisfiesExpression(e)) e = e.expression;
   return e;
 }
 
-export function memberName(ctx: AnalysisContext, e: ts.Expression): string | undefined {
+export function memberName(ctx: Pick<AnalysisContext, 'ts'>, e: ts.Expression): string | undefined {
   const t = ctx.ts;
   const x = strip(ctx, e);
   if (t.isPropertyAccessExpression(x)) return x.name.text;

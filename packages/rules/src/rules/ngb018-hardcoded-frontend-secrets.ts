@@ -14,7 +14,7 @@ const JSON_GLOBS = [
 ];
 const IGNORED_JSON = /(^|\/)(package(-lock)?|tsconfig[^/]*|angular|project|nx|ngbastion\.config|firebase|vercel|staticwebapp\.config)\.json$/;
 
-function assignedName(ctx: AnalysisContext, lit: ts.Node): string | undefined {
+function assignedName(ctx: Pick<AnalysisContext, 'ts'>, lit: ts.Node): string | undefined {
   const t = ctx.ts;
   let p = lit.parent;
   while (p && (t.isParenthesizedExpression(p) || t.isAsExpression(p) || t.isSatisfiesExpression(p))) p = p.parent;
@@ -26,7 +26,7 @@ function assignedName(ctx: AnalysisContext, lit: ts.Node): string | undefined {
   return undefined;
 }
 
-function isNonValueLiteral(ctx: AnalysisContext, lit: ts.Node): boolean {
+function isNonValueLiteral(ctx: Pick<AnalysisContext, 'ts'>, lit: ts.Node): boolean {
   const t = ctx.ts;
   const p = lit.parent;
   return t.isImportDeclaration(p) || t.isExportDeclaration(p) || t.isExternalModuleReference(p) || t.isLiteralTypeNode(p)
@@ -45,6 +45,18 @@ function finding(location: SourceLocation | undefined, node: ts.Node | undefined
     evidence: [`matched: ${m.kind}`, 'value redacted in this report'],
     redactSnippet: true,
   };
+}
+
+/** The TypeScript source pass, shared with the isolated browser snippet worker. */
+export function inspectSecretLiterals(ctx: Pick<AnalysisContext, 'ts'>, literals: Iterable<ts.StringLiteralLike>): RuleFinding[] {
+  const findings: RuleFinding[] = [];
+  for (const lit of literals) {
+    if (isNonValueLiteral(ctx, lit)) continue;
+    const name = assignedName(ctx, lit);
+    const m = classifySecret(lit.text, name);
+    if (m) findings.push(finding(undefined, lit, lit.text, m, 'in frontend source'));
+  }
+  return findings;
 }
 
 export const ngb018 = defineRule({
@@ -83,13 +95,7 @@ export const ngb018 = defineRule({
     },
   },
   analyze(ctx) {
-    const findings: RuleFinding[] = [];
-    for (const lit of ctx.index.stringLiterals) {
-      if (isNonValueLiteral(ctx, lit)) continue;
-      const name = assignedName(ctx, lit);
-      const m = classifySecret(lit.text, name);
-      if (m) findings.push(finding(undefined, lit, lit.text, m, 'in frontend source'));
-    }
+    const findings = inspectSecretLiterals(ctx, ctx.index.stringLiterals);
 
     const files = new Set(JSON_GLOBS.flatMap((g) => ctx.findFiles(g)));
     for (const file of files) {
