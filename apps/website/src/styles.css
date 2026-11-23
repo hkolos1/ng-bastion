@@ -499,6 +499,9 @@
   .table-wrap { overflow-x: auto; margin: 1.25rem 0 1.75rem; border: 1px solid var(--border); border-radius: var(--radius); }
   .prose table { border-collapse: collapse; width: 100%; font-size: var(--text-sm); line-height: 1.55; }
   .prose th, .prose td { text-align: left; padding: 0.65rem 0.9rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  /* Keep config identifiers intact when the table computes minimum column widths. */
+  .prose table :not(pre) > code { white-space: normal; overflow-wrap: normal; word-break: normal; }
+  .prose th code { text-transform: none; letter-spacing: normal; }
   .prose tr:last-child td { border-bottom: 0; }
   .prose th { font: 500 var(--text-label) / 1.4 var(--font-mono); letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--text-subtle); background: var(--surface); }
   .prose td:first-child { color: var(--text); }
