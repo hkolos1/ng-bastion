@@ -327,7 +327,7 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
           fingerprintV2: fingerprintBase(rule.meta.id, fileRel,
             operationAnchor(r.node?.getText() ?? line ?? '', r.node),
             (r.trace ?? []).filter(step => step.kind === 'source' || step.kind === 'sink')
-              .map(step => JSON.stringify([step.kind, rel(step.location.file), step.symbol ?? '']))),
+              .map(step => JSON.stringify([step.kind, rel(step.location.file), step.symbol ?? step.description]))),
           ruleId: rule.meta.id,
           ruleName: rule.meta.name,
           category: rule.meta.category,
