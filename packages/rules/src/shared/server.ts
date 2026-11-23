@@ -133,3 +133,41 @@ export function isServerFile(ctx: AnalysisContext, sf: ts.SourceFile): boolean {
   if (/(^|[/\\])(server|main\.server|app\.config\.server)\.[cm]?[jt]s$/.test(sf.fileName) || /[/\\](server|backend)[/\\]/.test(sf.fileName)) return true;
   return /\bfrom\s+['"](node:[\w/]+|express|fs|child_process|http|https|crypto|path)['"]|\brequire\(\s*['"](node:[\w/]+|express|fs|child_process|http|https|crypto)['"]\s*\)/.test(sf.text);
 }
+
+/** Expression reads a server request header / body / query / cookies (directly or via a `const`). */
+export function requestDerived(ctx: AnalysisContext, e: ts.Expression, depth = 0): string | undefined {
+  const t = ctx.ts;
+  let found: string | undefined;
+  const visit = (n: ts.Node): void => {
+    if (found) return;
+    if (t.isPropertyAccessExpression(n) || t.isElementAccessExpression(n)) {
+      const name = memberName(ctx, n as ts.Expression);
+      const recv = receiverOf(ctx, n as ts.Expression);
+      if (recv && name && ['headers', 'body', 'query', 'cookies', 'params'].includes(name) && isServerRequest(ctx, recv)) {
+        found = `request ${name}`;
+        return;
+      }
+    }
+    if (t.isCallExpression(n)) {
+      const callee = strip(ctx, n.expression);
+      const m = memberName(ctx, callee);
+      const recv = receiverOf(ctx, callee);
+      if (recv && (m === 'get' || m === 'header') && isServerRequest(ctx, recv)) {
+        found = `request header ${n.arguments[0] ? ctx.symbols.constantString(n.arguments[0]) ?? '' : ''}`.trim();
+        return;
+      }
+    }
+    if (t.isIdentifier(n) && depth < 3) {
+      const d = ctx.symbols.declarationOf(n);
+      if (d && t.isVariableDeclaration(d) && d.initializer) found = requestDerived(ctx, d.initializer, depth + 1);
+      else if (d && t.isBindingElement(d)) {
+        const decl = d.parent.parent;
+        if (t.isVariableDeclaration(decl) && decl.initializer) found = requestDerived(ctx, decl.initializer, depth + 1);
+      }
+      return;
+    }
+    t.forEachChild(n, visit);
+  };
+  visit(e);
+  return found;
+}

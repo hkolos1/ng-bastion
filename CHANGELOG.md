@@ -31,6 +31,11 @@ user-visible changes are tracked with [Changesets](.changeset).
   NGB057 Missing OIDC nonce, NGB058 ID token sent as API bearer token, NGB059 JWT decoded without
   signature verification (server code), NGB060 Untrusted OAuth redirect URI. NGB055 and NGB058
   only warn in `recommended`.
+- NGB061 Server-side open redirect, NGB062 Permissive Permissions-Policy, NGB063 DOM-clobberable
+  global in a sensitive sink, NGB064 Untrusted CSS injection, NGB065 Broken or weak cipher, NGB066
+  Sensitive data copied to the clipboard, NGB067 Sensitive data sent to analytics, NGB068 Hardcoded
+  cryptographic key, NGB069 Reflected XSS in server responses, NGB070 Timing-unsafe secret
+  comparison. NGB062, NGB063, NGB066 and NGB067 only warn in `recommended`.
 - The `recommended` preset enables them; the heuristic ones (NGB022, NGB027, NGB028, NGB030,
   NGB033, NGB037, NGB044, NGB045) only warn. Configurations without `extends` keep their explicit rule selection. To keep the previous
   behaviour on upgrade, set the new IDs to `"off"`.

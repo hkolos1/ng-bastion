@@ -61,7 +61,7 @@ HIGH     NGB001  Unsafe HTML trust bypass  confidence: high · dataflow
 - **Severity and confidence are separate**; heuristic findings are labelled as such.
 - **Bounded analysis**: depth, call-site, file-hop, node and time limits; when one is hit you get an
   explicit `analysis-incomplete` diagnostic instead of silent gaps.
-- **60 security rules** (below), **terminal / JSON / SARIF 2.1.0** reports, **CI security gates**.
+- **70 security rules** (below), **terminal / JSON / SARIF 2.1.0** reports, **CI security gates**.
 - **Enterprise configuration**: presets, shared configs, organizational policies with mandatory
   rules, expiring exceptions, inline suppressions with required justification.
 - **Local-first**: no telemetry, no uploads, no network access during scans.
@@ -194,6 +194,16 @@ policies, exceptions, inline suppressions, analysis limits and trusted sanitizer
 | NGB058 | ID token sent as API bearer token | Medium |
 | NGB059 | JWT decoded without signature verification | High |
 | NGB060 | Untrusted OAuth redirect URI | High |
+| NGB061 | Server-side open redirect | Medium |
+| NGB062 | Permissive Permissions-Policy | Low |
+| NGB063 | DOM-clobberable global in a sensitive sink | Medium |
+| NGB064 | Untrusted CSS injection | Medium |
+| NGB065 | Broken or weak cipher | High |
+| NGB066 | Sensitive data copied to the clipboard | Low |
+| NGB067 | Sensitive data sent to analytics | Medium |
+| NGB068 | Hardcoded cryptographic key | High |
+| NGB069 | Reflected XSS in server responses | High |
+| NGB070 | Timing-unsafe secret comparison | Medium |
 
 Every rule documents its detected patterns, limitations, false-positive considerations and
 remediation: `ngbastion explain <ID>` or the generated rule pages of the documentation site.

@@ -98,3 +98,4 @@ metadata (`ngbastion explain NGBxxx`, website rule pages) and summarised below a
 | Batch | Rules | State |
 |---|---|---|
 | A | NGB051–NGB060 | ✅ implemented, tested (positive / safe / false-positive regression), in the showcase |
+| B | NGB061–NGB070 | ✅ implemented, tested (positive / safe / false-positive regression), in the showcase |

@@ -38,6 +38,7 @@ import { ngb048 } from './rules/ngb048-weak-hash-algorithm.js';
 import { ngb049 } from './rules/ngb049-insecure-dependency-source.js';
 import { ngb050 } from './rules/ngb050-document-domain-relaxation.js';
 import { rules as batchA } from './rules/batch-a.js';
+import { rules as batchB } from './rules/batch-b.js';
 
 /** All built-in rules, ordered by ID. */
 export const builtinRules: SecurityRule[] = [
@@ -45,7 +46,7 @@ export const builtinRules: SecurityRule[] = [
   ngb021, ngb022, ngb023, ngb024, ngb025, ngb026, ngb027, ngb028, ngb029, ngb030,
   ngb031, ngb032, ngb033, ngb034, ngb035, ngb036, ngb037, ngb038, ngb039, ngb040,
   ngb041, ngb042, ngb043, ngb044, ngb045, ngb046, ngb047, ngb048, ngb049, ngb050,
-  ...batchA,
+  ...batchA, ...batchB,
 ];
 
 export { classifyName, looksLikePan, words } from './shared/sensitivity.js';

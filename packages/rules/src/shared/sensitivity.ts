@@ -215,3 +215,17 @@ export function sensitiveValue(
   if (!best) return undefined;
   return { confidence: confidenceOf(best), category: best.match.category, strongest: best, evidence: relevant.slice(0, 4).map(describeEvidence) };
 }
+
+const PII_HEADS = new Set(['email', 'mail', 'phone', 'ssn', 'dob', 'birthdate', 'birthday', 'passport', 'iban', 'msisdn']);
+
+/** Personal data by name (`email`, `userEmail`, `phoneNumber`, `dateOfBirth`, `ssn`, `iban`). */
+export function personalDataName(name: string): boolean {
+  const w = words(name);
+  const head = w[w.length - 1];
+  if (!head) return false;
+  if (['is', 'has', 'show', 'valid', 'verified'].includes(w[0]!) && w.length > 1) return false;
+  if (PII_HEADS.has(head) || PII_HEADS.has(w.join(''))) return true;
+  const j = w.join('');
+  if (/^(emailaddress|phonenumber|mobilenumber|dateofbirth|socialsecuritynumber|nationalid|taxid|passportnumber|streetaddress|homeaddress)$/.test(j)) return true;
+  return head === 'number' && (w.includes('phone') || w.includes('mobile') || w.includes('passport') || w.includes('tax'));
+}
