@@ -4,6 +4,26 @@ All notable changes to NgBastion are documented here. The project follows
 [Semantic Versioning](https://semver.org/) and [Conventional Commits](https://www.conventionalcommits.org/);
 user-visible changes are tracked with [Changesets](.changeset).
 
+## Unreleased
+
+### New rules
+
+- NGB021 Disabled XSRF protection, NGB022 Authorization decision from user-controllable state,
+  NGB023 Missing OAuth state validation, NGB024 Weakened OAuth/OIDC client configuration,
+  NGB025 Authentication cookie set from JavaScript, NGB026 Untrusted HTTP request destination
+  (client-side path traversal), NGB027 Sensitive data in DOM attributes, NGB028 Sensitive data on
+  global objects, NGB029 Sensitive data in navigation state, NGB030 Permissive referrer policy.
+- The `recommended` preset enables them; the heuristic ones (NGB022, NGB027, NGB028, NGB030) only
+  warn. Configurations without `extends` keep their explicit rule selection. To keep the previous
+  behaviour on upgrade, set the new IDs to `"off"`.
+
+### Fixes
+
+- `encodeURIComponent()` was accepted as an HTML sanitizer and `encodeURI()` as an HTML sanitizer.
+  URL encoding is not HTML escaping (`'`, `(`, `)` survive and break out of single-quoted
+  attributes). Flows through them into HTML sinks (NGB001, NGB003) are now reported with one
+  confidence level less; `encodeURIComponent()` still sanitizes URL contexts.
+
 ## 0.1.2 — 2026-11-23
 
 ### Fixes

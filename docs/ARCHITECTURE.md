@@ -6,7 +6,7 @@
             │ (packages/   │     │ config         │  extends, policies, exceptions
             │  cli)        │     └────────────────┘
             │ reporters:   │     ┌────────────────┐
-            │ terminal,    │────▶│ @ngbastion/    │  builtinRules NGB001–NGB020
+            │ terminal,    │────▶│ @ngbastion/    │  builtinRules NGB001–NGB030
             │ JSON, SARIF  │     │ rules          │──┐ (depend only on plugin-api)
             └──────┬───────┘     └────────────────┘  │
                    │ scan()                           │ SecurityRule.analyze(ctx)
@@ -71,7 +71,7 @@ back through:
 | arrays, `Object.assign`, unmodeled library calls | propagate with an *approximation* (lowers confidence) |
 | RxJS | `subscribe`, `pipe` with `map`, flattening operators, pass-through operators, `catchError`, `startWith`…, `of`/`from`/`defer`, Subjects, `firstValueFrom` |
 | Signals | `signal`/`set`/`update`, `computed`, `linkedSignal`, `toSignal`, `toObservable`; `input()`/`model()` are unresolved (parent-supplied) |
-| sanitizers | context-specific (`DomSanitizer.sanitize(SecurityContext.X)`, DOMPurify for HTML, `encodeURIComponent` for HTML/URL, numeric conversion, configured `trustedSanitizers`) |
+| sanitizers | context-specific (`DomSanitizer.sanitize(SecurityContext.X)`, DOMPurify for HTML, `encodeURIComponent` for URL contexts only (never HTML), numeric conversion, configured `trustedSanitizers`) |
 | `bypassSecurityTrust*` | **pass-through** with a `trust-bypass` step — never a sanitizer |
 
 Results contain flows (source, ordered steps, confidence, approximations), unresolved origins,

@@ -624,7 +624,11 @@ export class TaintEngine implements TaintAnalyzer {
         this.state.sanitized.push({ reason: sanitizer.description, location: locationOf(call) });
         return;
       }
-      if (arg0) return this.visit(sanitizer.valueArg ?? arg0, env, this.extend(path, 'transform', call, `${sanitizer.description} (not a sanitizer for this context)`));
+      if (arg0) {
+        const p = this.extend(path, 'transform', call, `${sanitizer.description} (not a sanitizer for this context)`);
+        // URL encoding is not HTML escaping: `'` ( ) ! * survive and break out of single-quoted attributes.
+        return this.visit(sanitizer.valueArg ?? arg0, env, sanitizer.partial ? this.approx(p, sanitizer.partial) : p);
+      }
     }
     if (name?.startsWith('bypassSecurityTrust') && arg0) {
       return this.visit(arg0, env, this.extend(path, 'trust-bypass', call, `marked as trusted by ${name}() (no sanitization)`));
@@ -736,7 +740,7 @@ export class TaintEngine implements TaintAnalyzer {
   }
 
   private matchSanitizer(call: ts.CallExpression, info: ReturnType<Symbols['callee']>):
-    { description: string; contexts: SinkContext[]; valueArg?: ts.Expression } | 'numeric' | undefined {
+    { description: string; contexts: SinkContext[]; valueArg?: ts.Expression; partial?: string } | 'numeric' | undefined {
     if (!info) return undefined;
     const { name, receiver, origin } = info;
     const recvExpr = memberObject(skipOuter(call.expression));
@@ -753,9 +757,13 @@ export class TaintEngine implements TaintAnalyzer {
       return { description: 'DOMPurify.sanitize()', contexts: ['html'] };
     }
     if (!recvExpr && name === 'encodeURIComponent' && (!origin || origin.module === 'lib')) {
-      return { description: 'encodeURIComponent()', contexts: ['html', 'url', 'resource-url'] };
+      // URL contexts only. It is NOT HTML escaping (see `partial`).
+      return { description: 'encodeURIComponent()', contexts: ['url', 'resource-url'], partial: 'URL-encoded (encodeURIComponent) but not HTML-escaped' };
     }
-    if (!recvExpr && name === 'encodeURI' && (!origin || origin.module === 'lib')) return { description: 'encodeURI()', contexts: ['html'] };
+    if (!recvExpr && name === 'encodeURI' && (!origin || origin.module === 'lib')) {
+      // Keeps `:` and `/`, so `javascript:` URLs pass; not an HTML escape either.
+      return { description: 'encodeURI()', contexts: [], partial: 'URL-encoded (encodeURI) but not HTML-escaped or scheme-validated' };
+    }
     if (info.declaration && this.trustedSanitizers.length) {
       const fnName = nameOf(info.declaration) ?? (ts.isVariableDeclaration(info.declaration.parent) ? nameOf(info.declaration.parent) : undefined);
       const file = info.declaration.getSourceFile().fileName.replace(/\\/g, '/');

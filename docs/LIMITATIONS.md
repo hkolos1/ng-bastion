@@ -244,4 +244,99 @@ Possible false positives:
 - Pages rendered per request with `Cache-Control: private, no-store` limit exposure to the requesting user; such findings can be documented as exceptions.
 - Public data with personal-sounding names (e.g. a public author `profile`) may be reported with medium confidence.
 
+### NGB021 — Disabled XSRF protection
+
+- The server side is not visible: whether the backend validates the XSRF header, uses SameSite cookies or other CSRF defences cannot be assessed.
+- Angular only adds the XSRF header to mutating requests to relative / same-origin URLs; disabling it has no effect on cross-origin APIs, which need server-side CSRF protection anyway.
+- Custom `HttpXsrfTokenExtractor` providers that return no token are not detected.
+
+Possible false positives:
+
+- Applications that authenticate exclusively with bearer tokens in headers do not need XSRF tokens; such findings are low confidence.
+
+### NGB022 — Authorization decision from user-controllable state
+
+- Server-side authorization is not visible. A finding does not mean the protected data is exposed; it means the client-side check alone proves nothing.
+- Roles decoded from a JWT read from storage are reported (the user can edit the stored token; the signature is only checked by the server).
+- Guards built by factories (`roleGuard("admin")`) are analyzed only when the returned function is visible in the factory body.
+
+Possible false positives:
+
+- Applications whose APIs enforce authorization server-side use guards purely for UX; suppress the finding with a justification referencing the server check.
+
+### NGB023 — Missing OAuth state validation
+
+- Flows handled by OAuth libraries (angular-oauth2-oidc, angular-auth-oidc-client, MSAL) are not analyzed here; those libraries validate `state` themselves (see NGB024 for settings that weaken them).
+- State handling spread over several services (callback parsing in one class, comparison in another) can be missed when the exchange class neither reads nor compares the parameter.
+- Whether the stored state is unguessable and single-use is not assessed.
+
+Possible false positives:
+
+- Backends-for-frontend that validate `state` on the server while the SPA only forwards the code can be reported; suppress with a justification.
+
+### NGB024 — Weakened OAuth/OIDC client configuration
+
+- Configuration loaded at runtime (from JSON files fetched over HTTP, environment variables injected at deploy time) is not visible.
+- Values built dynamically (`requireHttps: environment.production`) are not evaluated.
+- Identity-provider settings (allowed flows, redirect URI allowlists) are outside the repository and not assessed.
+
+Possible false positives:
+
+- `requireHttps: false` in a configuration used only for local development is reported; keep such configs in development-only environment files and exclude them, or use `requireHttps: "remoteOnly"`.
+
+### NGB025 — Authentication cookie set from JavaScript
+
+- Cookie names built dynamically are only reported when the value is identified as a credential.
+- Cookies set through other wrappers or by the server (`Set-Cookie`, see NGB043) are not covered by this rule.
+
+Possible false positives:
+
+- Non-secret cookies that happen to use a credential-like name (e.g. a `token` cookie holding a feature flag) can be reported.
+
+### NGB026 — Untrusted HTTP request destination
+
+- `encodeURIComponent('..')` is still `..`; a single path level can be traversed after encoding. This is accepted as mitigation (one segment can no longer inject `/`).
+- Values from HTTP responses, Web Storage and form inputs are not treated as attacker-controlled here (users control their own inputs; response-driven URLs are usually API links).
+- Whether the server would accept the forged request (method, CSRF token, authorization) is not visible.
+
+Possible false positives:
+
+- Read-only lookups by route ID (`GET /api/items/${id}`) are low severity and low confidence; they are hidden by the default `minConfidence: medium`.
+
+### NGB027 — Sensitive data in DOM attributes
+
+- Template expressions are classified by identifier names only (no type information inside templates).
+- Attributes set by third-party components from their inputs are not followed.
+
+Possible false positives:
+
+- Opaque, non-secret identifiers with credential-like names (e.g. a public `tokenId` attribute used for testing selectors) can be reported.
+
+### NGB028 — Sensitive data on global objects
+
+- Globals created through `declare global` + plain `var` declarations in scripts outside the Angular build are not seen.
+- Assignments through aliases (`const w: any = window; w.token = …`) are covered only when the alias is typed as `Window`.
+
+Possible false positives:
+
+- Public configuration intentionally exposed on `window` (e.g. a publishable key) can be reported when its name looks like a credential.
+
+### NGB029 — Sensitive data in navigation state
+
+- Angular `Location.go(path, query, state)` and third-party routers are not covered.
+- State objects built in another function are classified by their names/types only.
+
+Possible false positives:
+
+- Opaque identifiers with credential-like names (`resetTokenId`) can be reported.
+
+### NGB030 — Permissive referrer policy
+
+- Headers configured outside the repository (CDN, reverse proxy) are not visible; no finding is produced for them.
+- Dynamic policy values are not evaluated.
+
+Possible false positives:
+
+- An `unsafe-url` policy on a single element whose destination is your own origin leaks nothing; it is still reported because the setting is fragile.
+
 _Generated from rule metadata in `packages/rules` by `scripts/generate-limitations.mjs`._
