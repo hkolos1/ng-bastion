@@ -5,7 +5,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const SITE = 'https://ngbastion.dev';
+const SITE = 'https://ngbastion.web.app';
 const site = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const out = path.join(site, 'dist/analog/public');
 const routes = JSON.parse(readFileSync(path.join(site, 'src/generated/routes.json'), 'utf8'));

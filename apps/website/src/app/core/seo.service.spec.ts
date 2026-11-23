@@ -4,9 +4,9 @@ import { Seo, canonicalUrl } from './seo.service';
 
 describe('Seo', () => {
   it('builds trailing-slash canonical URLs', () => {
-    expect(canonicalUrl('/')).toBe('https://ngbastion.dev/');
-    expect(canonicalUrl('/docs/configuration')).toBe('https://ngbastion.dev/docs/configuration/');
-    expect(canonicalUrl('/rules/ngb001/?q=1#x')).toBe('https://ngbastion.dev/rules/ngb001/');
+    expect(canonicalUrl('/')).toBe('https://ngbastion.web.app/');
+    expect(canonicalUrl('/docs/configuration')).toBe('https://ngbastion.web.app/docs/configuration/');
+    expect(canonicalUrl('/rules/ngb001/?q=1#x')).toBe('https://ngbastion.web.app/rules/ngb001/');
   });
 
   it('sets title, description, canonical, Open Graph and Twitter tags without duplicates', () => {
@@ -16,11 +16,11 @@ describe('Seo', () => {
     seo.set({ title: 'B | NgBastion', description: 'second description', path: '/rules/ngb002' });
     expect(doc.title).toBe('B | NgBastion');
     expect(doc.querySelectorAll('link[rel="canonical"]')).toHaveLength(1);
-    expect(doc.querySelector('link[rel="canonical"]')!.getAttribute('href')).toBe('https://ngbastion.dev/rules/ngb002/');
+    expect(doc.querySelector('link[rel="canonical"]')!.getAttribute('href')).toBe('https://ngbastion.web.app/rules/ngb002/');
     expect(doc.querySelectorAll('meta[property="og:title"]')).toHaveLength(1);
-    expect(doc.querySelector('meta[property="og:url"]')!.getAttribute('content')).toBe('https://ngbastion.dev/rules/ngb002/');
+    expect(doc.querySelector('meta[property="og:url"]')!.getAttribute('content')).toBe('https://ngbastion.web.app/rules/ngb002/');
     expect(doc.querySelector('meta[name="description"]')!.getAttribute('content')).toBe('second description');
-    expect(doc.querySelector('meta[name="twitter:image"]')!.getAttribute('content')).toBe('https://ngbastion.dev/brand/social-preview.png');
+    expect(doc.querySelector('meta[name="twitter:image"]')!.getAttribute('content')).toBe('https://ngbastion.web.app/brand/social-preview.png');
   });
 
   it('writes JSON-LD as text, escapes "<" and replaces it on the next page', () => {

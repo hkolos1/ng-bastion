@@ -54,7 +54,7 @@ describe('cli basics', () => {
     const list = JSON.parse((await cli(['rules', '--json'])).stdout) as { id: string }[];
     expect(list.map((r) => r.id)).toEqual(Array.from({ length: list.length }, (_, i) => `NGB${String(i + 1).padStart(3, '0')}`));
     const explain = await cli(['explain', 'ngb003']);
-    for (const s of ['What it checks', 'Why it matters', 'Detected patterns', 'Example (unsafe)', 'Safer alternative', 'Remediation', 'Known limitations', 'https://ngbastion.dev/rules/ngb003']) {
+    for (const s of ['What it checks', 'Why it matters', 'Detected patterns', 'Example (unsafe)', 'Safer alternative', 'Remediation', 'Known limitations', 'https://ngbastion.web.app/rules/ngb003']) {
       expect(explain.stdout).toContain(s);
     }
     expect((await cli(['explain', 'NGB999'])).code).toBe(2);

@@ -18,7 +18,7 @@ import { loadConfig, resolveConfig, PRESETS } from '@ngbastion/config';
 import { scan } from '@ngbastion/core';
 import { builtinRules } from '@ngbastion/rules';
 
-export const SITE = 'https://ngbastion.dev';
+export const SITE = 'https://ngbastion.web.app';
 const site = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const repo = path.resolve(site, '../..');
 const handwritten = path.join(site, 'content/docs');

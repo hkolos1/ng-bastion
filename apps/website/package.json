@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "ngbastion.dev: Angular 22 + AnalogJS site with landing page, documentation, rule reference, playground and changelog.",
+  "description": "ngbastion.web.app: Angular 22 + AnalogJS site with landing page, documentation, rule reference, playground and changelog.",
   "engines": {
     "node": ">=22.22.3"
   },

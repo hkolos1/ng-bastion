@@ -2,7 +2,7 @@ import { DOCUMENT } from '@angular/common';
 import { Injectable, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 
-export const SITE = 'https://ngbastion.dev';
+export const SITE = 'https://ngbastion.web.app';
 export const SOCIAL_IMAGE = `${SITE}/brand/social-preview.png`;
 
 export interface SeoInput {

@@ -175,7 +175,7 @@ export class HomePage {
         operatingSystem: 'Linux, macOS, Windows (Node.js 22 or 24)',
         softwareVersion: SHOWCASE.version,
         description: DESCRIPTION,
-        url: 'https://ngbastion.dev/',
+        url: 'https://ngbastion.web.app/',
         license: 'https://opensource.org/licenses/MIT',
       },
     });

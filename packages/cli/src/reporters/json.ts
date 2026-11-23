@@ -2,7 +2,7 @@ import { SEVERITIES, type Severity } from '@ngbastion/plugin-api';
 import type { ScanResult } from '@ngbastion/core';
 
 export const JSON_SCHEMA_VERSION = 1;
-export const JSON_SCHEMA_URL = 'https://ngbastion.dev/schemas/report-v1.json';
+export const JSON_SCHEMA_URL = 'https://ngbastion.web.app/schemas/report-v1.json';
 
 /**
  * Versioned JSON report (schema: packages/cli/schema/report-v1.json).
@@ -29,7 +29,7 @@ export function toJsonReport(result: ScanResult, configSources: string[] = []) {
       severity: r.severity,
       level: r.level,
       ...(r.meta.cwe ? { cwe: r.meta.cwe } : {}),
-      helpUri: `https://ngbastion.dev/rules/${r.meta.id.toLowerCase()}`,
+      helpUri: `https://ngbastion.web.app/rules/${r.meta.id.toLowerCase()}`,
     })),
     findings: result.findings,
     suppressed: result.suppressed,

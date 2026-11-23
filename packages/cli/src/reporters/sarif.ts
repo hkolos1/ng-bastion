@@ -53,16 +53,16 @@ export function toSarif(result_: ScanResult) {
           name: 'NgBastion',
           semanticVersion: result_.tool.version,
           version: result_.tool.version,
-          informationUri: 'https://ngbastion.dev',
+          informationUri: 'https://ngbastion.web.app',
           rules: rules.map((r) => ({
             id: r.meta.id,
             name: r.meta.name.replace(/(^|[\s/-]+)(\w)/g, (_, __, c: string) => c.toUpperCase()).replace(/\W/g, ''),
             shortDescription: { text: r.meta.name },
             fullDescription: { text: r.meta.docs.description },
-            helpUri: `https://ngbastion.dev/rules/${r.meta.id.toLowerCase()}`,
+            helpUri: `https://ngbastion.web.app/rules/${r.meta.id.toLowerCase()}`,
             help: {
               text: `${r.meta.docs.rationale}\n\nRemediation: ${r.meta.docs.remediation}`,
-              markdown: `${r.meta.docs.rationale}\n\n**Remediation:** ${r.meta.docs.remediation}\n\n[Rule documentation](https://ngbastion.dev/rules/${r.meta.id.toLowerCase()})`,
+              markdown: `${r.meta.docs.rationale}\n\n**Remediation:** ${r.meta.docs.remediation}\n\n[Rule documentation](https://ngbastion.web.app/rules/${r.meta.id.toLowerCase()})`,
             },
             defaultConfiguration: { level: LEVEL[r.severity] },
             properties: {

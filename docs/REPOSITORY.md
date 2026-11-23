@@ -2,7 +2,7 @@
 
 **Description:** NgBastion — Angular-aware, local-first security scanner with type-aware data-flow tracing, 20 security rules and SARIF output.
 
-**Website:** https://ngbastion.dev (planned; not deployed)
+**Website:** https://ngbastion.web.app
 
 **Suggested topics:** `angular`, `security`, `static-analysis`, `sast`, `taint-analysis`, `typescript`,
 `xss`, `security-scanner`, `sarif`, `devsecops`, `angular-security`, `data-flow-analysis`

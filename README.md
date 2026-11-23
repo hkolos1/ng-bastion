@@ -161,8 +161,8 @@ remediation: `ngbastion explain <ID>` or the generated rule pages of the documen
 ## Documentation
 
 The documentation site (`apps/website`, an Angular 22 + AnalogJS application pre-rendered to static
-HTML, intended for **ngbastion.dev** — not
-deployed) covers getting started, the CLI reference, all rules, configuration, the security engine,
+HTML, deployed at **[ngbastion.web.app](https://ngbastion.web.app)**)
+covers getting started, the CLI reference, all rules, configuration, the security engine,
 the plugin API and CI/CD. Repository docs:
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — packages and engine design

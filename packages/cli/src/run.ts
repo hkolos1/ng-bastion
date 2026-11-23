@@ -49,7 +49,7 @@ Global options:
   --no-color        Disable colors (also: NO_COLOR=1)
 
 Exit codes: 0 success · 1 security gate failed · 2 configuration or execution error
-Docs: https://ngbastion.dev/docs`;
+Docs: https://ngbastion.web.app/docs`;
 
 const HELPS: Record<string, string> = {
   scan: `Usage: ngbastion scan [dir] [options]
@@ -281,7 +281,7 @@ function explainCommand(argv: string[], io: Io): number {
     section('Remediation', `  ${d.remediation}`),
     section('Known limitations', list(d.limitations)),
     section('False-positive considerations', list(d.falsePositives)),
-    `${c.bold('Documentation')}: https://ngbastion.dev/rules/${m.id.toLowerCase()}`,
+    `${c.bold('Documentation')}: https://ngbastion.web.app/rules/${m.id.toLowerCase()}`,
     '',
   ].join('\n'));
   return EXIT_OK;
