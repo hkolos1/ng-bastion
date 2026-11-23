@@ -4,7 +4,13 @@ All notable changes to NgBastion are documented here. The project follows
 [Semantic Versioning](https://semver.org/) and [Conventional Commits](https://www.conventionalcommits.org/);
 user-visible changes are tracked with [Changesets](.changeset).
 
-## Unreleased
+## 0.2.0 — 2026-11-23
+
+### Reporting
+
+- Generate a self-contained interactive HTML report with findings, code context and ordered traces.
+- Track findings with versioned fingerprints and baselines, and apply status-aware security gates.
+- Identify locations touched by a local Git diff and compare two saved JSON reports.
 
 ### New rules
 
