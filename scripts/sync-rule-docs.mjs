@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Regenerates the rule tables and rule counts in README.md and packages/cli/README.md from the
+// Regenerates the rule table and rule count in README.md (copied into the CLI package at build) from the
 // authoritative registry (@ngbastion/rules). Usage: pnpm build && node scripts/sync-rule-docs.mjs [--check]
 import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -11,7 +11,7 @@ const check = process.argv.includes('--check');
 const cap = (s) => s[0].toUpperCase() + s.slice(1);
 const table = ['| ID | Rule | Default severity |', '|---|---|---|', ...builtinRules.map((r) => `| ${r.meta.id} | ${r.meta.name} | ${cap(r.meta.defaultSeverity)} |`)].join('\n');
 let stale = false;
-for (const file of ['README.md', 'packages/cli/README.md']) {
+for (const file of ['README.md']) {
   const abs = path.join(repo, file);
   const before = readFileSync(abs, 'utf8');
   const after = before
