@@ -6,22 +6,21 @@ import { RenderedContent } from './rendered-content';
 describe('RenderedContent', () => {
   beforeEach(() => TestBed.configureTestingModule({ providers: [provideRouter([])] }));
 
-  it('renders every generated page through Angular sanitization without stripping anything', async () => {
+  const slugs = NAV.groups.flatMap(g => g.items.map(item => item.slug)).filter(slug => slug !== 'playground');
+  it.each(slugs)('renders %s through Angular sanitization without stripping anything', async slug => {
     const warn = vi.spyOn(console, 'warn');
-    const stripped: string[] = [];
-    const slugs = NAV.groups.flatMap((g) => g.items.map((i) => i.slug)).filter((s) => s !== 'playground');
-    for (const slug of slugs) {
+    try {
       const page = (await loadPage(slug))!;
       const fixture = TestBed.createComponent(RenderedContent);
       fixture.componentRef.setInput('blocks', page.blocks);
       fixture.componentRef.setInput('slug', slug);
-      const before = warn.mock.calls.length;
       fixture.detectChanges();
-      if (warn.mock.calls.slice(before).some((c) => String(c[0]).includes('sanitizing HTML stripped'))) stripped.push(slug);
+      expect(warn.mock.calls.some(([message]) => String(message).includes('sanitizing HTML stripped'))).toBe(false);
       const el = fixture.nativeElement as HTMLElement;
       for (const h of page.headings) expect(el.querySelector(`[id="${h.id}"]`), `${slug}#${h.id}`).not.toBeNull();
+    } finally {
+      warn.mockRestore();
     }
-    expect(stripped).toEqual([]);
   });
 
   it('turns every markdown code fence into a highlighted CodeBlock with a copy button', async () => {

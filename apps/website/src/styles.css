@@ -248,11 +248,21 @@
   .rule-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); gap: var(--space-3); }
   .rule-filter { display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; font: 500 var(--text-label) / 1.2 var(--font-ui); letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--text-muted); }
   .rule-filter-search { grid-column: 1 / -1; }
-  .rule-filter input, .rule-filter select {
+  .rule-filter input, .rule-filter button {
     width: 100%; min-width: 0; height: 2.5rem; padding: 0 0.7rem; border-radius: var(--radius-sm); border: 1px solid var(--border);
     background: var(--surface); color: var(--text); font: 400 var(--text-sm) / 1 var(--font-sans); letter-spacing: normal; text-transform: none;
   }
-  .rule-filter input:focus-visible, .rule-filter select:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; border-color: var(--accent-line); }
+  .rule-filter input:focus-visible, .rule-filter button:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; border-color: var(--accent-line); }
+  ngb-filter-select { position: relative; }
+  .rule-filter button { display: flex; align-items: center; justify-content: space-between; gap: .5rem; cursor: pointer; }
+  .rule-filter button[aria-expanded="true"] { border-color: var(--accent); }
+  .filter-chevron { width: .5rem; height: .5rem; border: solid currentColor; border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); margin: -.25rem .2rem 0; }
+  [aria-expanded="true"] > .filter-chevron { transform: rotate(225deg); margin-top: .25rem; }
+  .rule-filter [role="listbox"] { position: absolute; z-index: 20; inset: calc(100% + .35rem) 0 auto; max-height: min(18rem, 45vh); overflow-y: auto; overscroll-behavior: contain; padding: .25rem; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface); box-shadow: 0 8px 24px rgb(0 0 0 / .22); }
+  .rule-filter [role="option"] { display: flex; align-items: center; gap: .5rem; padding: .55rem .45rem; border-radius: 4px; cursor: pointer; font: 400 var(--text-sm)/1.25 var(--font-sans); letter-spacing: normal; text-transform: none; color: var(--text); }
+  .rule-filter [role="option"].active, .rule-filter [role="option"]:hover { background: var(--surface-2); outline: 1px solid var(--border-strong); }
+  .rule-filter [aria-selected="true"] { background: var(--accent-soft); }
+  .filter-check { width: 1em; color: var(--accent); }
   .rule-count { display: flex; align-items: center; gap: var(--space-3); margin: var(--space-4) 0 0; font: 500 var(--text-xs) / 1.4 var(--font-ui); color: var(--text-muted); }
   .rule-reset { padding: 0.25rem 0.6rem; border-radius: var(--radius-sm); border: 1px solid var(--border-strong); background: transparent; color: var(--accent); font: inherit; cursor: pointer; }
   .rule-reset:hover { background: var(--surface-2); }
@@ -489,6 +499,9 @@
   .table-wrap { overflow-x: auto; margin: 1.25rem 0 1.75rem; border: 1px solid var(--border); border-radius: var(--radius); }
   .prose table { border-collapse: collapse; width: 100%; font-size: var(--text-sm); line-height: 1.55; }
   .prose th, .prose td { text-align: left; padding: 0.65rem 0.9rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  /* Keep config identifiers intact when the table computes minimum column widths. */
+  .prose table :not(pre) > code { white-space: normal; overflow-wrap: normal; word-break: normal; }
+  .prose th code { text-transform: none; letter-spacing: normal; }
   .prose tr:last-child td { border-bottom: 0; }
   .prose th { font: 500 var(--text-label) / 1.4 var(--font-mono); letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--text-subtle); background: var(--surface); }
   .prose td:first-child { color: var(--text); }

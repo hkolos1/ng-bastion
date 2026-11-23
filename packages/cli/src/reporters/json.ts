@@ -1,4 +1,4 @@
-import { SEVERITIES, type Severity } from '@ngbastion/plugin-api';
+import { summarizeFindings } from './overview.js';
 import type { ScanResult } from '@ngbastion/core';
 
 export const JSON_SCHEMA_VERSION = 1;
@@ -9,7 +9,7 @@ export const JSON_SCHEMA_URL = 'https://ngbastion.web.app/schemas/report-v1.json
  * Paths are workspace-relative; no absolute paths or secrets are included.
  */
 export function toJsonReport(result: ScanResult, configSources: string[] = []) {
-  const bySeverity = Object.fromEntries([...SEVERITIES].reverse().map((s) => [s, result.findings.filter((f) => f.severity === s).length])) as Record<Severity, number>;
+  const { total, bySeverity } = summarizeFindings(result);
   return {
     $schema: JSON_SCHEMA_URL,
     schemaVersion: JSON_SCHEMA_VERSION,
@@ -35,7 +35,7 @@ export function toJsonReport(result: ScanResult, configSources: string[] = []) {
     suppressed: result.suppressed,
     diagnostics: result.diagnostics,
     summary: {
-      total: result.findings.length,
+      total,
       bySeverity,
       suppressed: result.suppressed.length,
       hiddenBelowConfidence: result.stats.hiddenBelowConfidence,

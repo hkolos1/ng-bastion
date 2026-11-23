@@ -21,9 +21,11 @@ describe('RuleExplorer', () => {
   it('combines severity, CWE, applicability, level and text filters, and resets them', () => {
     const { fixture, cmp, el } = render();
     const select = (label: string, value: string) => {
-      const s = Array.from(el.querySelectorAll('label.rule-filter')).find((l) => l.textContent!.includes(label))!.querySelector('select')!;
-      s.value = value;
-      s.dispatchEvent(new Event('change'));
+      const filter = Array.from(el.querySelectorAll('ngb-filter-select')).find(f => f.querySelector('span')?.textContent === label)!;
+      filter.querySelector('button')!.click();
+      fixture.detectChanges();
+      const option = Array.from(filter.querySelectorAll<HTMLElement>('[role=option]')).find(o => o.textContent!.trim().startsWith(value))!;
+      option.click();
       fixture.detectChanges();
     };
     select('Category', cmp.categories[0]);
@@ -31,7 +33,7 @@ describe('RuleExplorer', () => {
     expect(cmp.shown().every((r) => r.category === cmp.categories[0])).toBe(true);
     (el.querySelector('.rule-reset') as HTMLButtonElement).click();
     fixture.detectChanges();
-    expect(el.querySelector('select')!.value).toBe('');
+    expect(el.querySelector('[role=combobox] span')!.textContent).toBe('All');
     select('Severity', 'critical');
     expect(cmp.shown().every((r) => r.severity === 'critical')).toBe(true);
     expect(rows(el).length).toBe(cmp.shown().length);

@@ -4,3 +4,5 @@ export { renderJson, toJsonReport, JSON_SCHEMA_VERSION } from './reporters/json.
 export { renderSarif, toSarif } from './reporters/sarif.js';
 export { renderTerminal, createColors } from './reporters/terminal.js';
 export { loadPlugins, validatePlugin, PluginError } from './plugins.js';
+
+export { renderHtml } from './reporters/html.js';

@@ -78,6 +78,21 @@ describe('scan: gate, formats and output', () => {
     expect(JSON.parse(r.stdout).findings.every((f: { level: string }) => f.level === 'warn')).toBe(true);
   });
 
+  it('writes standalone HTML without sending markup to stdout and retains the gate exit code', async () => {
+    const ws = workspace();
+    const target = path.join(ws, 'out/report.html');
+    const report = await cli(['scan', ws, '-f', 'html', '-o', target]);
+    expect(report.code).toBe(1);
+    expect(report.stdout).toBe('');
+    const html = readFileSync(target, 'utf8');
+    expect(html).toContain('Content-Security-Policy');
+    expect(html).toContain('Source-to-sink evidence');
+    const fail = await cli(['scan', ws, '-f', 'html', '-o', ws]);
+    expect(fail.code).toBe(2);
+    expect(fail.stderr).toContain('could not write report');
+    expect((await cli(['scan', ws, '-f', 'unknown'])).code).toBe(2);
+  });
+
   it('emits JSON that validates against the published schema and contains no absolute paths', async () => {
     const r = await cli(['scan', fixture, '--format', 'json']);
     const report = JSON.parse(r.stdout);

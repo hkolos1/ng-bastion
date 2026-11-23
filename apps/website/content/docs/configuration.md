@@ -63,12 +63,18 @@ export default defineConfig({
 
 ## Presets
 
-| Preset | Rules | `failOn` | `minConfidence` | Policy |
-|---|---|---|---|---|
-| `recommended` | Every built-in rule as `error`, except the context-dependent or heuristic rules NGB008, NGB010, NGB019, NGB022, NGB027, NGB028, NGB030, NGB033, NGB037, NGB044, NGB045 as `warn`; excludes `*.spec.ts`, `*.test.ts`, `e2e`, `cypress`, `playwright` | `high` | `medium` | none |
-| `strict` | All 20 as `error`; same exclusions | `medium` | `low` | none |
-| `enterprise` | Extends `strict` | `high` | `medium` | Mandatory NGB001–NGB005, NGB007, NGB011, NGB013–NGB016, NGB018, NGB020; `maxFailOn: high`; no inline suppressions; exceptions must expire within 180 days |
-| `payments` | Extends `recommended`; NGB013–NGB018 as `error` | `high` | `low` | Mandatory NGB013, NGB015, NGB016, NGB017, NGB018; exceptions must expire |
+| Preset | Rule levels | `failOn` | `minConfidence` |
+|---|---|---|---|
+| `recommended` | All built-ins enabled, with selected heuristic and context-dependent rules at `warn` | `high` | `medium` |
+| `strict` | Every built-in rule at `error` | `medium` | `low` |
+| `enterprise` | Inherits `strict` | `high` | `medium` |
+| `payments` | Inherits `recommended` and sets NGB013–NGB018 to `error` | `high` | `low` |
+
+All four presets exclude `*.spec.ts`, `*.test.ts` and the `e2e`, `cypress` and `playwright` directories. The [rule catalog](/rules) lists the recommended level for each rule.
+
+- **Enterprise policy** requires NGB001–NGB005, NGB007, NGB011, NGB013–NGB016, NGB018 and NGB020 at `error`. Its `maxFailOn` is `high`. Inline suppressions are disabled and exceptions must expire within 180 days.
+- **Payments policy** requires NGB013, NGB015, NGB016, NGB017 and NGB018 at `error`. Exceptions must have an expiry date.
+- The recommended and strict presets set no policy constraints.
 
 The `payments` preset raises visibility of payment and credential findings. It does not certify PCI DSS or any other compliance.
 

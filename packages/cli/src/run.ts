@@ -7,6 +7,7 @@ import { CONFIG_FILE_NAMES, ConfigError, loadConfig, type ConfigOverrides } from
 import { discoverWorkspace, resolveProjectFiles, scan, SUPPORTED_ANGULAR_MAJORS, type WorkspaceDiagnostic } from '@ngbastion/core';
 import { builtinRules } from '@ngbastion/rules';
 import { PluginError, loadPlugins } from './plugins.js';
+import { renderHtml } from './reporters/html.js';
 import { renderJson } from './reporters/json.js';
 import { renderSarif } from './reporters/sarif.js';
 import { createColors, renderTerminal, type Colors } from './reporters/terminal.js';
@@ -55,8 +56,9 @@ const HELPS: Record<string, string> = {
   scan: `Usage: ngbastion scan [dir] [options]
 
 Options:
-  -f, --format <terminal|json|sarif>   Output format (default: terminal)
+  -f, --format <terminal|json|sarif|html>   Output format (default: terminal)
   -o, --output <file>                  Write the report to a file
+  --redact-source                      Omit snippets and free-text scan evidence from HTML
   -c, --config <file>                  Config file (default: ngbastion.config.{json,ts,…} in dir)
   --fail-on <severity|none>            Gate threshold: critical|high|medium|low|info|none
   --min-confidence <high|medium|low>   Hide findings below this confidence
@@ -151,6 +153,7 @@ async function scanCommand(argv: string[], io: Io): Promise<number> {
     'fail-on': { type: 'string' },
     'min-confidence': { type: 'string' },
     project: { type: 'string', short: 'p', multiple: true },
+    'redact-source': { type: 'boolean' },
     'show-suppressed': { type: 'boolean' },
     quiet: { type: 'boolean', short: 'q' },
     verbose: { type: 'boolean' },
@@ -158,7 +161,9 @@ async function scanCommand(argv: string[], io: Io): Promise<number> {
   if (positionals.length > 1) throw new UsageError('scan accepts at most one directory');
   const cwd = path.resolve(io.cwd, positionals[0] ?? '.');
   if (!existsSync(cwd)) throw new UsageError(`directory not found: ${cwd}`);
-  const format = oneOf('format', values.format, ['terminal', 'json', 'sarif'] as const) ?? 'terminal';
+  const format = oneOf('format', values.format, ['terminal', 'json', 'sarif', 'html'] as const) ?? 'terminal';
+  if (format === 'html' && !values.output) throw new UsageError('HTML requires --output <file>, for example --output security-report.html');
+  if (values['redact-source'] && format !== 'html') throw new UsageError('--redact-source requires --format html');
   const overrides: ConfigOverrides = {};
   const failOn = oneOf('fail-on', values['fail-on'], [...SEVERITIES, 'none'] as const);
   if (failOn) overrides.failOn = failOn as Severity | 'none';
@@ -176,6 +181,13 @@ async function scanCommand(argv: string[], io: Io): Promise<number> {
   const colors = colorsFor(io, values);
   let report: string;
   if (format === 'json') report = renderJson(result, configSources);
+  else if (format === 'html') {
+    try {
+      report = renderHtml(result, { redactSource: values['redact-source'] === true });
+    } catch (error) {
+      throw new UsageError(`could not generate HTML report: ${(error as Error).message}`);
+    }
+  }
   else if (format === 'sarif') report = renderSarif(result);
   else {
     report = renderTerminal(result, {
@@ -188,8 +200,12 @@ async function scanCommand(argv: string[], io: Io): Promise<number> {
   }
   if (values.output) {
     const out = path.resolve(io.cwd, values.output as string);
-    mkdirSync(path.dirname(out), { recursive: true });
-    writeFileSync(out, report);
+    try {
+      mkdirSync(path.dirname(out), { recursive: true });
+      writeFileSync(out, report);
+    } catch (error) {
+      throw new UsageError(`could not write report to ${out}: ${(error as Error).message}`);
+    }
     const summary = `${result.findings.length} finding(s), gate ${result.gate.failOn === 'none' ? 'disabled' : result.gate.failed ? 'FAILED' : 'passed'}`;
     io.stderr(`ngbastion: wrote ${format} report to ${path.relative(io.cwd, out) || out} (${summary})\n`);
   } else {
