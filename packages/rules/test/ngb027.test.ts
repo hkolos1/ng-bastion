@@ -35,6 +35,21 @@ export class X { session = { accessToken: '' }; apiKey = ''; }`);
 export class X { userId = 1; card = { last4: '' }; showPassword = false; password = ''; getToken() { return ''; } }`)).toEqual([]);
   });
 
+  it('false-positive regression: names inside string literals (translation keys) are not values', async () => {
+    expect(await one('NGB027', `${NG}@Component({ selector: 'x', template: \`<input type="password" placeholder="{{ 'login.form.password.placeholder' | translate }}" [title]="'token.help' | translate">\` })
+export class X {}`)).toEqual([]);
+  });
+
+  it('false-positive regression: component inputs, interpolated literal text and formatter arguments', async () => {
+    expect(await one('NGB027', `${NG}@Component({ selector: 'x', template: \`
+  <bit-svg [content]="noCredentials"></bit-svg>
+  <app-row [label]="password"></app-row>
+  <a id="tab-managed-credentials-{{ r.id }}">x</a>
+  <button [title]="getCopyText(credential)"></button>
+\` })
+export class X { noCredentials = ''; password = ''; r = { id: 1 }; credential = ''; getCopyText(c: string) { return c; } }`)).toEqual([]);
+  });
+
   it('false-positive regression: CSRF tokens and non-DOM setAttribute', async () => {
     expect(await one('NGB027', `${NG}@Component({ selector: 'x', template: '<meta name="csrf" [attr.content]="csrfToken">' })
 export class X { csrfToken = ''; }

@@ -148,7 +148,7 @@ export class HomePage {
   protected readonly capabilities = [
     { title: 'Understands Angular', text: 'Sanitized [innerHTML] bindings, DomSanitizer, ElementRef, Renderer2, ActivatedRoute, HttpClient, interceptors, TransferState, signals and inject().', icon: 'M12 3l8 3-1.2 10.2L12 21l-6.8-4.8L4 6l8-3Zm0 0v18M8.5 15l3.5-8 3.5 8M9.6 12.5h4.8' },
     { title: 'Explains every finding', text: 'Data-flow findings carry the observed path. Confidence is separate from severity; analysis gaps become diagnostics.', icon: 'M5 6h14M5 12h9M5 18h6M17 15l2 2 3-4' },
-    { title: `${SHOWCASE.ruleCount} security rules`, text: 'Trust bypasses, DOM sinks, cross-window messaging, redirects, credential forwarding, token and payment storage, secrets, CSP, SSR state.', icon: 'M12 3l7 3v5c0 4.4-3 8.2-7 10-4-1.8-7-5.6-7-10V6l7-3Zm-3 9 2 2 4-4' },
+    { title: `${SHOWCASE.ruleCount} security rules`, text: 'Trust bypasses, DOM sinks, cross-window messaging, redirects, OAuth and session handling, request forgery, token and payment storage, secrets, CSP, SSR, cryptography and supply chain.', icon: 'M12 3l7 3v5c0 4.4-3 8.2-7 10-4-1.8-7-5.6-7-10V6l7-3Zm-3 9 2 2 4-4' },
     { title: 'Local-first', text: 'Runs on your machine or CI runner. No uploads, no account, no telemetry.', icon: 'M4 6h16v10H4zM2 20h20M9 16v4M15 16v4' },
     { title: 'Policies and exceptions', text: 'JSON or TypeScript config, presets, shared configs, mandatory rules and expiring, justified exceptions.', icon: 'M6 4h9l3 3v13H6zM9 11h6M9 15h6M14 4v4h4' },
     { title: 'Built for pipelines', text: 'Predictable exit codes, SARIF 2.1.0 for GitHub code scanning, JSON reports and templates for four CI systems.', icon: 'M5 7h4v4H5zM15 13h4v4h-4zM9 9h3a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2' },

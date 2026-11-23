@@ -77,3 +77,36 @@ that is observable in the repository), merged, or replaced.
 - The `enterprise` and `payments` mandatory-rule lists are unchanged in this milestone; promote
   rules into them only after their real-world false-positive rate is known.
 - Configurations without `extends` keep their explicit rule selection: new rules stay off for them.
+
+## Status
+
+All 30 rules are implemented, registered and documented; each has positive, negative / safe and
+false-positive regression tests, and the vulnerable showcase demonstrates every one of the 50 rules.
+
+### Engine changes made for these rules
+
+- `request-header` source kind (`Host`, `X-Forwarded-Host`, `X-Forwarded-Proto`, `Forwarded`) and
+  Express / Node `req.query` / `req.params` / `req.url` as URL sources, for SSR rules (NGB041,
+  NGB042, NGB037). `SourceKind` and `RuleCategory` (`cryptography`, `supply-chain`) gained members;
+  plugins that switch exhaustively over them need a default branch.
+- `location.origin` / `host` / `hostname` / `protocol` / `port` are no longer treated as tainted.
+- URL encoding is no longer an HTML sanitizer (see above).
+- `Symbols.callee()` / `typeOrigin()` are memoized per node (see [PERFORMANCE.md](PERFORMANCE.md)).
+- Lookups of method / type names in plain objects use own-property checks (fixed an NGB002 false
+  positive on `hasOwnProperty` and an NGB009 crash on `Object.prototype.toString.call`).
+
+### Known unsupported patterns (new rules)
+
+- Server-side context: proxy trust settings, Angular SSR host allowlists and backend CSRF /
+  authorization checks are not visible (NGB021, NGB022, NGB042).
+- Library-internal behaviour: OAuth libraries' own state handling, Workbox strategies,
+  `express-session` cookie configuration, crypto libraries other than Web Crypto / CryptoJS / md5
+  packages (NGB023, NGB032, NGB043, NGB047, NGB048).
+- Custom service workers are found by file name only (NGB032); JavaScript files are parsed
+  syntactically without types.
+- Template analysis has no directive metadata: inputs named like reflected attributes on native
+  elements are treated as attributes (NGB027).
+- Validation in another function than the sink is only recognized where the rule says so
+  (allowlist / own-property / regex guards dominating the call).
+
+See [PERFORMANCE.md](PERFORMANCE.md#real-world-check-50-rules) for the real-world validation.

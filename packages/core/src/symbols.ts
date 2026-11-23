@@ -149,8 +149,20 @@ export class Symbols implements SymbolResolver {
     return decl ? { module: this.moduleOf(decl), name: id.text, resolvedBy: 'declaration' } : undefined;
   }
 
+  /** Memoized per node: rules ask the same questions about the same calls (type resolution dominates scan time). */
+  private readonly typeOriginCache = new WeakMap<ts.Node, TypeOrigin | null>();
+  private readonly calleeCache = new WeakMap<ts.Node, CalleeInfo | null>();
+
   typeOrigin(expression: ts.Expression): TypeOrigin | undefined {
     const e = skipOuter(expression);
+    const hit = this.typeOriginCache.get(e);
+    if (hit !== undefined) return hit ?? undefined;
+    const origin = this.computeTypeOrigin(e);
+    this.typeOriginCache.set(e, origin ?? null);
+    return origin;
+  }
+
+  private computeTypeOrigin(e: ts.Expression): TypeOrigin | undefined {
     let type: ts.Type | undefined;
     try {
       type = this.checker.getNonNullableType(this.checker.getTypeAtLocation(e));
@@ -215,6 +227,14 @@ export class Symbols implements SymbolResolver {
   }
 
   callee(call: ts.CallExpression | ts.NewExpression): CalleeInfo | undefined {
+    const hit = this.calleeCache.get(call);
+    if (hit !== undefined) return hit ?? undefined;
+    const info = this.computeCallee(call);
+    this.calleeCache.set(call, info ?? null);
+    return info;
+  }
+
+  private computeCallee(call: ts.CallExpression | ts.NewExpression): CalleeInfo | undefined {
     const expr = skipOuter(call.expression);
     let name: string | undefined;
     let receiverExpr: ts.Expression | undefined;

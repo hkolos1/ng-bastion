@@ -35,6 +35,10 @@ export function init(accessToken: string) {
 }`)).toEqual([]);
   });
 
+  it('false-positive regression: the own origin (location.origin) is not attacker-controlled', async () => {
+    expect(await one('NGB034', `export function f(code: string) { window.postMessage({ code }, window.location.origin); window.opener.postMessage('x', location.protocol + '//' + location.host); }`)).toEqual([]);
+  });
+
   it('false-positive regression: worker postMessage and wildcard (NGB006) are not reported here', async () => {
     expect(await one('NGB034', `export function f(w: Worker, data: string) { w.postMessage(data); window.parent.postMessage(data, '*'); }`)).toEqual([]);
   });

@@ -43,6 +43,8 @@ const CATEGORY = {
   'sensitive-data': 'Sensitive data & payment security',
   'security-config': 'Security configuration',
   ssr: 'Angular SSR security',
+  cryptography: 'Cryptography',
+  'supply-chain': 'Supply chain',
 };
 const yaml = (s) => JSON.stringify(s);
 const list = (items) => (items.length ? items.map((i) => `- ${i}`).join('\n') : '_None documented._');
@@ -127,6 +129,8 @@ description: The ${builtinRules.length} built-in NgBastion rules for Angular app
 ---
 
 NgBastion ships ${builtinRules.length} built-in rules. Each page documents exactly which patterns the implementation recognizes, its known limitations and its false-positive considerations. A rule that is not listed here is not checked: the absence of findings never proves an application is secure.
+
+${Object.entries(CATEGORY).map(([key, label]) => [label, builtinRules.filter((r) => r.meta.category === key).length]).filter(([, n]) => n).map(([label, n]) => `[${label}](#${label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}) (${n})`).join(' · ')}
 
 ${byCategory}
 `);

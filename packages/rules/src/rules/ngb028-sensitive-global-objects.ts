@@ -1,5 +1,5 @@
 import type * as ts from 'typescript';
-import { defineRule, type AnalysisContext, type RuleFinding } from '@ngbastion/plugin-api';
+import { defineRule, lowerConfidence, type AnalysisContext, type RuleFinding } from '@ngbastion/plugin-api';
 import { is, memberName, receiverOf, strip } from '../shared/common.js';
 import { sensitiveValue } from '../shared/sensitivity.js';
 
@@ -32,7 +32,7 @@ export const ngb028 = defineRule({
         '`window.x = v`, `globalThis.x = v`, `self.x = v`, `window["x"] = v`, `(window as any).x = v`',
         '`Object.defineProperty(window, "x", { value: v })`',
         'Sensitive when the property name or the value is classified as a credential (`accessToken`, `jwt`, `apiKey`, `password`, `sessionId`) or payment data (`cardNumber`, `cvv`)',
-        '`window.name` is handled by NGB029; DOM APIs (`location`, `opener`, event handlers) are ignored',
+        '`window.name` is handled by NGB029; DOM APIs (`location`, `opener`, event handlers), PascalCase API names and class / function values (polyfills) are ignored',
       ],
       limitations: [
         'Globals created through `declare global` + plain `var` declarations in scripts outside the Angular build are not seen.',
@@ -55,12 +55,15 @@ export const ngb028 = defineRule({
     const findings: RuleFinding[] = [];
     const check = (node: ts.Node, key: string | undefined, value: ts.Expression, how: string) => {
       if (key && WINDOW_API.has(key)) return;
+      // `globalThis.PublicKeyCredential = class …` defines an API / polyfill, not data.
+      const v = strip(ctx, value);
+      if ((key && /^[A-Z]/.test(key)) || t.isClassExpression(v) || t.isFunctionExpression(v) || t.isArrowFunction(v)) return;
       const s = sensitiveValue(ctx, value, { keys: [key] });
       if (!s) return;
       findings.push({
         node,
         message: `${s.category === 'payment' ? 'Payment data' : 'A credential'} is stored on the global object (${how}); every script in the page, including third-party and injected code, can read it.`,
-        confidence: s.confidence,
+        confidence: s.strongest.via === 'origin' ? lowerConfidence(s.confidence) : s.confidence,
         evidenceKind: 'heuristic',
         evidence: s.evidence,
         redactSnippet: true,

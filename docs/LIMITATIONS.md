@@ -306,6 +306,7 @@ Possible false positives:
 ### NGB027 — Sensitive data in DOM attributes
 
 - Template expressions are classified by identifier names only (no type information inside templates).
+- Directive inputs on native elements that share a name with a reflected attribute (`[title]` consumed by a tooltip directive) are treated as attributes.
 - Attributes set by third-party components from their inputs are not followed.
 
 Possible false positives:
@@ -431,5 +432,96 @@ Possible false positives:
 Possible false positives:
 
 - Internal hostnames that are only reachable on a trusted network (e.g. `http://intranet-api`) are reported; they still travel unencrypted.
+
+### NGB041 — Unsafe inline state serialization
+
+- Strings assembled across several functions or in templates outside TypeScript (e.g. EJS views) are not followed.
+- Browser-only code that sets a live script element's `textContent` is not reported (no HTML parsing happens there).
+
+Possible false positives:
+
+- Values that can never contain `<` (numbers, booleans, enums) serialized this way are reported with medium confidence when their origin is not resolved.
+
+### NGB042 — Host header injection in SSR
+
+- Proxy configuration (`app.set('trust proxy', …)`) and Angular's host allowlisting in the SSR engine (`allowedHosts`) are not evaluated; a finding may be unexploitable if the deployment already rejects unknown hosts.
+- Headers copied into objects or services before use are followed only as far as the taint engine models the flow.
+
+Possible false positives:
+
+- Deployments behind a proxy that overwrites `Host` with a fixed value are not exploitable; document an exception that names the proxy setting.
+
+### NGB043 — Insecure session cookie attributes
+
+- Cookies set by frameworks or middleware (e.g. `express-session` configuration) are not analyzed.
+- Cookie names that are not constant are not classified.
+
+Possible false positives:
+
+- A `token` cookie that intentionally must be readable by client code (not a session credential) can be reported; rename it or document an exception.
+
+### NGB044 — Public production source maps
+
+- Whether the generated `.map` files are actually deployed (and served) is not visible; hidden maps copied to the web root are still downloadable.
+- Builders other than the Angular application / browser builders and custom webpack configs are not analyzed.
+
+Possible false positives:
+
+- Teams that intentionally publish source maps (open-source applications) can disable this rule.
+
+### NGB045 — Missing subresource integrity
+
+- Scripts injected by tag managers or other scripts at runtime are not visible.
+- Whether the `integrity` hash matches the current file is not verified.
+- Dynamic script URLs are handled by NGB005 (untrusted script loading).
+
+Possible false positives:
+
+- Version-pinned URLs on a CDN you control are still reported; SRI is cheap insurance there too.
+
+### NGB046 — Insecure randomness for security values
+
+- Random values passed to other functions before being named are only classified by the enclosing function name.
+- Third-party random libraries (e.g. `nanoid/non-secure`, `random-js` with a Math.random engine) are not recognized.
+
+Possible false positives:
+
+- Non-security identifiers that use security words (e.g. a UI `stateKey` for animations) can be reported; rename or document.
+
+### NGB047 — Static IV in Web Crypto encryption
+
+- IVs derived deterministically from data (counters, hashes of the plaintext) are not recognized as reused.
+- Encryption through libraries (crypto-js, node-forge, libsodium wrappers) is not analyzed.
+
+Possible false positives:
+
+- A key that is itself used only once (fresh random key per message) makes a fixed IV harmless; such designs are rare and are still reported.
+
+### NGB048 — Weak hash algorithm
+
+- Digests whose purpose is not visible in names (passed straight into a helper with a neutral name) are not reported.
+- Strong hashes used for password storage on the client (SHA-256 of a password) are not reported by this rule.
+
+Possible false positives:
+
+- A value named like a secret that is only used as a non-security cache key can be reported.
+
+### NGB049 — Insecure dependency source
+
+- The lockfile content is not parsed; its presence only lowers confidence.
+- Known-vulnerable or malicious package versions are out of scope (use `npm audit` / an SCA tool).
+
+Possible false positives:
+
+- Forked dependencies on a Git branch you control are reported; pin them to a commit SHA to remove the finding.
+
+### NGB050 — document.domain relaxation
+
+- Third-party scripts that set `document.domain` are not visible.
+- Reading `document.domain` is not reported.
+
+Possible false positives:
+
+- Legacy integrations that still require cross-subdomain scripting are reported; plan their migration to `postMessage`.
 
 _Generated from rule metadata in `packages/rules` by `scripts/generate-limitations.mjs`._

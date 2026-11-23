@@ -161,7 +161,7 @@ export const ngb017 = defineRule({
       if (!name || !info || info.declaration) continue;
       const ro = recv ? ctx.symbols.typeOrigin(recv) : undefined;
 
-      if (recv && is(ro, HTTP, 'HttpClient') && name in HTTP_OPTIONS_INDEX) {
+      if (recv && is(ro, HTTP, 'HttpClient') && Object.hasOwn(HTTP_OPTIONS_INDEX, name)) {
         const urlArg = call.arguments[name === 'request' ? 1 : 0];
         if (urlArg) check(call, `HttpClient.${name}()`, urlParts(ctx, urlArg));
         const optIdx = HTTP_OPTIONS_INDEX[name]!;

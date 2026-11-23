@@ -70,7 +70,7 @@ function stateFacts(ctx: AnalysisContext, scope: ts.Node) {
     if (key === 'state') sent = true;
     if (key && /^(code_verifier|codeVerifier|code_challenge|codeChallenge)$/.test(key)) pkce = true;
     if ((t.isStringLiteralLike(n) || t.isTemplateHead(n) || t.isTemplateMiddle(n) || t.isTemplateTail(n))) {
-      if (/[?&]state=/.test(n.text)) sent = true;
+      if (/(^|[?&])state=/.test(n.text)) sent = true;
       if (/code_(verifier|challenge)=/.test(n.text)) pkce = true;
     }
     if (t.isBinaryExpression(n) && [t.SyntaxKind.EqualsEqualsEqualsToken, t.SyntaxKind.ExclamationEqualsEqualsToken, t.SyntaxKind.EqualsEqualsToken, t.SyntaxKind.ExclamationEqualsToken].includes(n.operatorToken.kind)
