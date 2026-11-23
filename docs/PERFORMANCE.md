@@ -48,7 +48,7 @@ or vendored into this repository. Times are the engine's `durationMs`.
 | NGB026 (medium) | realworld: `PUT /articles/${article.slug}` with `slug` from the editor route | True positive by the rule's definition: an encoded `..%2Fuser` slug turns it into `PUT /user` with the user's token |
 | NGB026 (low × 3) | realworld: `GET /articles/${slug}` / `/profiles/${username}` | True pattern, low impact (read-only); hidden by default (`minConfidence: medium`) |
 | NGB045 (low) | realworld / ngx-admin / bitwarden: CDN stylesheet, Google Fonts / Maps, Stripe.js | True pattern; known evolving providers are low confidence |
-| NGB034 (× 4) | bitwarden: `postMessage` target origin taken from a `parent` / `parentOrigin` query parameter | Matches the rule; exploitability depends on how those pages can be framed and was not assessed |
+| NGB034 (× 4) | bitwarden/clients | Matches the rule's pattern; exploitability depends on deployment context and was not assessed here |
 | NGB033 (× 3) | bitwarden: `window.open(url, '_blank')` without `noopener` | True pattern; low severity (two of them open the vendor's own site) |
 | NGB027 (low) | bitwarden: `setAttribute('title', subtitle)`; sensitivity only from a name along the data flow | Likely false positive; low confidence, hidden by default |
 
