@@ -132,8 +132,27 @@ NgBastion ships ${builtinRules.length} built-in rules. Each page documents exact
 
 ${Object.entries(CATEGORY).map(([key, label]) => [label, builtinRules.filter((r) => r.meta.category === key).length]).filter(([, n]) => n).map(([label, n]) => `[${label}](#${label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}) (${n})`).join(' · ')}
 
+Use the explorer above to filter by category, severity, where a rule applies, CWE and its level in the \`recommended\` preset. The full catalog by category follows.
+
 ${byCategory}
 `);
+
+// ---------------------------------------------------------------- rule explorer data
+// Where a rule applies, derived from its category (rules carry no separate applicability field).
+const APPLIES = {
+  'angular-xss': 'Browser app', 'cross-window': 'Browser app', 'navigation-auth': 'Browser app', 'sensitive-data': 'Browser app',
+  ssr: 'Server / SSR', cryptography: 'Browser & server', 'supply-chain': 'Build & CI', 'security-config': 'Configuration',
+};
+writeFileSync(path.join(generated, 'rules.json'), JSON.stringify(builtinRules.map(({ meta: m }) => ({
+  id: m.id,
+  name: m.name,
+  category: CATEGORY[m.category] ?? m.category,
+  severity: m.defaultSeverity,
+  cwe: m.cwe ?? [],
+  level: PRESETS.recommended.rules?.[m.id] ?? 'off',
+  applies: APPLIES[m.category] ?? 'Other',
+  summary: m.docs.description.split('. ')[0].replace(/`/g, '') + '.',
+}))));
 
 // ---------------------------------------------------------------- CLI reference (markdown)
 const cli = path.join(repo, 'packages/cli/dist/bin.js');
