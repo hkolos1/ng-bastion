@@ -4,6 +4,14 @@ All notable changes to NgBastion are documented here. The project follows
 [Semantic Versioning](https://semver.org/) and [Conventional Commits](https://www.conventionalcommits.org/);
 user-visible changes are tracked with [Changesets](.changeset).
 
+## 0.1.2 — 2026-11-23
+
+### Fixes
+
+- `ngbastion --version`, `--help` and `tool.version` in terminal, JSON and SARIF reports now show
+  the installed version. 0.1.1 still reported 0.1.0 because the version was hardcoded; the CLI and
+  `@ngbastion/core` (`ENGINE_VERSION`) now read it from their `package.json`.
+
 ## 0.1.1 — 2026-11-23
 
 ### Fixes

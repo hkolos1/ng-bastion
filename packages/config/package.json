@@ -1,6 +1,6 @@
 {
   "name": "@ngbastion/config",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Configuration schema, presets, policies and loading for NgBastion.",
   "license": "MIT",
   "repository": {
