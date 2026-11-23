@@ -1,6 +1,6 @@
 {
   "name": "@ngbastion/core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "NgBastion type-aware data-flow security engine.",
   "license": "MIT",
   "repository": {

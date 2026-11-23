@@ -1,6 +1,6 @@
 {
   "name": "ngbastion",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "NgBastion — Angular-aware, local-first security scanner CLI.",
   "license": "MIT",
   "repository": {

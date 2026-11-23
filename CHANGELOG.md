@@ -4,6 +4,20 @@ All notable changes to NgBastion are documented here. The project follows
 [Semantic Versioning](https://semver.org/) and [Conventional Commits](https://www.conventionalcommits.org/);
 user-visible changes are tracked with [Changesets](.changeset).
 
+## 0.1.1 — 2026-11-23
+
+### Fixes
+
+- Rule documentation, `ngbastion --help`, `ngbastion explain` and SARIF/JSON report links
+  (`helpUri`, `informationUri`, report `$schema`) now point to https://ngbastion.web.app.
+  `ngbastion.dev` was never live, so links in 0.1.0 reports led nowhere.
+
+### Project
+
+- Documentation site deployed to Firebase Hosting at https://ngbastion.web.app.
+- Releases are published from version tags by GitHub Actions with npm Trusted Publishing,
+  so packages carry npm provenance.
+
 ## 0.1.0 — 2026-11-23
 
 ### Security engine (`@ngbastion/core`)
