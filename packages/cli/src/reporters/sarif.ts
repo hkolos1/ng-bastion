@@ -39,7 +39,7 @@ function result(f: Finding, ruleIndex: number, context: ReportingContext) {
     ...(f.suppression
       ? { suppressions: [{ kind: f.suppression.kind === 'inline' ? 'inSource' : 'external', status: 'accepted', justification: f.suppression.justification }] }
       : {}),
-    properties: { ...(status ? { findingStatus: status } : {}), severity: f.severity, confidence: f.confidence, evidenceKind: f.evidenceKind, evidence: f.evidence, project: f.project },
+    properties: { ...(context.git ? { gitAssociation: context.git.findings[f.fingerprintV2!] } : {}), ...(status ? { findingStatus: status } : {}), severity: f.severity, confidence: f.confidence, evidenceKind: f.evidenceKind, evidence: f.evidence, project: f.project },
   };
 }
 

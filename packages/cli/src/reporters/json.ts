@@ -24,6 +24,7 @@ export function toJsonReport(result: ScanResult, configSources: string[] = [], c
       stats: result.stats,
       ...(context.snapshot ? { snapshot: context.snapshot } : {}),
       ...(context.comparison ? { comparison: context.comparison } : {}),
+      ...(context.git ? { git: context.git } : {}),
       gateScope: context.gateScope,
       identities: [...result.findings, ...result.suppressed].filter(f => f.fingerprintV2)
         .map(f => ({ legacy: f.fingerprint, v2: f.fingerprintV2 })),

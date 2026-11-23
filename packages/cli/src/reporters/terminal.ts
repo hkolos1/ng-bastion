@@ -49,6 +49,7 @@ function renderFinding(f: Finding, o: TerminalOptions): string[] {
   const lines = [
     `${severityLabel(f.severity, c)} ${c.bold(f.ruleId)}  ${f.ruleName}  ${c.dim(`confidence: ${f.confidence} · ${f.evidenceKind}${f.level === 'warn' ? ' · warn' : ''}`)}`,
     `  ${c.cyan(`${f.location.file}:${f.location.line}:${f.location.column}`)}`,
+    ...(o.git ? [`  Git: ${o.git.findings[f.fingerprintV2!]}`] : []),
     ...(o.comparison && !f.suppression ? [`  Status: ${o.comparison.statuses[f.fingerprintV2!]}`] : []),
     `  ${f.message}`,
   ];
@@ -104,6 +105,7 @@ export function renderTerminal(result: ScanResult, o: TerminalOptions): string {
   if (!result.findings.length) {
     out.push(c.dim('No findings does not prove the application is secure: NgBastion only reports the patterns and data flows it models.'));
   }
+  if (o.git) out.push(`Git diff against ${o.git.revision}: ${o.git.files.length} changed paths`);
   if (o.comparison) out.push(comparisonSummary(o.comparison), ...o.comparison.warnings);
   if (o.gateScope?.status === 'new' || o.gateScope?.confidence) out.push(`Gate scope: ${o.gateScope.status} · confidence ${o.gateScope.confidence ?? 'low'}+`);
   const gate = result.gate;
