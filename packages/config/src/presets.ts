@@ -1,6 +1,7 @@
 import type { AnalysisLimits, NgBastionConfig, RuleLevel } from './types.js';
 
-export const BUILTIN_RULE_IDS = Array.from({ length: 20 }, (_, i) => `NGB${String(i + 1).padStart(3, '0')}`);
+/** Must match `builtinRules` in @ngbastion/rules (asserted by its registry test). */
+export const BUILTIN_RULE_IDS = Array.from({ length: 30 }, (_, i) => `NGB${String(i + 1).padStart(3, '0')}`);
 
 export const DEFAULT_LIMITS: AnalysisLimits = {
   maxDepth: 40,
@@ -11,11 +12,14 @@ export const DEFAULT_LIMITS: AnalysisLimits = {
   maxTimeMs: 120_000,
 };
 
+/** Context-dependent or heuristic rules: enabled as warnings in `recommended`. */
+const RECOMMENDED_WARN = ['NGB008', 'NGB010', 'NGB019', 'NGB022', 'NGB027', 'NGB028', 'NGB030'];
+
 const all = (level: RuleLevel) => Object.fromEntries(BUILTIN_RULE_IDS.map((id) => [id, level]));
 
 /**
  * Built-in presets. Rule selections are explicit so documentation can list them.
- * - recommended: every rule enabled; context-dependent rules (NGB008, NGB010, NGB019) only warn.
+ * - recommended: every rule enabled; context-dependent or heuristic rules only warn (never fail the gate).
  *   Gate on high+ findings; hide low-confidence findings.
  * - strict: every rule is an error, gate on medium+, show low-confidence findings.
  * - enterprise: strict reporting plus a governance policy (mandatory rules, expiring exceptions,
@@ -25,7 +29,7 @@ const all = (level: RuleLevel) => Object.fromEntries(BUILTIN_RULE_IDS.map((id) =
  */
 export const PRESETS: Record<string, NgBastionConfig> = {
   recommended: {
-    rules: { ...all('error'), NGB008: 'warn', NGB010: 'warn', NGB019: 'warn' },
+    rules: { ...all('error'), ...Object.fromEntries(RECOMMENDED_WARN.map((id) => [id, 'warn' as const])) },
     exclude: ['**/*.spec.ts', '**/*.test.ts', '**/e2e/**', '**/cypress/**', '**/playwright/**'],
     failOn: 'high',
     minConfidence: 'medium',

@@ -1,5 +1,5 @@
 import type * as ts from 'typescript';
-import type { AnalysisContext, TaintResult } from '@ngbastion/plugin-api';
+import type { AnalysisContext, Confidence, TaintResult } from '@ngbastion/plugin-api';
 
 export type SensitiveCategory = 'credential' | 'payment';
 
@@ -174,4 +174,44 @@ export function sensitivityOf(ctx: AnalysisContext, expr: ts.Expression, trace?:
 export function describeEvidence(e: SensitivityEvidence): string {
   const how = { name: 'value is named', origin: 'data flow passes through', type: 'value type has property', literal: 'literal looks like', key: 'storage key' }[e.via];
   return `${how} '${e.match.term}' (${e.match.category}, ${e.match.strength})`;
+}
+
+export function confidenceOf(e: SensitivityEvidence): Confidence {
+  if (e.match.strength === 'weak') return 'low';
+  return e.via === 'name' || e.via === 'literal' || e.via === 'key' ? 'high' : 'medium';
+}
+
+const RANK: Record<Confidence, number> = { low: 0, medium: 1, high: 2 };
+export function strongest(list: SensitivityEvidence[]): SensitivityEvidence | undefined {
+  return [...list].sort((a, b) => RANK[confidenceOf(b)] - RANK[confidenceOf(a)])[0];
+}
+
+export interface SensitiveValue {
+  confidence: Confidence;
+  category: SensitiveCategory;
+  strongest: SensitivityEvidence;
+  evidence: string[];
+}
+
+/**
+ * Whether `expr` carries credentials or payment data (by its own name, type, data-flow names, literal,
+ * or the extra `keys` it is stored under). Redacted values are never sensitive.
+ */
+export function sensitiveValue(
+  ctx: AnalysisContext,
+  expr: ts.Expression,
+  opts: { categories?: SensitiveCategory[]; keys?: (string | undefined)[] } = {},
+): SensitiveValue | undefined {
+  const trace = ctx.taint.trace(expr, { context: 'generic' });
+  if (isRedacted(ctx, expr, trace)) return undefined;
+  const cats = opts.categories ?? ['credential', 'payment'];
+  const evs = sensitivityOf(ctx, expr, trace);
+  for (const k of opts.keys ?? []) {
+    const m = k ? classifyName(k) : undefined;
+    if (m) evs.push({ match: m, via: 'key' });
+  }
+  const relevant = evs.filter((e) => cats.includes(e.match.category) && !/(masked|redacted|hashed|last4|encrypted|tokenized)/i.test(e.match.term));
+  const best = strongest(relevant);
+  if (!best) return undefined;
+  return { confidence: confidenceOf(best), category: best.match.category, strongest: best, evidence: relevant.slice(0, 4).map(describeEvidence) };
 }

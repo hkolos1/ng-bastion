@@ -71,10 +71,12 @@ Sanitizers only count for the security context they protect:
 | `DomSanitizer.sanitize(SecurityContext.HTML, …)` | HTML |
 | `DomSanitizer.sanitize(SecurityContext.URL / RESOURCE_URL / SCRIPT, …)` | that context |
 | `DOMPurify.sanitize()` | HTML |
-| `encodeURIComponent()` | HTML, URL, resource URL |
-| `encodeURI()` | HTML |
+| `encodeURIComponent()` | URL, resource URL (never HTML) |
+| `encodeURI()` | none |
 | `Number()`, `parseInt()`, `parseFloat()`, `Boolean()`, `Math.*` | all (numeric) |
 | `trustedSanitizers` from configuration | all |
+
+URL encoding is not HTML escaping: `encodeURIComponent()` leaves `'`, `(`, `)`, `!` and `*` intact, which is enough to break out of a single-quoted attribute in an HTML string, and `encodeURI()` additionally keeps `:` and `/` (so `javascript:` URLs pass). A flow through either function into an HTML sink is still reported, with one approximation (lower confidence).
 
 `bypassSecurityTrust*()` is **never** a sanitizer: it is recorded as a `trust-bypass` step and propagation continues. Angular's own template sanitization is respected by not treating `[innerHTML]`, `[href]` and similar bindings as sinks. Guards such as origin allowlists, same-origin URL checks and scheme checks are evaluated by the rules that need them (NGB007, NGB011, NGB012, NGB013).
 

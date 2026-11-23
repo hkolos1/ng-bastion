@@ -124,7 +124,21 @@ describe('taint engine: messages, storage, sanitizers', () => {
     expect(results[1]!.sanitized[0]!.reason).toBe('DOMPurify.sanitize()');
     expect(results[2]!.flows).toHaveLength(1);
     expect(results[2]!.flows[0]!.steps.some((s) => s.kind === 'trust-bypass')).toBe(true);
-    expect(results[3]!.flows).toHaveLength(0);
+    // URL encoding is not an HTML sanitizer: the flow is kept, with one approximation (medium confidence).
+    expect(results[3]!.flows).toHaveLength(1);
+    expect(results[3]!.flows[0]!.confidence).toBe('medium');
+    expect(results[3]!.flows[0]!.approximations.join()).toMatch(/not HTML-escaped/);
+  });
+
+  it('treats encodeURIComponent() as a sanitizer for URL contexts only, and encodeURI() for none', async () => {
+    const SRC = `${SINK}export function run() {\n  sink(encodeURIComponent(location.hash));\n  sink(encodeURI(location.hash));\n}`;
+    const [url, urlRaw] = await traceSink({ 'a.ts': SRC }, 'url');
+    expect(url!.flows).toHaveLength(0);
+    expect(url!.sanitized[0]!.reason).toBe('encodeURIComponent()');
+    expect(urlRaw!.flows).toHaveLength(1);
+    const [html, htmlRaw] = await traceSink({ 'a.ts': SRC }, 'html');
+    expect(html!.flows).toHaveLength(1);
+    expect(htmlRaw!.flows).toHaveLength(1);
   });
 
   it('does not treat an HTML sanitizer as safe for URL sinks', async () => {

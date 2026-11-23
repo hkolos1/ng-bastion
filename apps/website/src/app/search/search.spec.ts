@@ -1,5 +1,6 @@
 import { searchIndex, type SearchEntry } from './search';
 import index from '../../generated/search.json';
+import showcase from '../../generated/showcase.json';
 
 const entries = index as SearchEntry[];
 
@@ -22,8 +23,8 @@ describe('searchIndex', () => {
   });
 
   it('indexes every generated page', () => {
-    expect(entries.length).toBe(36);
-    expect(entries.filter((e) => e.slug.startsWith('rules/ngb'))).toHaveLength(20);
+    expect(entries.length).toBe(16 + showcase.ruleCount);
+    expect(entries.filter((e) => e.slug.startsWith('rules/ngb'))).toHaveLength(showcase.ruleCount);
   });
 });
 

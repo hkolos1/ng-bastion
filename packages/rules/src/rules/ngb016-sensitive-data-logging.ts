@@ -1,7 +1,11 @@
 import type * as ts from 'typescript';
 import { defineRule, type AnalysisContext, type Confidence, type RuleFinding } from '@ngbastion/plugin-api';
 import { is, receiverOf, strip } from '../shared/common.js';
-import { describeEvidence, isRedacted, sensitivityOf, type SensitivityEvidence } from '../shared/sensitivity.js';
+import { confidenceOf, describeEvidence, isRedacted, sensitivityOf, strongest, type SensitivityEvidence } from '../shared/sensitivity.js';
+
+export { confidenceOf, strongest };
+
+const RANK: Record<Confidence, number> = { low: 0, medium: 1, high: 2 };
 
 const CONSOLE_METHODS = new Set(['log', 'info', 'warn', 'error', 'debug', 'trace', 'dir', 'table']);
 const SENTRY_METHODS = new Set(['captureMessage', 'captureException', 'setUser', 'setContext', 'setExtra', 'setExtras', 'addBreadcrumb']);
@@ -33,16 +37,6 @@ function logSink(ctx: AnalysisContext, call: ts.CallExpression): string | undefi
     return `appInsights.${name}()`;
   }
   return undefined;
-}
-
-export function confidenceOf(e: SensitivityEvidence): Confidence {
-  if (e.match.strength === 'weak') return 'low';
-  return e.via === 'name' || e.via === 'literal' ? 'high' : 'medium';
-}
-
-const rank: Record<Confidence, number> = { low: 0, medium: 1, high: 2 };
-export function strongest(list: SensitivityEvidence[]): SensitivityEvidence | undefined {
-  return [...list].sort((a, b) => rank[confidenceOf(b)] - rank[confidenceOf(a)])[0];
 }
 
 export const ngb016 = defineRule({
@@ -94,7 +88,7 @@ export const ngb016 = defineRule({
         if (isRedacted(ctx, arg, trace)) continue;
         const ev = sensitivityOf(ctx, arg, trace);
         const top = strongest(ev);
-        if (top && (!best || rank[confidenceOf(top)] > rank[confidenceOf(best.e)])) best = { e: top, all: ev };
+        if (top && (!best || RANK[confidenceOf(top)] > RANK[confidenceOf(best.e)])) best = { e: top, all: ev };
       }
       if (!best) continue;
       const what = best.e.match.category === 'payment' ? 'payment data' : 'a credential';

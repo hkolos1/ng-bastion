@@ -32,6 +32,8 @@ jobs:
       - run: pnpm turbo run build --filter="./packages/*"
       - run: pnpm turbo run typecheck --filter="./packages/*"
       - run: pnpm lint
+      - name: README rule tables match the registry
+        run: node scripts/sync-rule-docs.mjs --check
       - name: Unit, integration and Angular 20/21/22 compatibility tests
         run: pnpm test
 

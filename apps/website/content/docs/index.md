@@ -17,7 +17,7 @@ It runs entirely on your machine. Source code is never uploaded, and there is no
 
 ## What it is not
 
-NgBastion is not a penetration test, a server-side authorization review or a replacement for browser security controls such as Content Security Policy. It reports the patterns and data flows it models — [20 rules](/rules/) in version 0.1 — and nothing else. **No findings does not mean an application is secure.**
+NgBastion is not a penetration test, a server-side authorization review or a replacement for browser security controls such as Content Security Policy. It reports the patterns and data flows it models — the [built-in rules](/rules/) — and nothing else. **No findings does not mean an application is secure.**
 
 ## Next steps
 

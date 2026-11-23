@@ -17,7 +17,7 @@ export const ngb001 = defineRule({
         '`sanitizer.bypassSecurityTrustHtml(value)` where `sanitizer` is `DomSanitizer` from `@angular/platform-browser` (constructor injection or `inject()`)',
         'Values traced through variables, class fields, function parameters/returns, services across files, template literals, string methods, RxJS `map`/`switchMap`/`tap` and Angular `signal`/`computed`/`toSignal`',
         'Untrusted sources: ActivatedRoute query/route params and fragment, `location.*`, `document.URL`, `window.name`, `MessageEvent.data`, input element values, `[(ngModel)]` bindings, Web Storage reads, HttpClient/fetch responses',
-        'Recognized sanitizers: `DomSanitizer.sanitize(SecurityContext.HTML, …)`, `DOMPurify.sanitize()`, `encodeURIComponent()`, functions listed in `trustedSanitizers`',
+        'Recognized sanitizers: `DomSanitizer.sanitize(SecurityContext.HTML, …)`, `DOMPurify.sanitize()`, functions listed in `trustedSanitizers`. URL encoding (`encodeURIComponent()`, `encodeURI()`) is not HTML escaping: such flows are still reported, with lowered confidence',
       ],
       limitations: [
         'Values coming from component `input()`s or `@Input()`s are reported as unresolved (the parent binding is not followed).',
