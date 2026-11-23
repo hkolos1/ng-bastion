@@ -61,7 +61,7 @@ HIGH     NGB001  Unsafe HTML trust bypass  confidence: high · dataflow
 - **Severity and confidence are separate**; heuristic findings are labelled as such.
 - **Bounded analysis**: depth, call-site, file-hop, node and time limits; when one is hit you get an
   explicit `analysis-incomplete` diagnostic instead of silent gaps.
-- **100 security rules** (below), **terminal / JSON / SARIF 2.1.0** reports, **CI security gates**.
+- **100 security rules** (below), **terminal / HTML / JSON / SARIF 2.1.0** reports, **CI security gates**.
 - **Enterprise configuration**: presets, shared configs, organizational policies with mandatory
   rules, expiring exceptions, inline suppressions with required justification.
 - **Local-first**: no telemetry, no uploads, no network access during scans.
@@ -93,6 +93,7 @@ npx ngbastion scan
 
 ```bash
 ngbastion scan [dir]                       # terminal report, gate on high+
+ngbastion scan --format html --output security-report.html
 ngbastion scan --format json --output ngbastion.json
 ngbastion scan --format sarif --output results.sarif
 ngbastion scan --fail-on critical          # or: high | medium | low | info | none
@@ -105,6 +106,8 @@ ngbastion doctor                           # read-only environment check
 ```
 
 Exit codes: **0** success · **1** security gate failed · **2** configuration or execution error.
+
+Open the HTML file directly in a browser to explore severity, confidence, source-to-sink evidence and remediation. HTML requires an output path. Add `--redact-source` to withhold snippets, finding messages, trace descriptions and diagnostic messages before sharing. Paths and rule metadata remain visible. Use the browser’s Print command to export the current filtered selection, including all its pages.
 
 ### Configuration
 

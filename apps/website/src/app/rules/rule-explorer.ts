@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { FilterSelect } from './filter-select';
 import rulesData from '../../generated/rules.json';
 
 export interface RuleSummary {
@@ -20,7 +21,7 @@ const uniq = (xs: string[]) => [...new Set(xs)];
 @Component({
   selector: 'ngb-rule-explorer',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, FilterSelect],
   template: `
     <section class="rule-explorer" aria-label="Rule explorer">
       <div class="rule-filters">
@@ -28,42 +29,11 @@ const uniq = (xs: string[]) => [...new Set(xs)];
           <span>Search</span>
           <input type="search" placeholder="ID, name or keyword" [value]="query()" (input)="query.set(value($event))" />
         </label>
-        <label class="rule-filter">
-          <span>Category</span>
-          <select (change)="category.set(value($event))">
-            <option value="">All</option>
-            @for (c of categories; track c) { <option [value]="c" [selected]="c === category()">{{ c }}</option> }
-          </select>
-        </label>
-        <label class="rule-filter">
-          <span>Severity</span>
-          <select (change)="severity.set(value($event))">
-            <option value="">All</option>
-            @for (s of severities; track s) { <option [value]="s" [selected]="s === severity()">{{ s }}</option> }
-          </select>
-        </label>
-        <label class="rule-filter">
-          <span>Applies to</span>
-          <select (change)="applies.set(value($event))">
-            <option value="">All</option>
-            @for (a of appliesTo; track a) { <option [value]="a" [selected]="a === applies()">{{ a }}</option> }
-          </select>
-        </label>
-        <label class="rule-filter">
-          <span>CWE</span>
-          <select (change)="cwe.set(value($event))">
-            <option value="">All</option>
-            @for (c of cwes; track c) { <option [value]="c" [selected]="c === cwe()">{{ c }}</option> }
-          </select>
-        </label>
-        <label class="rule-filter">
-          <span>Recommended</span>
-          <select (change)="level.set(value($event))">
-            <option value="">All</option>
-            <option value="error" [selected]="level() === 'error'">error (gates)</option>
-            <option value="warn" [selected]="level() === 'warn'">warn (heuristic)</option>
-          </select>
-        </label>
+        <ngb-filter-select label="Category" [options]="categories" [(value)]="category" />
+        <ngb-filter-select label="Severity" [options]="severities" [(value)]="severity" />
+        <ngb-filter-select label="Applies to" [options]="appliesTo" [(value)]="applies" />
+        <ngb-filter-select label="CWE" [options]="cwes" [(value)]="cwe" />
+        <ngb-filter-select label="Recommended" [options]="['error','warn']" [(value)]="level" [captions]="{ error: 'error (gates)', warn: 'warn (heuristic)' }" />
       </div>
       <p class="rule-count" aria-live="polite">
         {{ shown().length }} of {{ rules.length }} rules

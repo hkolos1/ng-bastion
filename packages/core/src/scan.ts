@@ -97,6 +97,8 @@ export interface ProjectSummary {
 
 export interface ScanResult {
   tool: { name: 'NgBastion'; version: string; pluginApiVersion: number };
+  /** Unique rule IDs completed in at least one project. Older results may omit coverage. */
+  ruleCoverage?: { available: number; evaluated: string[] };
   workspaceRoot: string;
   startedAt: string;
   durationMs: number;
@@ -202,6 +204,8 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
   const listings = new Map<string, string[]>();
 
   const all: Finding[] = [];
+  const evaluated = new Set<string>();
+  const redactedRanges = new Map<string, number>();
   const summaries: ProjectSummary[] = [];
   let traces = 0;
   let truncatedTraces = 0;
@@ -292,6 +296,7 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
       let results;
       try {
         results = await rule.analyze(context);
+        evaluated.add(rule.meta.id);
       } catch (e) {
         diagnostics.push({ code: 'rule-failed', level: 'error', project: target.name, message: `${rule.meta.id} failed: ${(e as Error).stack ?? String(e)}` });
         continue;
@@ -303,6 +308,10 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
         if (isExcluded(fileRel) || !isIncluded(fileRel)) continue;
         const text = readSourceText(loc.file, program, readFile);
         const line = text?.split(/\r?\n/)[loc.line - 1];
+        if (r.redactSnippet) {
+          const start = JSON.stringify([fileRel, loc.line]);
+          redactedRanges.set(start, Math.max(loc.endLine, redactedRanges.get(start) ?? loc.line));
+        }
         all.push({
           fingerprint: '',
           ruleId: rule.meta.id,
@@ -355,7 +364,13 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
   const today = now.toISOString().slice(0, 10);
 
   all.sort((a, b) => a.location.file.localeCompare(b.location.file) || a.location.line - b.location.line || a.location.column - b.location.column || a.ruleId.localeCompare(b.ruleId));
+  const redactThrough = new Map<string, number>();
   for (const f of all) {
+    // Findings are ordered by location. Honor all sensitive ranges before confidence filtering.
+    const { file, line } = f.location;
+    const end = redactedRanges.get(JSON.stringify([file, line]));
+    if (end !== undefined) redactThrough.set(file, Math.max(end, redactThrough.get(file) ?? 0));
+    if (line <= (redactThrough.get(file) ?? 0)) delete f.snippet;
     const key = `${f.ruleId}:${f.location.file}:${f.location.line}:${f.location.column}:${f.message}`;
     if (seen.has(key)) continue;
     seen.add(key);
@@ -416,6 +431,7 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
   return {
     tool: { name: 'NgBastion', version: options.toolVersion ?? ENGINE_VERSION, pluginApiVersion: PLUGIN_API_VERSION },
     workspaceRoot: root,
+    ruleCoverage: { available: known.size, evaluated: [...evaluated] },
     startedAt: new Date(started).toISOString(),
     durationMs: Date.now() - started,
     ...(workspace.angularVersion ? { angularVersion: workspace.angularVersion } : {}),
