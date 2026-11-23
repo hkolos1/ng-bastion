@@ -1,0 +1,8 @@
+{
+  "$schema": "./node_modules/@angular/service-worker/config/schema.json",
+  "index": "/index.html",
+  "assetGroups": [{ "name": "app", "installMode": "prefetch", "resources": { "files": ["/favicon.ico", "/index.html", "/*.css", "/*.js"] } }],
+  "dataGroups": [
+    { "name": "account", "urls": ["/api/account", "/api/orders/**"], "cacheConfig": { "strategy": "performance", "maxSize": 50, "maxAge": "7d" } }
+  ]
+}

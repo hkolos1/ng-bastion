@@ -193,3 +193,8 @@ export function relative(ctx: AnalysisContext, file: string): string {
   const root = ctx.project.workspaceRoot;
   return file.startsWith(root) ? file.slice(root.length + 1) : file;
 }
+
+/** Project TypeScript/JavaScript sources, without JSON modules imported through `resolveJsonModule`. */
+export function codeFiles(ctx: AnalysisContext): readonly ts.SourceFile[] {
+  return ctx.sourceFiles.filter((sf) => !sf.fileName.endsWith('.json'));
+}

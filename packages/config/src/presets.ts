@@ -1,7 +1,7 @@
 import type { AnalysisLimits, NgBastionConfig, RuleLevel } from './types.js';
 
 /** Must match `builtinRules` in @ngbastion/rules (asserted by its registry test). */
-export const BUILTIN_RULE_IDS = Array.from({ length: 30 }, (_, i) => `NGB${String(i + 1).padStart(3, '0')}`);
+export const BUILTIN_RULE_IDS = Array.from({ length: 40 }, (_, i) => `NGB${String(i + 1).padStart(3, '0')}`);
 
 export const DEFAULT_LIMITS: AnalysisLimits = {
   maxDepth: 40,
@@ -13,7 +13,7 @@ export const DEFAULT_LIMITS: AnalysisLimits = {
 };
 
 /** Context-dependent or heuristic rules: enabled as warnings in `recommended`. */
-const RECOMMENDED_WARN = ['NGB008', 'NGB010', 'NGB019', 'NGB022', 'NGB027', 'NGB028', 'NGB030'];
+const RECOMMENDED_WARN = ['NGB008', 'NGB010', 'NGB019', 'NGB022', 'NGB027', 'NGB028', 'NGB030', 'NGB033', 'NGB037'];
 
 const all = (level: RuleLevel) => Object.fromEntries(BUILTIN_RULE_IDS.map((id) => [id, level]));
 

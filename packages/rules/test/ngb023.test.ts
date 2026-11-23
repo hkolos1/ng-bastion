@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { one } from './helpers.js';
+import { findings, one } from './helpers.js';
 
 const PRE = `import { HttpClient } from '@angular/common/http';\nimport { ActivatedRoute } from '@angular/router';\ndeclare const TOKEN_URL: string;\n`;
 
@@ -52,6 +52,13 @@ describe('NGB023 missing OAuth state validation', () => {
     return this.http.post(TOKEN_URL, { grant_type: 'authorization_code', code: q.get('code') });
   }
 }`)).toEqual([]);
+  });
+
+  it('false-positive regression: JSON modules containing protocol text are not code', async () => {
+    expect(await findings('NGB023', {
+      'src/app/docs.json': JSON.stringify({ text: 'POST /token grant_type=authorization_code&code=…' }),
+      'src/app/a.ts': "import docs from './docs.json';\nexport const d = docs;",
+    })).toEqual([]);
   });
 
   it('false-positive regression: refresh-token grants and library configs are ignored', async () => {

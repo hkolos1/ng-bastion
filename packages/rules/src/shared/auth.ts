@@ -1,6 +1,6 @@
 import type * as ts from 'typescript';
 import type { AnalysisContext } from '@ngbastion/plugin-api';
-import { strip } from './common.js';
+import { codeFiles, strip } from './common.js';
 
 export interface AuthSignals {
   /** `withCredentials: true` / `credentials: 'include'` somewhere in the project. */
@@ -17,7 +17,7 @@ export function authSignals(ctx: AnalysisContext): AuthSignals {
   if (hit) return hit;
   const t = ctx.ts;
   const out: AuthSignals = { cookieCredentials: [], bearerHeaders: [] };
-  for (const sf of ctx.sourceFiles) {
+  for (const sf of codeFiles(ctx)) {
     const visit = (n: ts.Node): void => {
       if (t.isPropertyAssignment(n) && (t.isIdentifier(n.name) || t.isStringLiteralLike(n.name))) {
         const key = n.name.text;

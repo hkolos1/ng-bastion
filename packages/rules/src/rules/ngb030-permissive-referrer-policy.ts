@@ -1,6 +1,6 @@
 import type * as ts from 'typescript';
 import { defineRule, type RuleFinding, type Severity, type SourceLocation } from '@ngbastion/plugin-api';
-import { domElement, memberName, receiverOf, relative, strip } from '../shared/common.js';
+import { domElement, memberName, receiverOf, relative, strip, codeFiles } from '../shared/common.js';
 import { hostingHeaders, htmlTags } from '../shared/files.js';
 
 const WEAK: Record<string, { severity: Severity; why: string }> = {
@@ -77,7 +77,7 @@ export const ngb030 = defineRule({
         if (a) report({ location: a.location }, a.value, `<${el.name}> in ${tpl.component}`);
       }
     }
-    for (const sf of ctx.sourceFiles) {
+    for (const sf of codeFiles(ctx)) {
       const visit = (n: ts.Node): void => {
         if (t.isPropertyAssignment(n) && (t.isIdentifier(n.name) || t.isStringLiteralLike(n.name))) {
           const k = n.name.text.toLowerCase();

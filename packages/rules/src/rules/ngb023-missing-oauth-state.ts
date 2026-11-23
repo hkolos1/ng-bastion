@@ -1,6 +1,6 @@
 import type * as ts from 'typescript';
 import { defineRule, type AnalysisContext, type Confidence, type RuleFinding } from '@ngbastion/plugin-api';
-import { enclosingClass, memberName, strip } from '../shared/common.js';
+import { enclosingClass, memberName, strip, codeFiles } from '../shared/common.js';
 
 /** Node where the code asks for (`response_type=code`) or redeems (`grant_type=authorization_code`) an authorization code. */
 interface OAuthStep {
@@ -17,7 +17,7 @@ function keyOf(ctx: AnalysisContext, n: ts.Node): string | undefined {
 function steps(ctx: AnalysisContext): OAuthStep[] {
   const t = ctx.ts;
   const out: OAuthStep[] = [];
-  for (const sf of ctx.sourceFiles) {
+  for (const sf of codeFiles(ctx)) {
     const visit = (n: ts.Node): void => {
       if (t.isPropertyAssignment(n)) {
         const k = keyOf(ctx, n);

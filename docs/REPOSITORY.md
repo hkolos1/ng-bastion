@@ -1,6 +1,6 @@
 # Repository presentation (to apply when the repository settings are available)
 
-**Description:** NgBastion — Angular-aware, local-first security scanner with type-aware data-flow tracing, 30 security rules and SARIF output.
+**Description:** NgBastion — Angular-aware, local-first security scanner with type-aware data-flow tracing, 40 security rules and SARIF output.
 
 **Website:** https://ngbastion.web.app
 
