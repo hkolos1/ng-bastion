@@ -1,6 +1,6 @@
 # @ngbastion/rules
 
-Built-in NgBastion security rules NGB001–NGB050.
+Built-in NgBastion security rules NGB001–NGB060.
 
 Internal package of [NgBastion](https://www.npmjs.com/package/ngbastion). Most users want the CLI:
 

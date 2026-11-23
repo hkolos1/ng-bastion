@@ -48,7 +48,25 @@ function requestKind(expr: ts.Expression, symbols: Symbols): 'node' | 'fetch' | 
   const o = symbols.typeOrigin(skipOuter(expr));
   if (originIs(o, NODE_REQUEST_MODULES, 'Request', 'IncomingMessage', 'Http2ServerRequest')) return 'node';
   if (isDom(o, 'Request')) return 'fetch';
+  if (!o || o.name === 'any') return untypedHandlerRequest(skipOuter(expr)) ? 'node' : undefined;
   return undefined;
+}
+
+/**
+ * Untyped `(req, res) => …` / `function (req, res, next)` handler parameters (Express / Node types not
+ * installed or not inferred): the `req` / `request` parameter immediately followed by `res` / `response`.
+ */
+function untypedHandlerRequest(e: ts.Expression): boolean {
+  if (!ts.isIdentifier(e) || !/^req(uest)?$/.test(e.text)) return false;
+  for (let n: ts.Node | undefined = e.parent; n; n = n.parent) {
+    if (!ts.isFunctionLike(n)) continue;
+    const params = n.parameters;
+    const i = params.findIndex((p) => ts.isIdentifier(p.name) && p.name.text === e.text);
+    if (i < 0) continue;
+    const next = params[i + 1];
+    return !params[i]!.type && !!next && ts.isIdentifier(next.name) && /^res(ponse)?$/.test(next.name.text);
+  }
+  return false;
 }
 
 const headerSource = (name: string): SourceMatch => ({ kind: 'request-header', description: `request header '${name}'`, trust: 'medium' });
@@ -95,6 +113,9 @@ export function matchMemberSource(obj: ts.Expression, name: string | undefined, 
     if ((name === 'query' || name === 'params' || name === 'originalUrl' || name === 'url') && requestKind(obj, symbols) === 'node') {
       return { kind: 'url', description: `server request ${name} (Express / Node)`, trust: 'high' };
     }
+    if (name === 'path' && requestKind(obj, symbols) === 'node') return { kind: 'url', description: 'server request path (Express)', trust: 'high' };
+    if (name === 'body' && requestKind(obj, symbols) === 'node') return { kind: 'user-input', description: 'server request body (Express)', trust: 'high' };
+    if (name === 'cookies' && requestKind(obj, symbols) === 'node') return { kind: 'cookie', description: 'server request cookies (Express)', trust: 'medium' };
     if (isDom(objOrigin, 'Storage') && name !== 'length' && !['getItem', 'setItem', 'removeItem', 'clear', 'key'].includes(name)) {
       return { kind: 'storage', description: `Web Storage key '${name}'`, trust: 'low' };
     }

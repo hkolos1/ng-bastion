@@ -291,6 +291,11 @@ export interface AnalysisContext {
   readFile(absolutePath: string): string | undefined;
   /** Lists files in the project root matching a glob (relative to project root). */
   findFiles(glob: string): string[];
+  /**
+   * Lists files in the workspace root matching a glob (relative to the workspace root), for
+   * workspace-level configuration such as `.github/workflows`. Same exclusions as `findFiles`.
+   */
+  findWorkspaceFiles(glob: string): string[];
   /** Reports an analysis limitation or unsupported construct. */
   diagnostic(diagnostic: AnalysisDiagnostic): void;
 }

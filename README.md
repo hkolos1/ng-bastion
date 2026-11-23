@@ -61,7 +61,7 @@ HIGH     NGB001  Unsafe HTML trust bypass  confidence: high · dataflow
 - **Severity and confidence are separate**; heuristic findings are labelled as such.
 - **Bounded analysis**: depth, call-site, file-hop, node and time limits; when one is hit you get an
   explicit `analysis-incomplete` diagnostic instead of silent gaps.
-- **50 security rules** (below), **terminal / JSON / SARIF 2.1.0** reports, **CI security gates**.
+- **60 security rules** (below), **terminal / JSON / SARIF 2.1.0** reports, **CI security gates**.
 - **Enterprise configuration**: presets, shared configs, organizational policies with mandatory
   rules, expiring exceptions, inline suppressions with required justification.
 - **Local-first**: no telemetry, no uploads, no network access during scans.
@@ -184,6 +184,16 @@ policies, exceptions, inline suppressions, analysis limits and trusted sanitizer
 | NGB048 | Weak hash algorithm | Medium |
 | NGB049 | Insecure dependency source | Medium |
 | NGB050 | document.domain relaxation | Medium |
+| NGB051 | Mismatched Angular sanitization context | High |
+| NGB052 | Unsafe custom Angular sanitizer | High |
+| NGB053 | Runtime template compilation from dynamic input | High |
+| NGB054 | Untrusted base URL | High |
+| NGB055 | Cross-request state in SSR module scope | Medium |
+| NGB056 | Pass-through Trusted Types policy | High |
+| NGB057 | Missing OIDC nonce | Medium |
+| NGB058 | ID token sent as API bearer token | Medium |
+| NGB059 | JWT decoded without signature verification | High |
+| NGB060 | Untrusted OAuth redirect URI | High |
 
 Every rule documents its detected patterns, limitations, false-positive considerations and
 remediation: `ngbastion explain <ID>` or the generated rule pages of the documentation site.

@@ -198,6 +198,8 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
   const isExcluded = picomatch(config.exclude.length ? config.exclude : ['\0'], { dot: true });
   const isIncluded = config.include.length ? picomatch(config.include, { dot: true }) : () => true;
   const rel = (f: string) => path.relative(root, f).split(path.sep).join('/');
+  /** Directory listings, shared by all rules and projects of this scan. */
+  const listings = new Map<string, string[]>();
 
   const all: Finding[] = [];
   const summaries: ProjectSummary[] = [];
@@ -254,11 +256,18 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
       ...(target.indexHtml ? { indexHtml: target.indexHtml } : {}),
       ...(target.angularProject ? { angularProject: target.angularProject } : {}),
     };
-    const findFiles = (glob: string): string[] => {
-      const match = picomatch(glob, { dot: true });
-      const candidates = memory ? [...memory.keys()] : listFiles(target.root, () => true);
-      return candidates.filter((f) => f.startsWith(target.root) && match(path.relative(target.root, f).split(path.sep).join('/')) && !isExcluded(rel(f)));
+    const filesUnder = (dir: string): string[] => {
+      if (memory) return [...memory.keys()];
+      let list = listings.get(dir);
+      if (!list) listings.set(dir, (list = listFiles(dir, () => true)));
+      return list;
     };
+    const globIn = (dir: string, glob: string): string[] => {
+      const match = picomatch(glob, { dot: true });
+      return filesUnder(dir).filter((f) => (f.startsWith(dir + path.sep) || dir === root) && match(path.relative(dir, f).split(path.sep).join('/')) && !isExcluded(rel(f)));
+    };
+    const findFiles = (glob: string): string[] => globIn(target.root, glob);
+    const findWorkspaceFiles = (glob: string): string[] => globIn(root, glob);
 
     for (const { rule, level, severity, options: ruleOptions } of enabled) {
       const context: AnalysisContext = {
@@ -277,6 +286,7 @@ export async function scan(options: ScanOptions): Promise<ScanResult> {
         location: (node) => locationOf(node),
         readFile,
         findFiles,
+        findWorkspaceFiles,
         diagnostic: report,
       };
       let results;

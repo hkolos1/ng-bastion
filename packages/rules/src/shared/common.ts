@@ -198,3 +198,15 @@ export function relative(ctx: AnalysisContext, file: string): string {
 export function codeFiles(ctx: AnalysisContext): readonly ts.SourceFile[] {
   return ctx.sourceFiles.filter((sf) => !sf.fileName.endsWith('.json'));
 }
+
+/** Identifier bound to `import { name } from 'module'`. */
+export function importedFrom(ctx: AnalysisContext, e: ts.Expression, module: string | readonly string[], name: string): boolean {
+  const t = ctx.ts;
+  if (!t.isIdentifier(e)) return false;
+  // The unresolved (alias) symbol: `declarationOf` follows aliases into the package's declarations.
+  const d = ctx.checker.getSymbolAtLocation(e)?.declarations?.[0];
+  if (!d || !t.isImportSpecifier(d)) return false;
+  const spec = d.parent.parent.parent.moduleSpecifier;
+  const mods = typeof module === 'string' ? [module] : module;
+  return t.isStringLiteral(spec) && mods.includes(spec.text) && (d.propertyName ?? d.name).text === name;
+}

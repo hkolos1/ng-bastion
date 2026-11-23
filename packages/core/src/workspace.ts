@@ -30,6 +30,9 @@ export interface Workspace {
 }
 
 export const SUPPORTED_ANGULAR_MAJORS = [20, 21, 22];
+/** Hidden directories that hold security-relevant configuration (CI workflows). */
+const VISIBLE_DOT_DIRS = new Set(['.github']);
+
 export const IGNORED_DIRS = new Set(['node_modules', 'dist', '.angular', '.git', 'coverage', '.nx', 'out-tsc', 'tmp']);
 
 function readJsonWithComments(file: string): unknown {
@@ -119,7 +122,7 @@ export function listFiles(dir: string, predicate: (file: string) => boolean, out
   }
   for (const e of entries) {
     if (e.isDirectory()) {
-      if (!IGNORED_DIRS.has(e.name) && !e.name.startsWith('.')) listFiles(path.join(dir, e.name), predicate, out);
+      if (!IGNORED_DIRS.has(e.name) && (!e.name.startsWith('.') || VISIBLE_DOT_DIRS.has(e.name))) listFiles(path.join(dir, e.name), predicate, out);
     } else if (e.isFile() && predicate(path.join(dir, e.name))) out.push(path.join(dir, e.name));
   }
   return out;

@@ -140,6 +140,17 @@ describe('taint engine: messages, storage, sanitizers', () => {
     expect(results[6]!.flows).toHaveLength(0);
   });
 
+  it('models Express body / path / cookies and untyped (req, res) handler parameters', async () => {
+    const results = await traceSink({
+      'a.ts': `${SINK}import type { Request } from 'express';
+export function h(req: Request) { sink(req.body.name); sink(req.path); sink(req.cookies['sid']); }
+declare const app: { post(p: string, f: (req: any, res: any) => void): void };
+app.post('/x', (req, res) => { sink(req.body); sink(res); });
+export function notAHandler(req: { body: string }, other: unknown) { sink(req.body); sink(other); }`,
+    }, 'generic');
+    expect(results.map((r) => r.flows[0]?.source.kind)).toEqual(['user-input', 'url', 'cookie', 'user-input', undefined, undefined, undefined]);
+  });
+
   it('does not crash on receiver types named like Object.prototype members', async () => {
     // `Object.prototype.toString.call(v)`: the receiver's type origin is named `toString`.
     const [r] = await traceSink({ 'a.ts': `${SINK}export function f() { sink(Object.prototype.toString.call(location.hash)); }` }, 'generic');

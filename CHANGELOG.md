@@ -24,6 +24,13 @@ user-visible changes are tracked with [Changesets](.changeset).
   subresource integrity, NGB046 Insecure randomness for security values, NGB047 Static IV in Web
   Crypto encryption, NGB048 Weak hash algorithm, NGB049 Insecure dependency source, NGB050
   `document.domain` relaxation. New categories: Cryptography, Supply chain.
+- NGB051 Mismatched Angular sanitization context (also `SecurityContext.NONE` and ngx-markdown
+  with sanitization disabled), NGB052 Unsafe custom Angular sanitizer, NGB053 Runtime template
+  compilation from dynamic input, NGB054 Untrusted base URL (`<base href>`, `APP_BASE_HREF`),
+  NGB055 Cross-request state in SSR module scope, NGB056 Pass-through Trusted Types policy,
+  NGB057 Missing OIDC nonce, NGB058 ID token sent as API bearer token, NGB059 JWT decoded without
+  signature verification (server code), NGB060 Untrusted OAuth redirect URI. NGB055 and NGB058
+  only warn in `recommended`.
 - The `recommended` preset enables them; the heuristic ones (NGB022, NGB027, NGB028, NGB030,
   NGB033, NGB037, NGB044, NGB045) only warn. Configurations without `extends` keep their explicit rule selection. To keep the previous
   behaviour on upgrade, set the new IDs to `"off"`.
@@ -33,6 +40,10 @@ user-visible changes are tracked with [Changesets](.changeset).
 - New taint sources for SSR code: `Host` / `X-Forwarded-*` request headers (source kind
   `request-header`) and Express / Node `req.query`, `req.params`, `req.url`.
 - `location.origin`, `host`, `hostname`, `protocol` and `port` are no longer tainted.
+- Server request sources: `req.body`, `req.path` and `req.cookies` (Express / Node); untyped
+  `(req, res)` handler parameters are recognized when Express types are not installed.
+- Plugin API: `AnalysisContext.findWorkspaceFiles(glob)` (additive) lists workspace-level files;
+  `.github` is no longer skipped when listing files. Directory listings are cached per scan.
 - Callee and type resolution is memoized: scans with 50 rules are faster than 0.1.2 with 20
   (bitwarden/clients monorepo 36.8 s → 26.5 s).
 - Plugin API: `SourceKind` gained `request-header`, `RuleCategory` gained `cryptography` and
