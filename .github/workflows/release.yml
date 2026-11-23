@@ -1,0 +1,47 @@
+name: Release
+
+# Publishes all public packages to npm when a version tag (vX.Y.Z) is pushed.
+# Auth is npm Trusted Publishing (OIDC): no npm token is stored in this repository.
+# Each package on npmjs.com must list this repository and workflow (release.yml) as a trusted publisher.
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write # create the GitHub release
+  id-token: write # npm Trusted Publishing (OIDC) + provenance
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm turbo run build --filter="./packages/*"
+      - run: pnpm lint
+      - run: pnpm test
+      - name: Publish to npm
+        run: node scripts/publish.mjs "${GITHUB_REF_NAME#v}"
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          # Changesets writes packages/cli/CHANGELOG.md; the root CHANGELOG.md is curated by hand.
+          for f in packages/cli/CHANGELOG.md CHANGELOG.md; do
+            [ -f "$f" ] && awk -v v="$v" '$0 ~ "^## "v"( |$)" {f=1; next} f && /^## / {exit} f' "$f" > notes.md
+            [ -s notes.md ] && break
+          done
+          [ -s notes.md ] || echo "See [CHANGELOG.md](CHANGELOG.md)." > notes.md
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" --verify-tag --title "$GITHUB_REF_NAME" --notes-file notes.md

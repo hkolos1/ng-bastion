@@ -28,7 +28,7 @@ Run the CLI from source after building: `node packages/cli/dist/bin.js scan exam
 | `packages/core` | Workspace discovery, TypeScript program, templates, taint engine, scan orchestration |
 | `packages/rules` | Built-in rules NGB001–NGB020 and shared rule helpers |
 | `packages/cli` | `ngbastion` command, reporters (terminal, JSON, SARIF) |
-| `apps/website` | ngbastion.dev: Angular 22 + AnalogJS app (landing, docs, rule pages, playground), statically pre-rendered |
+| `apps/website` | [ngbastion.web.app](https://ngbastion.web.app): Angular 22 + AnalogJS app (landing, docs, rule pages, playground), statically pre-rendered |
 | `examples/angular-{20,21,22}` | Compatibility fixtures with installed framework packages |
 | `examples/vulnerable-showcase` | Intentionally vulnerable demo app (never deploy) |
 | `tests/` | Integration, compatibility and reliability suites, fixtures, SARIF schema |
@@ -64,5 +64,12 @@ The engine must never invent path segments. If a construct is not modeled, recor
 
 ## Releases
 
-Publishing to npm, creating public releases and deploying the website require explicit maintainer
-approval and are not part of the contribution workflow.
+Maintainers only. Contributors add changesets; nothing else is needed.
+
+1. `pnpm changeset version` bumps all published packages together and writes their changelogs.
+   Curate the matching section of the root `CHANGELOG.md` (it feeds the website).
+2. Commit, then tag and push: `git tag -s vX.Y.Z && git push origin main vX.Y.Z`.
+3. `.github/workflows/release.yml` builds, tests, publishes to npm via Trusted Publishing (no tokens)
+   and creates the GitHub release. It refuses a tag that does not match the package versions.
+
+The website is deployed separately and manually to Firebase Hosting (see `apps/website/README.md`).
