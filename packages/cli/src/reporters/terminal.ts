@@ -49,6 +49,7 @@ function renderFinding(f: Finding, o: TerminalOptions): string[] {
   const lines = [
     `${severityLabel(f.severity, c)} ${c.bold(f.ruleId)}  ${f.ruleName}  ${c.dim(`confidence: ${f.confidence} · ${f.evidenceKind}${f.level === 'warn' ? ' · warn' : ''}`)}`,
     `  ${c.cyan(`${f.location.file}:${f.location.line}:${f.location.column}`)}`,
+    ...(o.comparison?.uncertainty[f.fingerprintV2!] ? [`  Comparison: ${o.comparison.uncertainty[f.fingerprintV2!]}`] : []),
     ...(o.git ? [`  Git: ${o.git.findings[f.fingerprintV2!]}`] : []),
     ...(o.comparison && !f.suppression ? [`  Status: ${o.comparison.statuses[f.fingerprintV2!]}`] : []),
     `  ${f.message}`,

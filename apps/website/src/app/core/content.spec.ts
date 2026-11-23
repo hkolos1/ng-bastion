@@ -2,7 +2,7 @@ import { NAV, hasPage, loadPage, neighbours, slugFromUrl } from './content';
 import showcase from '../../generated/showcase.json';
 
 /** Hand-written docs pages + rule index; rule pages come from the registry (showcase.ruleCount). */
-const DOC_PAGES = 16;
+const DOC_PAGES = 18;
 
 describe('content model', () => {
   it('normalizes URLs to slugs', () => {
@@ -13,6 +13,7 @@ describe('content model', () => {
   it('has a generated page for every navigation entry (except the playground route)', () => {
     const slugs = NAV.groups.flatMap((g) => g.items.map((i) => i.slug)).filter((s) => s !== 'playground');
     expect(slugs).toHaveLength(DOC_PAGES + showcase.ruleCount);
+    expect(slugs).toEqual(expect.arrayContaining(['docs/baselines', 'docs/git-comparison']));
     for (const slug of slugs) expect(hasPage(slug), slug).toBe(true);
   });
 

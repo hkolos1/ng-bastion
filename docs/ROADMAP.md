@@ -20,12 +20,12 @@ Status legend: ✅ done · 🚧 in progress · ⏳ planned · ⏸ deferred (need
 - Trusted Publishing, release automation, public GitHub releases
 - Custom domain (ngbastion.dev), announcements
 
-## Next milestone: NGB051–NGB100 (not started)
+## Rule and reporting milestones
 
-Stabilize the 50-rule release first: collect false-positive reports for the new heuristic rules and
-decide which of them can move from `warn` to `error`. New rules should cover new Angular / frontend
-categories (e.g. Workbox caching, NgRx / signal-store state persistence, Web Worker messaging,
-WebAuthn / Credential Management misuse, CORS configuration in SSR servers), not split existing ones.
+The registry contains NGB001–NGB100. The expansion audit records the rule batches and validation.
+
+- [Rule expansion 51–100](security/RULE_EXPANSION_51_100.md)
+- [Reporting implementation and validation](REPORTING-RELEASE.md)
 
 ## Next candidates (post 0.1.0)
 

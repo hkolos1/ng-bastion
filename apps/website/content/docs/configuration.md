@@ -155,3 +155,7 @@ A justification after `--` is required; without one the comment is ignored and a
 | `maxTimeMs` | 120000 | Wall-clock budget per project |
 
 When a trace stops at a limit, the scan reports `analysis-incomplete` (or `analysis-timeout`) instead of silently dropping paths.
+
+## Gates and comparison
+
+Baseline paths, explicit baseline writes, Git revisions and status or confidence gate restrictions are CLI options. The scanner resolves presets, coverage and organizational policies before applying those options. See [baseline-aware gates](/docs/baselines/#security-gates).

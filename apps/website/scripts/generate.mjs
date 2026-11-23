@@ -160,6 +160,7 @@ if (!existsSync(cli)) fail('packages/cli/dist/bin.js not found; run `pnpm build`
 const help = (args) => execFileSync(process.execPath, [cli, ...args], { encoding: 'utf8', env: { ...process.env, NO_COLOR: '1' } }).trimEnd();
 const commands = [
   ['scan', 'Analyze an Angular workspace. Without a directory argument the current directory is scanned. Angular workspaces are discovered through `angular.json`; otherwise `tsconfig.json`, otherwise every `.ts` file in the directory.'],
+  ['report', 'Compare two completed local JSON scans and inspect changes to findings and coverage.'],
   ['init', 'Create a configuration file. In an interactive terminal without `--format` you are asked for the format; in CI it defaults to JSON. Existing configuration is never overwritten without `--force`.'],
   ['explain', 'Print the full documentation of a rule: description, rationale, detected patterns, unsafe and safe examples, remediation, limitations and false-positive considerations.'],
   ['rules', 'List the available rules, optionally filtered.'],
@@ -404,7 +405,7 @@ function render(slug, text, file) {
 /** Sidebar: same structure as the previous documentation site. */
 const nav = [
   { label: 'Getting started', items: ['docs', 'docs/getting-started/installation', 'docs/getting-started/first-scan', 'docs/getting-started/reading-findings', 'docs/getting-started/compatibility'] },
-  { label: 'Reference', items: ['docs/cli-reference', 'docs/configuration', 'docs/security-engine', 'docs/reports', 'docs/plugin-api', 'docs/ci-cd', 'docs/limitations'] },
+  { label: 'Reference', items: ['docs/cli-reference', 'docs/configuration', 'docs/security-engine', 'docs/reports', 'docs/baselines', 'docs/git-comparison', 'docs/plugin-api', 'docs/ci-cd', 'docs/limitations'] },
   { label: 'Security rules', items: ['rules', ...builtinRules.map((r) => `rules/${r.meta.id.toLowerCase()}`)] },
   { label: 'Project', items: ['docs/contributing', 'docs/security-policy', 'changelog', 'playground'] },
 ];
@@ -504,7 +505,7 @@ for (const [slug] of sources) {
   const html = blocks.filter((b) => b.kind !== 'code').map((b) => b.html).join('\n');
   for (const [, href] of html.matchAll(/href="(\/[^"#?]*)/g)) {
     const target = href.replace(/\/$/, '') || '/';
-    if (!routeSet.has(target) && !href.startsWith('/brand/')) fail(`${slug}: broken internal link ${href}`);
+    if (!routeSet.has(target) && !href.startsWith('/brand/') && !(href.startsWith('/schemas/') && existsSync(path.join(repo, 'packages/cli/schema', href.slice('/schemas/'.length))))) fail(`${slug}: broken internal link ${href}`);
   }
 }
 writeFileSync(path.join(generated, 'routes.json'), JSON.stringify(routes, null, 2));
@@ -523,6 +524,9 @@ for (const [pkg, prefix] of [['geist', 'geist'], ['jetbrains-mono', 'jetbrains-m
 
 // ---------------------------------------------------------------- brand, sitemap
 const brand = path.join(repo, 'assets/brand');
+mkdirSync(path.join(site, 'public/reporting'), { recursive: true });
+cpSync(path.join(repo, 'docs/reporting/showcase-overview.png'), path.join(site, 'public/reporting/showcase-overview.png'));
+cpSync(path.join(repo, 'packages/cli/schema'), path.join(site, 'public/schemas'), { recursive: true });
 cpSync(brand, path.join(site, 'public/brand'), { recursive: true });
 cpSync(path.join(brand, 'favicon.svg'), path.join(site, 'public/favicon.svg'));
 const today = new Date().toISOString().slice(0, 10);

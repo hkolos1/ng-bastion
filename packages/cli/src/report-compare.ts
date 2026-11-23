@@ -12,7 +12,7 @@ const validate = validator.compile<ReturnType<typeof toJsonReport>>(require('../
 function reportSnapshot(file: string) {
   try {
     const report = JSON.parse(readFileSync(file, 'utf8'));
-    if (report?.schemaVersion !== 1 || !report.scan?.snapshot) throw new Error('Missing comparison data. Generate JSON reports with the Reporting Release CLI.');
+    if (report?.schemaVersion !== 1 || !report.scan?.snapshot || !Array.isArray(report.scan.identities)) throw new Error('Missing comparison data. Generate JSON reports with the Reporting Release CLI.');
     if (!validate(report)) throw new Error('Invalid NgBastion JSON report: ' + validator.errorsText(validate.errors));
     const snapshot = parseSnapshot(report.scan.snapshot);
     const legacy = new Map(report.scan.identities.map(i => [i.legacy, i.v2]));
@@ -34,10 +34,10 @@ function reportSnapshot(file: string) {
 export function compareReports(previous: string, current: string, format: 'terminal' | 'json') {
   const before = reportSnapshot(previous), after = reportSnapshot(current);
   const comparison = compare(before, after);
-  const findings = after.findings.map(f => ({ ...f, status: comparison.statuses[f.fingerprint] }));
+  const findings = after.findings.map(f => ({ ...f, status: comparison.statuses[f.fingerprint], reason: comparison.uncertainty[f.fingerprint] }));
   if (format === 'json') return JSON.stringify({ schemaVersion: 1, ...comparison, findings }, null, 2) + '\n';
   const lines = [comparisonSummary(comparison), ...comparison.warnings];
-  for (const f of findings) lines.push(`${f.status}  ${f.rule}  ${f.file}  ${f.fingerprint}`);
+  for (const f of findings) lines.push(`${f.status}  ${f.rule}  ${f.file}  ${f.fingerprint}${f.reason ? '  ' + f.reason : ''}`);
   for (const f of comparison.resolved) lines.push(`resolved  ${f.rule}  ${f.file}  ${f.fingerprint}`);
   for (const { finding, reason } of comparison.unverified) lines.push(`unverified  ${finding.rule}  ${finding.file}  ${reason}`);
   for (const { previous: p, current: c } of comparison.changes) lines.push(`changed  ${c.rule}  ${c.file}  severity ${p.severity} → ${c.severity}, confidence ${p.confidence} → ${c.confidence}`);

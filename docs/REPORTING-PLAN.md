@@ -2,7 +2,7 @@
 
 ## Phase 0 audit
 
-Base revision 97ce814 on main. The built CLI lists 100 rules, NGB001 through NGB100. Vitest passed all 552 tests in the 100 per-rule suites and registry suite. The registry validates sequential IDs, preset agreement and documentation. The older diagram in ARCHITECTURE.md predates the expansion.
+Base revision 97ce814 on main. The built CLI lists 100 rules, NGB001 through NGB100. Vitest passed all 552 tests in the 100 per-rule suites and registry suite. The registry validates sequential IDs, preset agreement and documentation. At audit time the architecture diagram still described the 50-rule registry.
 
 The CLI uses Node parseArgs and dispatches scan, init, rules, explain and doctor. Scan accepts a directory, format, output, config, project selection, severity threshold, confidence floor and terminal display controls. The core ScanResult already normalizes workspace-relative locations, independent severity and confidence, optional single-line snippets, ordered typed trace steps, evidence kind, diagnostics, active and suppressed findings. The core counts unique TypeScript source files and separately counts templates. Enabled rules can return without encountering any relevant API. Rule applicability has no signal in the plugin contract.
 
@@ -39,3 +39,5 @@ Chromium opened local files offline, exercised search, sorting, filtering, keybo
 Source snippets remain sensitive project data. Redact-source mode also omits free-text evidence. Paths, project names and rule documentation remain available to reviewers. The CSP allows the packaged hashed script and stylesheet and the embedded font. Links to built-in documentation use a fixed HTTPS origin. The reporter renders text and quoted attributes with encoding and indexes the resulting elements locally. The scan result remains usable by all existing reporters.
 
 Use a minor changeset for the fixed package group. Review Batch 1 before integrating identity changes. Release tagging, npm publication and production Hosting deployment remain separate release decisions.
+
+The [final milestone report](REPORTING-RELEASE.md) covers the remaining batches, measurements, compatibility and release steps.

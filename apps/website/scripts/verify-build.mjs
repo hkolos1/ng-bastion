@@ -69,7 +69,7 @@ const sitemap = existsSync(path.join(out, 'sitemap.xml')) ? readFileSync(path.jo
 for (const route of routes) if (!sitemap.includes(`<loc>${canonical(route)}</loc>`)) problem(`sitemap.xml: ${canonical(route)} missing`);
 const robots = existsSync(path.join(out, 'robots.txt')) ? readFileSync(path.join(out, 'robots.txt'), 'utf8') : '';
 if (!robots.includes(`Sitemap: ${SITE}/sitemap.xml`)) problem('robots.txt: sitemap reference missing');
-for (const asset of ['fonts/geist-latin-wght-normal.woff2', 'fonts/jetbrains-mono-latin-wght-normal.woff2', 'favicon.svg', 'brand/social-preview.png', 'brand/logo-mark-dark.svg', 'brand/logo-mark-light.svg', 'brand/apple-touch-icon.png']) {
+for (const asset of ['reporting/showcase-overview.png', 'schemas/baseline-v1.json', 'schemas/report-v1.json', 'fonts/geist-latin-wght-normal.woff2', 'fonts/jetbrains-mono-latin-wght-normal.woff2', 'favicon.svg', 'brand/social-preview.png', 'brand/logo-mark-dark.svg', 'brand/logo-mark-light.svg', 'brand/apple-touch-icon.png']) {
   if (!existsSync(path.join(out, asset))) problem(`asset missing: ${asset}`);
 }
 const walk = (d) => readdirSync(d).flatMap((f) => (statSync(path.join(d, f)).isDirectory() ? walk(path.join(d, f)) : [path.join(d, f)]));

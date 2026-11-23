@@ -7,19 +7,23 @@ const LEVEL: Record<Severity, 'error' | 'warning' | 'note'> = { critical: 'error
 const SECURITY_SEVERITY: Record<Severity, string> = { critical: '9.5', high: '8.0', medium: '5.5', low: '3.0', info: '1.0' };
 const PRECISION = { high: 'high', medium: 'medium', low: 'low' } as const;
 
+/** Encode each relative path segment so #, ?, %, and : stay part of the filename. */
+function artifactUri(file: string) {
+  return file.split('/').map(encodeURIComponent).join('/');
+}
+
 function location(file: string, region: { line: number; column: number; endLine: number; endColumn: number }, message?: string) {
   return {
     physicalLocation: {
-      artifactLocation: { uri: encodeURI(file), uriBaseId: '%SRCROOT%' },
+      artifactLocation: { uri: artifactUri(file), uriBaseId: '%SRCROOT%' },
       region: { startLine: region.line, startColumn: region.column, endLine: region.endLine, endColumn: region.endColumn },
     },
     ...(message ? { message: { text: message } } : {}),
   };
 }
 
-function result(f: Finding, ruleIndex: number, context: ReportingContext) {
+function result(f: Finding, ruleIndex: number, context: ReportingContext, changed: ReadonlySet<string>) {
   const status = context.comparison?.statuses[f.fingerprintV2!];
-  const changed = context.comparison?.changes.some(c => c.current.fingerprint === f.fingerprintV2);
   return {
     ruleId: f.ruleId,
     ruleIndex,
@@ -27,7 +31,7 @@ function result(f: Finding, ruleIndex: number, context: ReportingContext) {
     message: { text: f.message },
     locations: [location(f.location.file, f.location)],
     partialFingerprints: { 'ngbastion/v1': f.fingerprint, ...(f.fingerprintV2 ? { 'ngbastion/v2': f.fingerprintV2 } : {}) },
-    ...(status === 'existing' ? { baselineState: changed ? 'updated' : 'unchanged' } : status === 'new' ? { baselineState: 'new' } : {}),
+    ...(status === 'existing' ? { baselineState: changed.has(f.fingerprintV2!) ? 'updated' : 'unchanged' } : status === 'new' ? { baselineState: 'new' } : {}),
     ...(f.trace?.length
       ? {
           codeFlows: [{
@@ -45,6 +49,7 @@ function result(f: Finding, ruleIndex: number, context: ReportingContext) {
 
 /** SARIF 2.1.0 log compatible with GitHub code scanning. */
 export function toSarif(result_: ScanResult, context: ReportingContext = {}) {
+  const changed = new Set(context.comparison?.changes.map(c => c.current.fingerprint));
   const rules = result_.rules;
   const index = new Map(rules.map((r, i) => [r.meta.id, i]));
   const all = [...result_.findings, ...result_.suppressed];
@@ -81,13 +86,21 @@ export function toSarif(result_: ScanResult, context: ReportingContext = {}) {
       automationDetails: { id: 'ngbastion/' },
       ...(context.comparison ? { properties: { comparison: context.comparison } } : {}),
       columnKind: 'utf16CodeUnits',
-      results: all.map((f) => result(f, index.get(f.ruleId) ?? 0, context)),
+      results: [
+        ...all.map(f => result(f, index.get(f.ruleId) ?? 0, context, changed)),
+        ...(context.comparison?.resolved ?? []).map(f => ({
+          ruleId: f.rule, level: LEVEL[f.severity], baselineState: 'absent',
+          message: { text: 'Previously observed finding absent from comparable current coverage.' },
+          locations: [{ physicalLocation: { artifactLocation: { uri: artifactUri(f.file), uriBaseId: '%SRCROOT%' } } }],
+          partialFingerprints: { 'ngbastion/v2': f.fingerprint },
+        })),
+      ],
       invocations: [{
         executionSuccessful: !result_.diagnostics.some((d) => d.level === 'error'),
         toolExecutionNotifications: result_.diagnostics.map((d) => ({
           level: d.level === 'info' ? 'note' : d.level,
           message: { text: `${d.code}: ${d.message}` },
-          ...(d.file ? { locations: [{ physicalLocation: { artifactLocation: { uri: encodeURI(d.file), uriBaseId: '%SRCROOT%' } } }] } : {}),
+          ...(d.file ? { locations: [{ physicalLocation: { artifactLocation: { uri: artifactUri(d.file), uriBaseId: '%SRCROOT%' } } }] } : {}),
         })),
       }],
     }],

@@ -36,6 +36,7 @@ export interface Comparison {
   unverified: { finding: Entry; reason: string }[];
   changes: { previous: Entry; current: Entry }[];
   statuses: Record<string, Status>;
+  uncertainty: Record<string, string>;
   coverage: { addedFiles: string[]; removedFiles: string[]; enabledRules: string[]; disabledRules: string[] };
   warnings: string[];
 }
@@ -56,6 +57,7 @@ function canonical(_key: string, value: unknown) {
 
 export function snapshot(result: ScanResult, config: ResolvedConfig): Snapshot {
   const relevant = {
+    projectSettings: result.comparisonCoverage?.projectSettings,
     rules: config.rules, include: config.include, exclude: config.exclude, projects: config.projects,
     limits: config.limits, minConfidence: config.minConfidence, sanitizers: config.trustedSanitizers,
     plugins: config.plugins.map(p => p.specifier), exceptions: config.exceptions.map(({ source: _source, ...e }) => e),
@@ -104,10 +106,12 @@ export function compare(before: Snapshot, after: Snapshot): Comparison {
     };
   }
   const oldReason = absenceReason(before), newReason = absenceReason(after);
-  const result: Comparison = { new: 0, existing: 0, uncertain: 0, resolved: [], unverified: [], changes: [], statuses: Object.create(null), warnings: [...warnings], coverage };
+  const result: Comparison = { new: 0, existing: 0, uncertain: 0, resolved: [], unverified: [], changes: [], statuses: Object.create(null), uncertainty: Object.create(null), warnings: [...warnings], coverage };
   for (const f of after.findings) {
     const old = prior.get(f.fingerprint);
-    const status = old ? 'existing' : oldReason(f) ? 'uncertain' : 'new';
+    const reason = old ? undefined : oldReason(f);
+    const status = old ? 'existing' : reason ? 'uncertain' : 'new';
+    if (reason) result.uncertainty[f.fingerprint] = reason;
     result.statuses[f.fingerprint] = status;
     result[status]++;
     if (old && (old.confidence !== f.confidence || old.severity !== f.severity)) result.changes.push({ previous: old, current: f });

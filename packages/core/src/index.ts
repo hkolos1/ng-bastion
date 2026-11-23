@@ -1,4 +1,4 @@
-export { scan, ENGINE_VERSION } from './scan.js';
+export { scan, ENGINE_VERSION, traceLocationKey } from './scan.js';
 export type {
   Finding,
   FindingTraceStep,

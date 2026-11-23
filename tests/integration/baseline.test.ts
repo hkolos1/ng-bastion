@@ -45,6 +45,8 @@ it('keeps ordinary edits stable, distinguishes repeated operations, resolves onl
   const comparison = JSON.parse(changed.stdout).scan.comparison;
   expect(comparison.new).toBe(1);
   expect(comparison.resolved).toHaveLength(2);
+  const sarif = JSON.parse((await command(cwd, ['--baseline', baseName, '-f', 'sarif'])).stdout);
+  expect(sarif.runs[0].results.map((f: { baselineState: string }) => f.baselineState)).toEqual(['new', 'absent', 'absent']);
   expect((await command(cwd, ['--update-baseline'])).code).toBe(1);
   expect(readFileSync(baselineFile, 'utf8')).not.toBe(bytes);
   expect((await command(cwd, ['--baseline', baseName, '-o', baseName])).code).toBe(2);
@@ -67,4 +69,23 @@ it('reports uncertainty for changed eligibility, omissions, suppression and fail
   expect(() => parseSnapshot({ ...before, files: 'file' } as unknown as Snapshot)).toThrow(/Invalid baseline/);
   writeFileSync(path.join(cwd, 'ngbastion.config.json'), '{"extends":["enterprise"]}');
   expect((await command(cwd, ['--baseline', baseName, '--fail-on-status', 'new'])).stderr).toMatch(/policy/);
+});
+it('classifies severity changes independently of identity and preserves comparable statuses in SARIF', async () => {
+  const cwd = fixture(), src = path.join(cwd, 'app.ts');
+  writeFileSync(src, 'export function show(el: HTMLElement) { el.innerHTML = location.hash; }');
+  await command(cwd, ['--create-baseline']);
+  const config = { extends: [], rules: { NGB003: { level: 'error', severity: 'critical' } }, minConfidence: 'low', failOn: 'critical' };
+  writeFileSync(path.join(cwd, 'ngbastion.config.json'), JSON.stringify(config));
+  const result = await command(cwd, ['--baseline', baseName, '--fail-on-confidence', 'high', '-f', 'sarif']);
+  expect(result.code).toBe(1);
+  const log = JSON.parse(result.stdout);
+  const run = log.runs[0];
+  expect(run.properties.comparison.changes).toHaveLength(1);
+  expect(run.results[0].baselineState).toBe('updated');
+  expect(run.results[0].partialFingerprints['ngbastion/v2']).toMatch(/^[a-f0-9]{64}$/);
+  const { default: Ajv } = await import('ajv');
+  const { default: formats } = await import('ajv-formats');
+  const ajv = new Ajv({ strict: false, validateSchema: false });
+  formats(ajv);
+  expect(ajv.validate(JSON.parse(readFileSync(new URL('../fixtures/schemas/sarif-2.1.0.json', import.meta.url), 'utf8')), log)).toBe(true);
 });

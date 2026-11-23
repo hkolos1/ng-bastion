@@ -17,11 +17,12 @@ export interface GitClassification {
   findings: Record<string, 'changed-line' | 'changed-file' | 'outside-diff'>;
 }
 
-function git(cwd: string, args: string[], failure: string) {
+function git(cwd: string, args: string[], failure: string, allowNoMatches = false) {
   const result = spawnSync('git', ['--no-pager', '--no-optional-locks', '-c', 'core.fsmonitor=false', ...args], {
     cwd, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024,
     env: { ...process.env, GIT_NO_LAZY_FETCH: '1', GIT_ALLOW_PROTOCOL: '', GIT_TERMINAL_PROMPT: '0' },
   });
+  if (allowNoMatches && result.status === 1 && !result.stderr) return '';
   if (result.error || result.status !== 0) throw new ReportingError(`${failure}: ${result.error?.message ?? result.stderr.trim()}`);
   return result.stdout;
 }
@@ -56,9 +57,13 @@ export function parseGitPatch(output: string): ChangedFile[] {
 }
 
 export function classifyDiff(cwd: string, ref: string, findings: Finding[]): GitClassification {
+  if (!ref.trim()) throw new ReportingError('A local Git revision is required after --diff');
   const root = git(cwd, ['rev-parse', '--show-toplevel'], 'Git working tree required').replace(/\r?\n$/, '');
   const revision = git(root, ['rev-parse', '--verify', '--end-of-options', ref + '^{commit}'], 'Invalid local Git revision ' + ref).trim();
-  const patch = git(root, ['diff', '--raw', '-z', '--patch', '--find-renames', '--unified=0', '--inter-hunk-context=0',
+  // Git may otherwise execute a repository-configured clean/process driver to compare a working file.
+  const keys = git(root, ['config', '--null', '--name-only', '--get-regexp', '^filter\\..*\\.(clean|smudge|process|required)$'], 'Cannot inspect Git filters', true);
+  const overrides = keys.split('\0').filter(Boolean).flatMap(key => ['-c', key + (key.endsWith('.required') ? '=false' : '=')]);
+  const patch = git(root, [...overrides, 'diff', '--raw', '-z', '--patch', '--find-renames', '--unified=0', '--inter-hunk-context=0',
     '--no-ext-diff', '--no-textconv', '--no-color', '--no-relative', '--ignore-submodules=all', revision, '--'], 'Cannot read local Git diff');
   const tracked = parseGitPatch(patch);
   const other = git(root, ['ls-files', '--others', '--exclude-standard', '-z'], 'Cannot list untracked paths');

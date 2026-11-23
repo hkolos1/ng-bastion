@@ -38,7 +38,7 @@ export class RenderedContent {
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     const anchor = (event.target as Element | null)?.closest?.('a');
     const href = anchor?.getAttribute('href');
-    if (!href || !href.startsWith('/') || href.startsWith('//') || href.startsWith('/brand/')) return;
+    if (!href || !href.startsWith('/') || href.startsWith('//') || href.startsWith('/brand/') || href.startsWith('/schemas/')) return;
     event.preventDefault();
     void this.router.navigateByUrl(href);
   }
