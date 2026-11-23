@@ -1,9 +1,24 @@
 {
   "name": "@ngbastion/core",
   "version": "0.1.0",
-  "private": true,
   "description": "NgBastion type-aware data-flow security engine.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hkolos1/ng-bastion.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/hkolos1/ng-bastion#readme",
+  "bugs": {
+    "url": "https://github.com/hkolos1/ng-bastion/issues"
+  },
+  "keywords": [
+    "angular",
+    "security",
+    "sast",
+    "static-analysis",
+    "ngbastion"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -21,7 +36,8 @@
   },
   "scripts": {
     "build": "tsup",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "prepack": "cp ../../LICENSE ."
   },
   "dependencies": {
     "@ngbastion/plugin-api": "workspace:*",
@@ -32,5 +48,8 @@
   },
   "devDependencies": {
     "@types/picomatch": "^4.0.3"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

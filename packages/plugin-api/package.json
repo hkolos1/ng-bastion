@@ -1,9 +1,24 @@
 {
   "name": "@ngbastion/plugin-api",
   "version": "0.1.0",
-  "private": true,
   "description": "Versioned rule contract for NgBastion security rules.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hkolos1/ng-bastion.git",
+    "directory": "packages/plugin-api"
+  },
+  "homepage": "https://github.com/hkolos1/ng-bastion#readme",
+  "bugs": {
+    "url": "https://github.com/hkolos1/ng-bastion/issues"
+  },
+  "keywords": [
+    "angular",
+    "security",
+    "sast",
+    "static-analysis",
+    "ngbastion"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -21,7 +36,8 @@
   },
   "scripts": {
     "build": "tsup",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "prepack": "cp ../../LICENSE ."
   },
   "dependencies": {},
   "peerDependencies": {
@@ -31,5 +47,8 @@
     "typescript": {
       "optional": true
     }
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

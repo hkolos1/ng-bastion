@@ -1,9 +1,23 @@
 {
   "name": "ngbastion",
   "version": "0.1.0",
-  "private": true,
   "description": "NgBastion — Angular-aware, local-first security scanner CLI.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hkolos1/ng-bastion.git"
+  },
+  "homepage": "https://github.com/hkolos1/ng-bastion#readme",
+  "bugs": {
+    "url": "https://github.com/hkolos1/ng-bastion/issues"
+  },
+  "keywords": [
+    "angular",
+    "security",
+    "sast",
+    "static-analysis",
+    "ngbastion"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -27,7 +41,8 @@
   },
   "scripts": {
     "build": "tsup",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "prepack": "cp ../../README.md ../../LICENSE ."
   },
   "dependencies": {
     "@ngbastion/plugin-api": "workspace:*",
@@ -37,5 +52,8 @@
   },
   "bin": {
     "ngbastion": "./dist/bin.js"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

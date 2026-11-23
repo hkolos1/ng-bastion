@@ -1,20 +1,48 @@
 {
   "name": "@ngbastion/config",
   "version": "0.1.0",
-  "private": true,
   "description": "Configuration schema, presets, policies and loading for NgBastion.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hkolos1/ng-bastion.git",
+    "directory": "packages/config"
+  },
+  "homepage": "https://github.com/hkolos1/ng-bastion#readme",
+  "bugs": {
+    "url": "https://github.com/hkolos1/ng-bastion/issues"
+  },
+  "keywords": [
+    "angular",
+    "security",
+    "sast",
+    "static-analysis",
+    "ngbastion"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" }
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   },
-  "files": ["dist"],
-  "engines": { "node": "^22.22.3 || >=24.15.0 <25" },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": "^22.22.3 || >=24.15.0 <25"
+  },
   "scripts": {
     "build": "tsup",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "prepack": "cp ../../LICENSE ."
   },
-  "dependencies": { "@ngbastion/plugin-api": "workspace:*" }
+  "dependencies": {
+    "@ngbastion/plugin-api": "workspace:*"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }

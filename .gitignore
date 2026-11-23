@@ -8,3 +8,7 @@ coverage/
 results.sarif
 ngbastion-report.*
 .idea/
+
+# copied from repo root by prepack
+packages/*/LICENSE
+packages/cli/README.md

@@ -74,14 +74,17 @@ HIGH     NGB001  Unsafe HTML trust bypass  confidence: high · dataflow
 
 ## Getting started
 
-> The `ngbastion` package is **not on npm yet**. `npx ngbastion scan` is the planned interface.
-> Today, run it from a local checkout:
+Run it in your Angular workspace, no install needed:
 
 ```bash
-git clone <this repository> ng-bastion && cd ng-bastion
-pnpm install
-pnpm build
-node packages/cli/dist/bin.js scan /path/to/your/angular-workspace
+npx ngbastion scan
+```
+
+Or add it as a dev dependency:
+
+```bash
+npm install --save-dev ngbastion
+npx ngbastion scan
 ```
 
 ### CLI
