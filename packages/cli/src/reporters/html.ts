@@ -1,3 +1,4 @@
+import { comparisonSummary, type ReportingContext } from '../comparison.js';
 import { createHash } from 'node:crypto';
 import type { EnabledRule, Finding, RelativeLocation, ScanResult } from '@ngbastion/core';
 import { summarizeFindings } from './overview.js';
@@ -29,10 +30,10 @@ function highlight(line: string) {
   return html + escape(line.slice(offset));
 }
 
-function findingCard(f: Finding, rule: EnabledRule | undefined, index: number, redact: boolean, limited: boolean) {
+function findingCard(f: Finding, rule: EnabledRule | undefined, index: number, redact: boolean, limited: boolean, context: ReportingContext) {
   const e = escape;
   const id = `finding-${index}`;
-  const status = f.suppression ? 'Suppressed' : 'Uncompared';
+  const status = f.suppression ? 'Suppressed' : context.comparison?.statuses[f.fingerprintV2!] ?? 'Uncompared';
   const docs = rule?.meta.docs;
   const docLink = /^NGB\d{3}$/.test(f.ruleId)
     ? `<a href="https://ngbastion.web.app/rules/${f.ruleId.toLowerCase()}" rel="noreferrer">Rule documentation</a>` : '';
@@ -43,9 +44,9 @@ function findingCard(f: Finding, rule: EnabledRule | undefined, index: number, r
   const snippet = !redact && f.snippet !== undefined
     ? `<pre><code><span class="line-number">${e(f.location.line)}</span> ${highlight(f.snippet)}</code></pre>`
     : '<p>Source text withheld or unavailable.</p>';
-  return `<details class="finding" data-severity="${e(f.severity)}" data-confidence="${e(f.confidence)}" data-rule="${e(f.ruleId)}" data-category="${e(f.category)}" data-file="${e(f.location.file)}" data-status="${status}" data-line="${e(f.location.line)}" data-column="${e(f.location.column)}">
+  return `<details class="finding" data-severity="${e(f.severity)}" data-confidence="${e(f.confidence)}" data-rule="${e(f.ruleId)}" data-category="${e(f.category)}" data-file="${e(f.location.file)}" data-status="${e(status)}" data-line="${e(f.location.line)}" data-column="${e(f.location.column)}">
     <summary><span class="badge ${e(f.severity)}">${e(f.severity)}</span> <span class="rule-id">${e(f.ruleId)}</span> <strong>${e(f.ruleName)}</strong>
-    <small>${e(position(f.location))} · ${e(f.confidence)} confidence · ${status}</small></summary>
+    <small>${e(position(f.location))} · ${e(f.confidence)} confidence · ${e(status)}</small></summary>
     <div class="detail"><p>${e(docs?.description ?? '')}</p>${redact ? '' : `<p>${e(f.message)}</p>`}
     <p>${e(f.category)} · ${e(f.evidenceKind)} · ${e(f.project)} · ${e(f.level)}</p>
     <h4 id="${id}-location" tabindex="-1">Finding location</h4><code>${e(position(f.location))}</code>${snippet}
@@ -54,10 +55,10 @@ function findingCard(f: Finding, rule: EnabledRule | undefined, index: number, r
     ${f.suppression ? `<p>Suppression · ${e(f.suppression.kind)}${redact ? '' : ' · ' + e(f.suppression.justification)}</p>` : ''}
     <h4>Remediation</h4><p>${e(docs?.remediation ?? 'Consult the rule author for guidance.')}</p>
     <p>${(rule?.meta.cwe ?? []).map(e).join(' · ')} ${(docs?.references ?? []).filter(r => /OWASP/i.test(r.title)).map(r => e(r.title)).join(' · ')} ${docLink}</p>
-    <p>Fingerprint <code>${e(f.fingerprint)}</code></p></div></details>`;
+    <p>Fingerprint <code>${e(f.fingerprintV2 ?? f.fingerprint)}</code></p></div></details>`;
 }
 
-export function renderHtml(result: ScanResult, options: { redactSource?: boolean } = {}) {
+export function renderHtml(result: ScanResult, options: ReportingContext & { redactSource?: boolean } = {}) {
   const assets = loadReportAssets();
   const csp = `default-src 'none'; script-src 'sha256-${digest(assets.script)}'; style-src 'sha256-${digest(assets.style)}'; font-src data:; base-uri 'none'; form-action 'none'; object-src 'none'`;
   const { findings, diagnostics, stats, ruleCoverage } = result;
@@ -68,7 +69,7 @@ export function renderHtml(result: ScanResult, options: { redactSource?: boolean
     ['Active findings', findings.length], ['TS files analyzed', stats.filesAnalyzed], ['Available rules', ruleCoverage?.available ?? 'Unknown'],
     ['Enabled rules', ruleMap.size], ['Applicable rules', 'Unmeasured'], ['Evaluated rules¹', ruleCoverage?.evaluated.length ?? 'Unknown'],
   ] as const;
-  const cards = [...findings, ...result.suppressed].map((f, i) => findingCard(f, ruleMap.get(f.ruleId), i, !!options.redactSource, incomplete.length > 0));
+  const cards = [...findings, ...result.suppressed].map((f, i) => findingCard(f, ruleMap.get(f.ruleId), i, !!options.redactSource, incomplete.length > 0, options));
   const project = result.projects.map(p => p.name).join(', ') || 'No project analyzed';
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${escape(csp)}">
 <meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>NgBastion · ${escape(project)}</title><style>${assets.style}</style></head>
@@ -77,8 +78,9 @@ export function renderHtml(result: ScanResult, options: { redactSource?: boolean
 <h2>Scan overview</h2><dl class="metrics">${counts.map(([name, count]) => `<div><dt>${name}</dt><dd>${escape(count)}</dd></div>`).join('')}</dl>
 <p>¹ Unique rules that completed in at least one project. Individual rules determine relevance internally.</p>
 <div class="charts">${distribution('Severity', bySeverity, total)}${distribution('Confidence', byConfidence, total)}</div>
-<p>Gate ${result.gate.failOn === 'none' ? 'disabled' : result.gate.failed ? 'failed' : 'passed'} · ${result.suppressed.length} suppressed · ${escape(stats.hiddenBelowConfidence)} below confidence threshold · ${incomplete.length} analysis limit diagnostics</p>
-<p>Baseline comparison unavailable. New, existing and resolved counts require comparison data.</p>
+<p>Gate ${options.gateScope ? `(${escape(options.gateScope.status)}, confidence ${escape(options.gateScope.confidence ?? 'low')}+) ` : ''}${result.gate.failOn === 'none' ? 'disabled' : result.gate.failed ? 'failed' : 'passed'} · ${result.suppressed.length} suppressed · ${escape(stats.hiddenBelowConfidence)} below confidence threshold · ${incomplete.length} analysis limit diagnostics</p>
+<p>${options.comparison ? escape(comparisonSummary(options.comparison)) : 'Baseline comparison unavailable. New, existing and resolved counts require comparison data.'}</p>
+${options.comparison ? `<details><summary>Comparison details</summary><ul>${[...options.comparison.warnings, ...options.comparison.resolved.map(f => 'Resolved · ' + f.rule + ' · ' + f.file), ...options.comparison.unverified.map(u => u.finding.rule + ' · ' + u.finding.file + ' · ' + u.reason)].map(s => '<li>' + escape(s) + '</li>').join('')}</ul></details>` : ''}
 ${!findings.length ? '<p>No active findings within this scan’s coverage.</p>' : ''}
 ${diagnostics.length ? `<details class="diagnostics"><summary>Scan diagnostics (${diagnostics.length})</summary><ul>${diagnostics.map(d => `<li>${escape(d.level)} · <b>${escape(d.code)}</b> ${escape(d.file ?? '')} ${options.redactSource ? '' : escape(d.message)}</li>`).join('')}</ul></details>` : ''}
 <section id="findings"><h2>Findings explorer</h2><div id="controls" hidden><label>Search findings<input id="search" type="search"></label>

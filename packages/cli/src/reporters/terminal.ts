@@ -1,3 +1,4 @@
+import { comparisonSummary, type ReportingContext } from '../comparison.js';
 import { SEVERITIES, type Severity } from '@ngbastion/plugin-api';
 import type { Finding, ScanResult } from '@ngbastion/core';
 
@@ -20,7 +21,7 @@ export function createColors(enabled: boolean): Colors {
   };
 }
 
-export interface TerminalOptions {
+export interface TerminalOptions extends ReportingContext {
   colors: Colors;
   verbose?: boolean;
   quiet?: boolean;
@@ -48,6 +49,7 @@ function renderFinding(f: Finding, o: TerminalOptions): string[] {
   const lines = [
     `${severityLabel(f.severity, c)} ${c.bold(f.ruleId)}  ${f.ruleName}  ${c.dim(`confidence: ${f.confidence} · ${f.evidenceKind}${f.level === 'warn' ? ' · warn' : ''}`)}`,
     `  ${c.cyan(`${f.location.file}:${f.location.line}:${f.location.column}`)}`,
+    ...(o.comparison && !f.suppression ? [`  Status: ${o.comparison.statuses[f.fingerprintV2!]}`] : []),
     `  ${f.message}`,
   ];
   if (f.snippet) lines.push(`  ${c.dim('│')} ${f.snippet}`);
@@ -102,6 +104,8 @@ export function renderTerminal(result: ScanResult, o: TerminalOptions): string {
   if (!result.findings.length) {
     out.push(c.dim('No findings does not prove the application is secure: NgBastion only reports the patterns and data flows it models.'));
   }
+  if (o.comparison) out.push(comparisonSummary(o.comparison), ...o.comparison.warnings);
+  if (o.gateScope?.status === 'new' || o.gateScope?.confidence) out.push(`Gate scope: ${o.gateScope.status} · confidence ${o.gateScope.confidence ?? 'low'}+`);
   const gate = result.gate;
   if (gate.failOn === 'none') out.push(`${c.bold('Security gate:')} disabled (failOn: none)`);
   else if (gate.failed) out.push(`${c.bold('Security gate')} (fail on ${gate.failOn}+): ${c.red(c.bold('FAILED'))} — ${gate.failingFindings} finding(s) at or above '${gate.failOn}'`);

@@ -46,10 +46,11 @@
     "prepack": "cp ../../README.md ../../LICENSE ."
   },
   "dependencies": {
-    "@ngbastion/plugin-api": "workspace:*",
     "@ngbastion/config": "workspace:*",
     "@ngbastion/core": "workspace:*",
-    "@ngbastion/rules": "workspace:*"
+    "@ngbastion/plugin-api": "workspace:*",
+    "@ngbastion/rules": "workspace:*",
+    "ajv": "^8.20.0"
   },
   "bin": {
     "ngbastion": "./dist/bin.js"

@@ -1,3 +1,4 @@
+import type { ReportingContext } from '../comparison.js';
 import type { Severity } from '@ngbastion/plugin-api';
 import type { Finding, ScanResult } from '@ngbastion/core';
 
@@ -16,14 +17,17 @@ function location(file: string, region: { line: number; column: number; endLine:
   };
 }
 
-function result(f: Finding, ruleIndex: number) {
+function result(f: Finding, ruleIndex: number, context: ReportingContext) {
+  const status = context.comparison?.statuses[f.fingerprintV2!];
+  const changed = context.comparison?.changes.some(c => c.current.fingerprint === f.fingerprintV2);
   return {
     ruleId: f.ruleId,
     ruleIndex,
     level: LEVEL[f.severity],
     message: { text: f.message },
     locations: [location(f.location.file, f.location)],
-    partialFingerprints: { 'ngbastion/v1': f.fingerprint },
+    partialFingerprints: { 'ngbastion/v1': f.fingerprint, ...(f.fingerprintV2 ? { 'ngbastion/v2': f.fingerprintV2 } : {}) },
+    ...(status === 'existing' ? { baselineState: changed ? 'updated' : 'unchanged' } : status === 'new' ? { baselineState: 'new' } : {}),
     ...(f.trace?.length
       ? {
           codeFlows: [{
@@ -35,12 +39,12 @@ function result(f: Finding, ruleIndex: number) {
     ...(f.suppression
       ? { suppressions: [{ kind: f.suppression.kind === 'inline' ? 'inSource' : 'external', status: 'accepted', justification: f.suppression.justification }] }
       : {}),
-    properties: { severity: f.severity, confidence: f.confidence, evidenceKind: f.evidenceKind, evidence: f.evidence, project: f.project },
+    properties: { ...(status ? { findingStatus: status } : {}), severity: f.severity, confidence: f.confidence, evidenceKind: f.evidenceKind, evidence: f.evidence, project: f.project },
   };
 }
 
 /** SARIF 2.1.0 log compatible with GitHub code scanning. */
-export function toSarif(result_: ScanResult) {
+export function toSarif(result_: ScanResult, context: ReportingContext = {}) {
   const rules = result_.rules;
   const index = new Map(rules.map((r, i) => [r.meta.id, i]));
   const all = [...result_.findings, ...result_.suppressed];
@@ -75,8 +79,9 @@ export function toSarif(result_: ScanResult) {
         },
       },
       automationDetails: { id: 'ngbastion/' },
+      ...(context.comparison ? { properties: { comparison: context.comparison } } : {}),
       columnKind: 'utf16CodeUnits',
-      results: all.map((f) => result(f, index.get(f.ruleId) ?? 0)),
+      results: all.map((f) => result(f, index.get(f.ruleId) ?? 0, context)),
       invocations: [{
         executionSuccessful: !result_.diagnostics.some((d) => d.level === 'error'),
         toolExecutionNotifications: result_.diagnostics.map((d) => ({
@@ -89,6 +94,6 @@ export function toSarif(result_: ScanResult) {
   };
 }
 
-export function renderSarif(result: ScanResult): string {
-  return `${JSON.stringify(toSarif(result), null, 2)}\n`;
+export function renderSarif(result: ScanResult, context: ReportingContext = {}): string {
+  return `${JSON.stringify(toSarif(result, context), null, 2)}\n`;
 }

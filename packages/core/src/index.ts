@@ -15,3 +15,4 @@ export { resolveProjectFiles, createProjectProgram, createInMemoryProgram, DEFAU
 export { Symbols, originIs, moduleMatches } from './symbols.js';
 export { TaintEngine } from './taint/engine.js';
 export { matchSource, matchObservableSource } from './taint/sources.js';
+export { FINGERPRINT_VERSION } from './fingerprint.js';

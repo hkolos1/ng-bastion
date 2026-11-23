@@ -270,3 +270,17 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Security issues: [SECURITY.md](SECURITY.
 ## License
 
 [MIT](LICENSE). Third-party notices: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+### Finding identity and baselines
+
+```sh
+ngbastion scan --create-baseline
+ngbastion scan --baseline .ngbastion-baseline.json --fail-on high --fail-on-status new
+ngbastion scan --baseline .ngbastion-baseline.json --update-baseline
+```
+
+Creation uses the workspace root by default. An explicit baseline path is relative to the invoking directory. Ordinary comparison is read-only. Creation refuses to overwrite. Updates require a valid prior baseline and refuse unverified disappearances. The writer uses a same-directory temporary file and a short-lived exclusive lock. After an interrupted write, verify that no writer is active before removing a stale `.lock`.
+
+The versioned [baseline schema](packages/cli/schema/baseline-v1.json) stores SHA-256 fingerprints, relative paths, rule IDs, severity, confidence and coverage metadata. V2 hashes rule ID, normalized file path, significant operation tokens, enclosing named scopes and available trace endpoint symbols or descriptions. Identical operations in the same scope receive a source-order occurrence number. Renames, substantial refactors and inserting an identical operation before another can change identity. Location-only rules fall back to tokenizing the reported line. V1 exception matching and SARIF fingerprints remain supported. JSON v1 preserves its finding objects and adds identities, a comparison snapshot and optional comparison results under `scan`.
+
+New and resolved describe observed differences across comparable scans. Missing coverage, changed configuration or scanner version, hidden findings and analysis diagnostics can make a difference uncertain. A resolved result means the scanner no longer reports the operation in comparable coverage. An ordinary scan still shows every active finding. With `--fail-on-status new`, uncertain current findings also count toward the gate. The severity order is info, low, medium, high, critical. Confidence is low, medium, high. Both thresholds are inclusive. Use `--fail-on-confidence high` to narrow only the gate. Policies with mandatory rules or a severity ceiling reject gate narrowing. Exit codes remain 0, 1 and 2.
