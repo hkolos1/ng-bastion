@@ -9,6 +9,8 @@ import { builtinRules } from '@ngbastion/rules';
 import { PluginError, loadPlugins } from './plugins.js';
 import { readSnapshot, writeSnapshot, ReportingError } from './baseline.js';
 import { compare, snapshot, type ReportingContext } from './comparison.js';
+import { classifyDiff } from './git-diff.js';
+import { compareReports } from './report-compare.js';
 import { statusGate } from './status-gate.js';
 import { renderHtml } from './reporters/html.js';
 import { renderJson } from './reporters/json.js';
@@ -42,6 +44,7 @@ Usage: ngbastion <command> [options]
 
 Commands:
   scan [dir]        Analyze an Angular workspace (default: current directory)
+  report compare    Compare two saved JSON reports
   init              Create an NgBastion configuration file
   explain <rule>    Show detailed documentation for a rule
   rules             List available security rules
@@ -61,6 +64,7 @@ const HELPS: Record<string, string> = {
 Options:
   -f, --format <terminal|json|sarif|html>   Output format (default: terminal)
   -o, --output <file>                  Write the report to a file
+  --diff <revision>                    Associate findings and trace locations with local Git changes
   --baseline <file>                    Compare with a local baseline
   --create-baseline                    Create baseline (default .ngbastion-baseline.json)
   --update-baseline                    Explicitly replace an existing comparable baseline
@@ -87,6 +91,7 @@ Options:
   --category <name>           Filter by category
   --severity <severity>       Filter by default severity
   --json                      Machine-readable output`,
+  report: 'Usage: ngbastion report compare <previous.json> <current.json> [--format terminal|json] [--output file]',
   doctor: 'Usage: ngbastion doctor [dir] [-c <config>]\n\nRead-only checks; never modifies the project.',
 };
 
@@ -128,6 +133,7 @@ export async function run(argv: string[], io: Io = defaultIo()): Promise<number>
     }
     switch (command) {
       case 'scan': return await scanCommand(rest, io);
+      case 'report': return reportCommand(rest, io);
       case 'init': return await initCommand(rest, io);
       case 'explain': return explainCommand(rest, io);
       case 'rules': return rulesCommand(rest, io);
@@ -167,6 +173,7 @@ async function scanCommand(argv: string[], io: Io): Promise<number> {
     'fail-on': { type: 'string' },
     'min-confidence': { type: 'string' },
     project: { type: 'string', short: 'p', multiple: true },
+    diff: { type: 'string' },
     baseline: { type: 'string' },
     'create-baseline': { type: 'boolean' },
     'update-baseline': { type: 'boolean' },
@@ -205,6 +212,7 @@ async function scanCommand(argv: string[], io: Io): Promise<number> {
   const current = snapshot(scanned, config);
   const comparison = prior ? compare(prior, current) : undefined;
   const context: ReportingContext = { snapshot: current, comparison, gateScope: { status: gateStatus ?? 'all', confidence: gateConfidence } };
+  if (values.diff !== undefined) context.git = classifyDiff(cwd, String(values.diff), [...scanned.findings, ...scanned.suppressed]);
   const result = statusGate(scanned, config.policy, comparison, gateStatus === 'new', gateConfidence);
   if ((create || update) && result.diagnostics.some(d => d.level === 'error')) throw new ReportingError('Scan failed. Baseline was not written.');
   if (update && comparison?.unverified.length) throw new ReportingError('Cannot update baseline with unverified disappearances. Inspect the comparison or create a separate baseline.');
@@ -256,6 +264,24 @@ async function scanCommand(argv: string[], io: Io): Promise<number> {
     return EXIT_ERROR;
   }
   return result.gate.failed ? EXIT_GATE_FAILED : EXIT_OK;
+}
+
+function reportCommand(argv: string[], io: Io) {
+  const { values, positionals } = parse(argv, { format: { type: 'string', short: 'f' }, output: { type: 'string', short: 'o' } });
+  if (positionals.length !== 3 || positionals[0] !== 'compare') throw new UsageError(HELPS.report!);
+  const previous = path.resolve(io.cwd, positionals[1]!), current = path.resolve(io.cwd, positionals[2]!);
+  const format = oneOf('format', values.format, ['terminal', 'json'] as const) ?? 'terminal';
+  const text = compareReports(previous, current, format);
+  if (!values.output) io.stdout(text);
+  else {
+    const file = path.resolve(io.cwd, String(values.output));
+    if (sameFile(file, previous) || sameFile(file, current)) throw new UsageError('Comparison output must differ from both input reports');
+    try {
+      mkdirSync(path.dirname(file), { recursive: true });
+      writeFileSync(file, text);
+    } catch (error) { throw new UsageError(`Cannot write comparison to ${file}: ${(error as Error).message}`); }
+  }
+  return EXIT_OK;
 }
 
 async function initCommand(argv: string[], io: Io): Promise<number> {

@@ -34,6 +34,7 @@ function findingCard(f: Finding, rule: EnabledRule | undefined, index: number, r
   const e = escape;
   const id = `finding-${index}`;
   const status = f.suppression ? 'Suppressed' : context.comparison?.statuses[f.fingerprintV2!] ?? 'Uncompared';
+  const git = context.git?.findings[f.fingerprintV2!];
   const docs = rule?.meta.docs;
   const docLink = /^NGB\d{3}$/.test(f.ruleId)
     ? `<a href="https://ngbastion.web.app/rules/${f.ruleId.toLowerCase()}" rel="noreferrer">Rule documentation</a>` : '';
@@ -44,9 +45,9 @@ function findingCard(f: Finding, rule: EnabledRule | undefined, index: number, r
   const snippet = !redact && f.snippet !== undefined
     ? `<pre><code><span class="line-number">${e(f.location.line)}</span> ${highlight(f.snippet)}</code></pre>`
     : '<p>Source text withheld or unavailable.</p>';
-  return `<details class="finding" data-severity="${e(f.severity)}" data-confidence="${e(f.confidence)}" data-rule="${e(f.ruleId)}" data-category="${e(f.category)}" data-file="${e(f.location.file)}" data-status="${e(status)}" data-line="${e(f.location.line)}" data-column="${e(f.location.column)}">
+  return `<details class="finding" data-change="${e(git ?? '')}" data-severity="${e(f.severity)}" data-confidence="${e(f.confidence)}" data-rule="${e(f.ruleId)}" data-category="${e(f.category)}" data-file="${e(f.location.file)}" data-status="${e(status)}" data-line="${e(f.location.line)}" data-column="${e(f.location.column)}">
     <summary><span class="badge ${e(f.severity)}">${e(f.severity)}</span> <span class="rule-id">${e(f.ruleId)}</span> <strong>${e(f.ruleName)}</strong>
-    <small>${e(position(f.location))} · ${e(f.confidence)} confidence · ${e(status)}</small></summary>
+    <small>${e(position(f.location))} · ${e(f.confidence)} confidence · ${e(status)}${git ? ' · ' + e(git) : ''}</small></summary>
     <div class="detail"><p>${e(docs?.description ?? '')}</p>${redact ? '' : `<p>${e(f.message)}</p>`}
     <p>${e(f.category)} · ${e(f.evidenceKind)} · ${e(f.project)} · ${e(f.level)}</p>
     <h4 id="${id}-location" tabindex="-1">Finding location</h4><code>${e(position(f.location))}</code>${snippet}
@@ -84,7 +85,7 @@ ${options.comparison ? `<details><summary>Comparison details</summary><ul>${[...
 ${!findings.length ? '<p>No active findings within this scan’s coverage.</p>' : ''}
 ${diagnostics.length ? `<details class="diagnostics"><summary>Scan diagnostics (${diagnostics.length})</summary><ul>${diagnostics.map(d => `<li>${escape(d.level)} · <b>${escape(d.code)}</b> ${escape(d.file ?? '')} ${options.redactSource ? '' : escape(d.message)}</li>`).join('')}</ul></details>` : ''}
 <section id="findings"><h2>Findings explorer</h2><div id="controls" hidden><label>Search findings<input id="search" type="search"></label>
-${filterFields.map(field => `<label>${field}<select id="${field}" data-filter><option value="">All</option></select></label>`).join('')}
+${(options.git ? [...filterFields, 'change'] : filterFields).map(field => `<label>${field}<select id="${field}" data-filter><option value="">All</option></select></label>`).join('')}
 <label>Sort by<select id="sort"><option>Severity</option><option>Confidence</option><option>Location</option><option>Rule ID</option></select></label><button id="reset">Reset filters</button></div>
 <p role="status" id="matches"></p><div id="rows">${cards.join('')}</div><nav hidden id="pages" aria-label="Finding pages"><button id="prev">Previous</button><button id="next">Next</button></nav></section></main>
 <script>${assets.script}</script></body></html>\n`;

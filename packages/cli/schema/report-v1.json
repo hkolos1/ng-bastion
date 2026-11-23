@@ -509,6 +509,32 @@
               "$ref": "#/definitions/confidence"
             }
           }
+        },
+        "git": {
+          "type": "object",
+          "required": [
+            "revision",
+            "files",
+            "findings"
+          ],
+          "properties": {
+            "revision": {
+              "type": "string"
+            },
+            "files": {
+              "type": "array"
+            },
+            "findings": {
+              "type": "object",
+              "additionalProperties": {
+                "enum": [
+                  "changed-line",
+                  "changed-file",
+                  "outside-diff"
+                ]
+              }
+            }
+          }
         }
       }
     },

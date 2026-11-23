@@ -1,3 +1,4 @@
+import type { GitClassification } from './git-diff.js';
 import { createHash } from 'node:crypto';
 import type { ResolvedConfig } from '@ngbastion/config';
 import { FINGERPRINT_VERSION, type ScanResult } from '@ngbastion/core';
@@ -40,6 +41,7 @@ export interface Comparison {
 }
 
 export interface ReportingContext {
+  git?: GitClassification;
   snapshot?: Snapshot;
   comparison?: Comparison;
   gateScope?: { status: 'all' | 'new'; confidence?: Confidence };

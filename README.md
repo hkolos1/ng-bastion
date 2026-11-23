@@ -284,3 +284,15 @@ Creation uses the workspace root by default. An explicit baseline path is relati
 The versioned [baseline schema](packages/cli/schema/baseline-v1.json) stores SHA-256 fingerprints, relative paths, rule IDs, severity, confidence and coverage metadata. V2 hashes rule ID, normalized file path, significant operation tokens, enclosing named scopes and available trace endpoint symbols or descriptions. Identical operations in the same scope receive a source-order occurrence number. Renames, substantial refactors and inserting an identical operation before another can change identity. Location-only rules fall back to tokenizing the reported line. V1 exception matching and SARIF fingerprints remain supported. JSON v1 preserves its finding objects and adds identities, a comparison snapshot and optional comparison results under `scan`.
 
 New and resolved describe observed differences across comparable scans. Missing coverage, changed configuration or scanner version, hidden findings and analysis diagnostics can make a difference uncertain. A resolved result means the scanner no longer reports the operation in comparable coverage. An ordinary scan still shows every active finding. With `--fail-on-status new`, uncertain current findings also count toward the gate. The severity order is info, low, medium, high, critical. Confidence is low, medium, high. Both thresholds are inclusive. Use `--fail-on-confidence high` to narrow only the gate. Policies with mandatory rules or a severity ceiling reject gate narrowing. Exit codes remain 0, 1 and 2.
+
+### Local Git changes and report comparison
+
+```sh
+ngbastion scan apps/shop --diff origin/main --format html -o changes.html
+ngbastion report compare previous.json current.json
+ngbastion report compare previous.json current.json --format json -o comparison.json
+```
+
+The revision must already exist locally. Git compares its tree to the current working tree, including staged, unstaged and untracked non-ignored paths. The scanner keeps its whole-project context. A finding is associated with a changed line if the finding region or a recorded trace region intersects a current-side hunk. Other findings in changed files are labeled changed-file. Deleted files carry no current-side lines. Submodule contents are excluded. Unstaged moves can appear as a deletion and an untracked addition. Diff association leaves the gate and baseline status intact.
+
+Report comparison reads two completed JSON v1 reports containing the reporting snapshot. It lists current finding statuses, comparable disappearances, uncertain disappearances, severity and confidence changes, and observed file and rule coverage changes. Older reports without identity and coverage data require a fresh scan. Successful comparisons exit 0 regardless of differences. Invalid inputs exit 2.
